@@ -646,7 +646,7 @@
         </div>
 
         <div class="tracker-box">
-          <h4>🤖 Assistente Pessoal (Wiki)</h4>
+          <h4>🤖 Gemini</h4>
           <div class="resultado-ia chat-history" style="margin-top: 8px; font-size: 11px; color: var(--muted); max-height: 120px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
              <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Oi! O que você quer pesquisar ou conversar hoje?</div>
           </div>
@@ -1019,44 +1019,51 @@
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-  /* ====== LOGICA DO CHAT WIKI ====== */
-  async function enviarChat(btn) {
-      const box = btn.closest('.tracker-box');
-      const input = box.querySelector('.termo-ia');
-      const termo = input.value.trim();
-      const div = box.querySelector('.chat-history');
-      if (!termo) return;
-      
-      div.innerHTML += `<div style="background: var(--accent); color: var(--bg); padding: 6px; border-radius: 6px; align-self: flex-end; max-width: 90%; margin-top:4px;">${termo}</div>`;
-      input.value = '';
-      div.scrollTop = div.scrollHeight;
+  /* ====== LOGICA DO CHAT GEMINI ====== */
+async function enviarChat(btn) {
+    const container = btn.closest('.tracker-box');
+    const input = container.querySelector('.termo-ia');
+    const history = container.querySelector('.chat-history');
+    const text = input.value.trim();
+    
+    if(!text) return;
 
-      const typingMsg = document.createElement('div');
-      typingMsg.innerHTML = '<em>Consultando a Wiki...</em>';
-      typingMsg.style = "background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%; margin-top:4px;";
-      div.appendChild(typingMsg);
-      div.scrollTop = div.scrollHeight;
+    // Adiciona sua pergunta ao histórico
+    history.innerHTML += `<div style="background: var(--accent); color: var(--bg); padding: 6px; border-radius: 6px; align-self: flex-end; max-width: 90%;"><b>Você:</b> ${text}</div>`;
+    input.value = "";
+    history.scrollTop = history.scrollHeight;
 
-      try {
-          const url = `https://pt.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termo)}&utf8=&format=json&origin=*`;
-          const resp = await fetch(url);
-          const dados = await resp.json();
-          
-          typingMsg.remove();
-          if (dados.query.search.length > 0) {
-              const res = dados.query.search[0];
-              div.innerHTML += `<div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%; margin-top:4px;"><strong>${res.title}:</strong> ${res.snippet}... <br><a href="https://pt.wikipedia.org/wiki/${encodeURIComponent(res.title)}" target="_blank" style="color:var(--accent); font-weight:bold;">Ler mais</a></div>`;
-          } else { 
-              div.innerHTML += `<div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%; margin-top:4px;">Não achei nada sobre isso na Wiki. Como este é um arquivo local, eu não tenho um cérebro de inteligência artificial de verdade conectado! 😔</div>`;
-          }
-          div.scrollTop = div.scrollHeight;
-      } catch (e) { 
-          typingMsg.remove();
-          div.innerHTML += `<div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%; margin-top:4px; color: #b94a48;">Erro de conexão.</div>`;
-      }
-      autoSave();
-  }
+    // Mensagem de carregamento
+    const loadingId = "loading-" + Date.now();
+    history.innerHTML += `<div id="${loadingId}" style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;"><i>O Gemini está pensando...</i></div>`;
 
+    try {
+        // CHAMADA PARA O SEU BACKEND SEGURO NA VERCEL
+        const res = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: text })
+        });
+        
+        const data = await res.json();
+        document.getElementById(loadingId).remove();
+
+        if (data.candidates && data.candidates[0]) {
+            let responseText = data.candidates[0].content.parts[0].text;
+            // Formatação básica (negrito e quebras de linha)
+            responseText = responseText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+            
+            history.innerHTML += `<div style="background: var(--bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%; border: 1px solid var(--border);"><b>Gemini:</b><br>${responseText}</div>`;
+        } else {
+            throw new Error("Resposta inválida da API.");
+        }
+    } catch (e) {
+        document.getElementById(loadingId).innerHTML = `<span style="color:red;">Erro ao conectar: ${e.message}</span>`;
+    }
+    
+    history.scrollTop = history.scrollHeight;
+    autoSave();
+}
   /* ====== DADOS DO TAROT E LAYOUT ====== */
   function changeViewMode(mode) { document.body.className = document.body.classList.contains('focus-mode') ? 'focus-mode' : ''; document.body.classList.add('view-' + mode); autoSave(); }
   const tarotDeck = ["--- Arcanos Maiores ---", "O Louco", "O Mago", "A Sacerdotisa", "A Imperatriz", "O Imperador", "O Hierofante", "Os Enamorados", "O Carro", "A Força", "O Eremita", "A Roda da Fortuna", "A Justiça", "O Enforcado", "A Morte", "A Temperança", "O Diabo", "A Torre", "A Estrela", "A Lua", "O Sol", "O Julgamento", "O Mundo", "--- Paus ---", ...[1,2,3,4,5,6,7,8,9,10,"Pajem","Cavaleiro","Rainha","Rei"].map(v=>`${v} de Paus`), "--- Copas ---", ...[1,2,3,4,5,6,7,8,9,10,"Pajem","Cavaleiro","Rainha","Rei"].map(v=>`${v} de Copas`), "--- Espadas ---", ...[1,2,3,4,5,6,7,8,9,10,"Pajem","Cavaleiro","Rainha","Rei"].map(v=>`${v} de Espadas`), "--- Ouros ---", ...[1,2,3,4,5,6,7,8,9,10,"Pajem","Cavaleiro","Rainha","Rei"].map(v=>`${v} de Ouros`)];
