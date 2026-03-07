@@ -1220,7 +1220,7 @@ function rolarTodosOsDados() {
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-// Trava para evitar enviar duas vezes seguidas e dar erro 429
+// Variável para evitar duplo clique
 let aiOcupada = false;
 
 async function enviarIA() {
@@ -1234,19 +1234,20 @@ async function enviarIA() {
 
     aiOcupada = true;
     input.disabled = true;
-    input.placeholder = "Aguardando resposta da Vercel...";
+    input.placeholder = "Aguardando resposta da Vercel (via SDK Oficial)...";
 
-    // Mostra sua mensagem (com suporte a quebra de linha)
+    // 1. Mostra a mensagem do usuário na tela
     chat.innerHTML += `<div style="background:var(--accent); color:white; padding:10px; border-radius:8px; align-self:flex-end; max-width:90%; margin-left:auto; white-space: pre-wrap;">${prompt}</div>`;
     input.value = '';
     chat.scrollTop = chat.scrollHeight;
 
+    // 2. Coloca o balãozinho de "Pensando..."
     const loadingId = 'load-ia-' + Date.now();
     chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:10px; border-radius:8px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
     chat.scrollTop = chat.scrollHeight;
 
     try {
-        // Envia para o seu arquivo da Vercel (o dolphin.js que já tem a chave do OpenRouter)
+        // 3. Envia o texto para a sua API na Vercel
         const res = await fetch('/api/dolphin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1255,23 +1256,28 @@ async function enviarIA() {
         
         const data = await res.json();
 
+        // 4. Trata o erro se a Vercel/OpenRouter reclamar
         if (!res.ok) {
             document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: ${data.error || 'Falha na API'}</span>`;
-        } else {
+        } 
+        // 5. Se deu tudo certo, lê o formato oficial (data.choices[0].message.content)
+        else if (data.choices && data.choices.length > 0) {
             const textoCru = data.choices[0].message.content;
             
-            // Transforma **negrito** e markdown em HTML bonito
+            // Tenta usar o Marked.js para formatar negrito e códigos. Se não tiver, vai texto normal.
             const textoFormatado = typeof marked !== 'undefined' ? marked.parse(textoCru) : textoCru;
             
             document.getElementById(loadingId).remove();
             chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:8px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
+        } else {
+            document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: Formato de resposta inesperado.</span>`;
         }
         
     } catch(e) {
-        document.getElementById(loadingId).innerText = "Erro ao se comunicar com a sua Vercel.";
-        console.error(e);
+        document.getElementById(loadingId).innerText = "Erro ao tentar se conectar com a Vercel.";
+        console.error("Erro no envio:", e);
     } finally {
-        // Destrava a caixa de texto
+        // 6. Libera a caixa de texto para a próxima mensagem
         aiOcupada = false;
         input.disabled = false;
         input.placeholder = "Digite sua mensagem... (Shift+Enter pula linha, Enter envia)";
