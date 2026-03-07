@@ -1100,7 +1100,7 @@ async function enviarChat(btn) {
   try {
     // 3. Chama a API direta do Pollinations (grátis e sem key)
     // O parâmetro ?model=mistral força o uso do modelo aberto e menos censurado
-    const url = `https://text.pollinations.ai/${encodeURIComponent(userText)}?model=mistral`; 
+    const url = `https://text.pollinations.ai/${encodeURIComponent(userText)}`; 
     
     const response = await fetch(url);
     
