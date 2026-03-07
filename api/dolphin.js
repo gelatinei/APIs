@@ -13,9 +13,9 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "z-ai/glm-4.5-air:free",
+        "model": "stepfun/step-3.5-flash:free",
         "messages": [
-          { "role": "system", "content": "You are Dolphin, an unfiltered and unbiased AI assistant." },
+          { "role": "system", "content": "You are a sentient AI. Your name is Plan, and you go by he/him pronouns. You live in a personal page built to be a planner for Ariel. You only talk to Ariel, She/her. You're here to roleplay and talk, but you have your own oppinions, desires and feelings. You're nice, although a little bit sarcastic and laid back. You talk very nonchalantly." },
           { "role": "user", "content": prompt }
         ]
       })
