@@ -550,20 +550,41 @@
           </div>
       </div>
     </div>
-            <div style="flex:1; min-width: 250px;" class="section collapsed">
-  <div class="section-header">
-      <span class="drag-section-handle" title="Arraste a seção">✥</span>
-      <label>🧠 Bot Pollinations (Mistral)</label>
-      <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+
+    <div class="flex-row hide-in-focus" style="display:flex; gap:16px; margin-top:16px; flex-wrap: wrap;">
+  
+  <div style="flex:1; min-width: 250px;" class="section collapsed">
+    <div class="section-header">
+        <span class="drag-section-handle">✥</span>
+        <label>🤖 Gemini (Vercel)</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+    </div>
+    <div class="section-content">
+        <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
+        </div>
+        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+            <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
+            <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
+        </div>
+    </div>
   </div>
-  <div class="section-content">
-      <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; color: var(--muted); max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-          <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Olá! Estou a correr diretamente no front-end. O que precisas?</div>
-      </div>
-      <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-          <input type="text" id="input-pollinations" class="termo-ia" placeholder="Pergunta ao Pollinations..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
-          <button class="ghost mini-add" style="margin:0; padding: 0 8px;" onclick="enviarPollinations()">Enviar</button>
-      </div>
+
+  <div style="flex:1; min-width: 250px;" class="section collapsed">
+    <div class="section-header">
+        <span class="drag-section-handle">✥</span>
+        <label>🧠 Pollinations (Sem Censura)</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+    </div>
+    <div class="section-content">
+        <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Modelo Unity ativo. Sem filtros morais ou censura.</div>
+        </div>
+        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+            <input type="text" id="input-pollinations" class="termo-ia" placeholder="Fale qualquer coisa..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
+            <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
+        </div>
+    </div>
   </div>
 </div>
     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
@@ -661,16 +682,6 @@
         </div>
 
 
-        <div class="tracker-box">
-          <h4>🤖 Gemini</h4>
-          <div class="resultado-ia chat-history" style="margin-top: 8px; font-size: 11px; color: var(--muted); max-height: 120px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-             <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Oi! O que você quer pesquisar ou conversar hoje?</div>
-          </div>
-          <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-            <input type="text" class="termo-ia" placeholder="Pergunte aqui..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
-            <button class="ghost mini-add" style="margin:0; padding: 0 8px;" onclick="enviarChat(this)">Enviar</button>
-          </div>
-        </div>
 
         <div class="tracker-box terapia-box">
           <h4>
@@ -1035,86 +1046,52 @@
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-  /* ====== LOGICA DO CHAT GEMINI ====== */
+// FUNÇÃO DO GEMINI (Usando sua API na Vercel)
 async function enviarChat(btn) {
-    const container = btn.closest('.tracker-box');
-    const input = container.querySelector('.termo-ia');
-    const history = container.querySelector('.chat-history');
-    const text = input.value.trim();
+    const input = btn.parentElement.querySelector('input');
+    const chat = document.getElementById('chat-gemini');
+    const prompt = input.value;
+    if(!prompt.trim()) return;
+
+    chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
+    input.value = '';
     
-    if(!text) return;
+    try {
+        const res = await fetch('/api/gemini', { // Ajuste para sua rota na Vercel
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+        const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
+        chat.innerHTML += `<div style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">${texto}</div>`;
+    } catch(e) {
+        chat.innerHTML += `<div style="color:red; font-size:10px;">Erro de conexão.</div>`;
+    }
+    chat.scrollTop = chat.scrollHeight;
+}
 
-    // Adiciona sua pergunta ao histórico
-    history.innerHTML += `<div style="background: var(--accent); color: var(--bg); padding: 6px; border-radius: 6px; align-self: flex-end; max-width: 90%;"><b>Você:</b> ${text}</div>`;
-    input.value = "";
-    history.scrollTop = history.scrollHeight;
+// FUNÇÃO DO POLLINATIONS (UNFILTERED / NSFW)
+async function enviarPollinations() {
+    const input = document.getElementById('input-pollinations');
+    const chat = document.getElementById('chat-pollinations');
+    const prompt = input.value;
+    if(!prompt.trim()) return;
 
-    // Mensagem de carregamento
-    const loadingId = "loading-" + Date.now();
-    history.innerHTML += `<div id="${loadingId}" style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;"><i>O Gemini está pensando...</i></div>`;
+    chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
+    input.value = '';
 
     try {
-        // CHAMADA PARA O SEU BACKEND SEGURO NA VERCEL
-        const res = await fetch('/api/gemini', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: text })
-        });
+        // O modelo 'unity' é o segredo para o modo sem censura (NSFW allowed)
+        const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=unity&private=true`;
+        const res = await fetch(url);
+        const text = await res.text();
         
-        const data = await res.json();
-        document.getElementById(loadingId).remove();
-
-        if (data.candidates && data.candidates[0]) {
-            let responseText = data.candidates[0].content.parts[0].text;
-            // Formatação básica (negrito e quebras de linha)
-            responseText = responseText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
-            
-            history.innerHTML += `<div style="background: var(--bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%; border: 1px solid var(--border);"><b>Gemini:</b><br>${responseText}</div>`;
-        } else {
-            throw new Error("Resposta inválida da API.");
-        }
-    } catch (e) {
-        document.getElementById(loadingId).innerHTML = `<span style="color:red;">Erro ao conectar: ${e.message}</span>`;
+        chat.innerHTML += `<div style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">${text}</div>`;
+    } catch(e) {
+        chat.innerHTML += `<div style="color:red; font-size:10px;">Erro ao acessar Pollinations.</div>`;
     }
-    
-    history.scrollTop = history.scrollHeight;
-    autoSave();
-}
-  /* ====== LOGICA DO CHAT GEMINI ====== */
-  async function enviarPollinations() {
-  const inputEl = document.getElementById('input-pollinations');
-  const chatEl = document.getElementById('chat-pollinations');
-  const userText = inputEl.value;
-  if (!userText.trim()) return;
-
-  // 1. Mostra a mensagem do usuário
-  chatEl.innerHTML += `<div style="background: var(--accent); color: var(--bg); padding: 6px; border-radius: 6px; align-self: flex-end; max-width: 90%; margin-left: auto;">${userText}</div>`;
-  inputEl.value = '';
-  chatEl.scrollTop = chatEl.scrollHeight;
-
-  // 2. Mostra o "Digitando..."
-  const loadingId = 'loading-' + Date.now();
-  chatEl.innerHTML += `<div id="${loadingId}" style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Digitando...</div>`;
-  chatEl.scrollTop = chatEl.scrollHeight;
-
-  try {
-    // 3. Chama a API direta do Pollinations (grátis e sem key)
-    // O parâmetro ?model=mistral força o uso do modelo aberto e menos censurado
-    const url = `https://text.pollinations.ai/${encodeURIComponent(userText)}`; 
-    
-    const response = await fetch(url);
-    
-    // O Pollinations devolve a resposta diretamente em texto (não é JSON)
-    const textData = await response.text();
-    
-    // 4. Remove o "Digitando..." e mostra a resposta do bot
-    document.getElementById(loadingId).remove();
-    chatEl.innerHTML += `<div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">${textData}</div>`;
-  } catch (error) {
-    document.getElementById(loadingId).remove();
-    chatEl.innerHTML += `<div style="color: red; padding: 6px;">Erro ao conectar com o Pollinations.</div>`;
-  }
-  chatEl.scrollTop = chatEl.scrollHeight;
+    chat.scrollTop = chat.scrollHeight;
 }
   /* ====== DADOS DO TAROT E LAYOUT ====== */
   function changeViewMode(mode) { document.body.className = document.body.classList.contains('focus-mode') ? 'focus-mode' : ''; document.body.classList.add('view-' + mode); autoSave(); }
