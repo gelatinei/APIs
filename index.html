@@ -550,7 +550,22 @@
           </div>
       </div>
     </div>
-    
+            <div style="flex:1; min-width: 250px;" class="section collapsed">
+  <div class="section-header">
+      <span class="drag-section-handle" title="Arraste a seção">✥</span>
+      <label>🧠 Bot Pollinations (Mistral)</label>
+      <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+  </div>
+  <div class="section-content">
+      <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; color: var(--muted); max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+          <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Olá! Estou a correr diretamente no front-end. O que precisas?</div>
+      </div>
+      <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+          <input type="text" id="input-pollinations" class="termo-ia" placeholder="Pergunta ao Pollinations..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
+          <button class="ghost mini-add" style="margin:0; padding: 0 8px;" onclick="enviarPollinations()">Enviar</button>
+      </div>
+  </div>
+</div>
     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
         <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
@@ -644,22 +659,7 @@
             <label class="tiny-lbl">Esquema Rímico: <span class="analise-rima" style="font-weight:bold;">Nenhum</span></label>
           </div>
         </div>
-        <div style="flex:1; min-width: 250px;" class="section collapsed">
-  <div class="section-header">
-      <span class="drag-section-handle" title="Arraste a seção">✥</span>
-      <label>🧠 Bot Pollinations (Mistral)</label>
-      <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-  </div>
-  <div class="section-content">
-      <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; color: var(--muted); max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-          <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Olá! Estou a correr diretamente no front-end. O que precisas?</div>
-      </div>
-      <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-          <input type="text" id="input-pollinations" class="termo-ia" placeholder="Pergunta ao Pollinations..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
-          <button class="ghost mini-add" style="margin:0; padding: 0 8px;" onclick="enviarPollinations()">Enviar</button>
-      </div>
-  </div>
-</div>
+
 
         <div class="tracker-box">
           <h4>🤖 Gemini</h4>
