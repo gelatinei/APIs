@@ -20,10 +20,10 @@
     :root { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; font-size: 13px; --maxw: 1000px; }
     
     /* Temas Originais */
+    html[data-theme="noite"] { --bg: #0F172A; --ink: #F1F5F9; --muted: #94A3B8; --accent: #38BDF8; --card-bg: #1E293B; --border: #334155; --drag-bg: #1E293B; }
     html[data-theme="creme"] { --bg: #FDFBF7; --ink: #3E2723; --muted: #8D6E63; --accent: #5D4037; --card-bg: #FFF; --border: #D7CCC8; --drag-bg: #EFEBE9; }
     html[data-theme="rosa"] { --bg: #FDF4F8; --ink: #4A148C; --muted: #AB47BC; --accent: #7B1FA2; --card-bg: #FFF; --border: #F4DCF0; --drag-bg: #F3E5F5; }
     html[data-theme="mar"] { --bg: #F0FBF9; --ink: #004D40; --muted: #4DB6AC; --accent: #00796B; --card-bg: #FFF; --border: #B2DFDB; --drag-bg: #E0F2F1; }
-    html[data-theme="noite"] { --bg: #0F172A; --ink: #F1F5F9; --muted: #94A3B8; --accent: #38BDF8; --card-bg: #1E293B; --border: #334155; --drag-bg: #1E293B; }
     html[data-theme="floresta"] { --bg: #F1F8E9; --ink: #1B5E20; --muted: #81C784; --accent: #388E3C; --card-bg: #FFF; --border: #C8E6C9; --drag-bg: #E8F5E9; }
     html[data-theme="cafe"] { --bg: #2D1D15; --ink: #F5EAE6; --muted: #A1887F; --accent: #D84315; --card-bg: #3E2723; --border: #5D4037; --drag-bg: #4E342E; }
     html[data-theme="lavanda"] { --bg: #F8F4FA; --ink: #311B92; --muted: #9575CD; --accent: #651FFF; --card-bg: #FFF; --border: #D1C4E9; --drag-bg: #EDE7F6; }
@@ -189,6 +189,11 @@
         </select>
 
         <select id="themeSelect" class="theme-select" onchange="changeTheme(this.value)">
+          <optgroup label="Escuros (Dark Mode)">
+            <option value="noite">Noite Enluarada</option>
+            <option value="cafe">Café Expresso</option>
+            <option value="hacker">Terminal Hacker</option>
+          </optgroup>
           <optgroup label="Clarinhos e Neutros">
             <option value="creme">Creme & Chocolate</option>
             <option value="rosa">Rosa e Roxo</option>
@@ -197,11 +202,6 @@
             <option value="lavanda">Campos de Lavanda</option>
             <option value="oceano">Fundo do Oceano</option>
             <option value="outono">Folhas de Outono</option>
-          </optgroup>
-          <optgroup label="Escuros (Dark Mode)">
-            <option value="noite">Noite Enluarada</option>
-            <option value="cafe">Café Expresso</option>
-            <option value="hacker">Terminal Hacker</option>
           </optgroup>
           <optgroup label="Clássicos TI/Design">
             <option value="dracula">Tema Drácula</option>
@@ -573,12 +573,12 @@
   <div style="flex:1; min-width: 250px;" class="section collapsed">
     <div class="section-header">
         <span class="drag-section-handle">✥</span>
-        <label>🔞 Pollinations (Llama Unfiltered)</label>
+        <label>🔞 Dolphin</label>
         <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
     </div>
     <div class="section-content">
         <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Modelo Llama 3.1 Ativo. Modo sem restrições.</div>
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
         </div>
         <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
             <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
