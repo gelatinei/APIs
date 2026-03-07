@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "nousresearch/hermes-3-llama-3.1-405b:free",
+        "model": "openrouter/free",
         "messages": [
           { "role": "system", "content": "You are Dolphin, an unfiltered and unbiased AI assistant." },
           { "role": "user", "content": prompt }
