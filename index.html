@@ -595,16 +595,16 @@
       </div>
     </div>
 
-  <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+ <div class="section hide-in-focus collapsed" style="margin-top:16px;">
     <div class="section-header">
         <span class="drag-section-handle" title="Arraste a seção">✥</span>
-        <label>🤖 Assistente (Sem Filtros)</label>
+        <label>✨ Assistente Gemini</label>
         <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
     </div>
     <div class="section-content">
         <div class="resultado-ia chat-history" id="chat-ia" style="margin-top: 8px; font-size: 13px; max-height: 300px; height: 300px; overflow-y: auto; background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
             <div style="background: var(--drag-bg); padding: 10px; border-radius: 8px; align-self: flex-start; max-width: 90%;">
-                Pronto para ajudar! Conectado com segurança via Vercel.
+                Em que posso ajudar? ✨
             </div>
         </div>
         <div class="field-group" style="display:flex; gap:8px; margin-top: 12px;">
@@ -612,7 +612,7 @@
             <button onclick="enviarIA()" style="padding: 0 20px;">Enviar</button>
         </div>
     </div>
-  </div>
+</div>
     
     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
     <div class="section-header">
@@ -1220,7 +1220,7 @@ function rolarTodosOsDados() {
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-// Variável para evitar duplo clique
+// ====== CHAT DO GEMINI VIA VERCEL (SEGURO) ======
 let aiOcupada = false;
 
 async function enviarIA() {
@@ -1234,21 +1234,21 @@ async function enviarIA() {
 
     aiOcupada = true;
     input.disabled = true;
-    input.placeholder = "Aguardando resposta da Vercel (via SDK Oficial)...";
+    input.placeholder = "O Gemini está pensando...";
 
-    // 1. Mostra a mensagem do usuário na tela
+    // Mensagem do usuário na tela
     chat.innerHTML += `<div style="background:var(--accent); color:white; padding:10px; border-radius:8px; align-self:flex-end; max-width:90%; margin-left:auto; white-space: pre-wrap;">${prompt}</div>`;
     input.value = '';
     chat.scrollTop = chat.scrollHeight;
 
-    // 2. Coloca o balãozinho de "Pensando..."
+    // Balão de loading
     const loadingId = 'load-ia-' + Date.now();
     chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:10px; border-radius:8px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
     chat.scrollTop = chat.scrollHeight;
 
     try {
-        // 3. Envia o texto para a sua API na Vercel
-        const res = await fetch('/api/dolphin', {
+        // Chama a SUA API segura na Vercel
+        const res = await fetch('/api/gemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt })
@@ -1256,28 +1256,22 @@ async function enviarIA() {
         
         const data = await res.json();
 
-        // 4. Trata o erro se a Vercel/OpenRouter reclamar
         if (!res.ok) {
-            document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: ${data.error || 'Falha na API'}</span>`;
-        } 
-        // 5. Se deu tudo certo, lê o formato oficial (data.choices[0].message.content)
-        else if (data.choices && data.choices.length > 0) {
-            const textoCru = data.choices[0].message.content;
+            document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: ${data.error || 'Falha na Vercel'}</span>`;
+        } else {
+            // Pega o texto da resposta do Gemini
+            const textoCru = data.candidates[0].content.parts[0].text;
             
-            // Tenta usar o Marked.js para formatar negrito e códigos. Se não tiver, vai texto normal.
+            // Transforma o Markdown (negrito, tabelas) em visual bonito
             const textoFormatado = typeof marked !== 'undefined' ? marked.parse(textoCru) : textoCru;
             
             document.getElementById(loadingId).remove();
             chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:8px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
-        } else {
-            document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: Formato de resposta inesperado.</span>`;
         }
-        
     } catch(e) {
-        document.getElementById(loadingId).innerText = "Erro ao tentar se conectar com a Vercel.";
-        console.error("Erro no envio:", e);
+        document.getElementById(loadingId).innerText = "Erro ao tentar conectar com a Vercel.";
+        console.error(e);
     } finally {
-        // 6. Libera a caixa de texto para a próxima mensagem
         aiOcupada = false;
         input.disabled = false;
         input.placeholder = "Digite sua mensagem... (Shift+Enter pula linha, Enter envia)";
