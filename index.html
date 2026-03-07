@@ -2,7 +2,6 @@
 <html lang="pt-BR" data-theme="noite">
 <head>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://js.puter.com/v2/"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#5D4037">
 <meta charset="utf-8" />
@@ -595,23 +594,39 @@
       </div>
     </div>
 
- <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+<div style="flex:1; min-width: 250px;" class="section collapsed">
     <div class="section-header">
-        <span class="drag-section-handle" title="Arraste a seção">✥</span>
-        <label>✨ Assistente Gemini</label>
+        <span class="drag-section-handle">✥</span>
+        <label>🤖 Gemini (Vercel)</label>
         <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
     </div>
     <div class="section-content">
-        <div class="resultado-ia chat-history" id="chat-ia" style="margin-top: 8px; font-size: 13px; max-height: 300px; height: 300px; overflow-y: auto; background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
-            <div style="background: var(--drag-bg); padding: 10px; border-radius: 8px; align-self: flex-start; max-width: 90%;">
-                Em que posso ajudar? ✨
-            </div>
+        <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
         </div>
-        <div class="field-group" style="display:flex; gap:8px; margin-top: 12px;">
-            <textarea id="input-ia" placeholder="Digite sua mensagem... (Shift+Enter pula linha, Enter envia)" style="flex:1; resize: none; height: 50px;" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); enviarIA(); }"></textarea>
-            <button onclick="enviarIA()" style="padding: 0 20px;">Enviar</button>
+        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+            <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
+            <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
         </div>
     </div>
+  </div>
+
+  <div style="flex:1; min-width: 250px;" class="section collapsed">
+    <div class="section-header">
+        <span class="drag-section-handle">✥</span>
+        <label>🔞 Hermes</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+    </div>
+    <div class="section-content">
+        <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
+        </div>
+        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+            <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
+            <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
+        </div>
+    </div>
+  </div>
 </div>
     
     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
@@ -1220,64 +1235,87 @@ function rolarTodosOsDados() {
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-// ====== CHAT DO GEMINI VIA VERCEL (SEGURO) ======
-let aiOcupada = false;
+// ====== FUNÇÃO DO GEMINI ======
+async function enviarChat(btn) {
+    const input = btn.parentElement.querySelector('input');
+    const chat = document.getElementById('chat-gemini');
+    const prompt = input.value;
+    if(!prompt.trim()) return;
 
-async function enviarIA() {
-    if (aiOcupada) return;
-
-    const input = document.getElementById('input-ia');
-    const chat = document.getElementById('chat-ia');
-    const prompt = input.value.trim();
-    
-    if (!prompt) return;
-
-    aiOcupada = true;
-    input.disabled = true;
-    input.placeholder = "O Gemini está pensando...";
-
-    // Mensagem do usuário na tela
-    chat.innerHTML += `<div style="background:var(--accent); color:white; padding:10px; border-radius:8px; align-self:flex-end; max-width:90%; margin-left:auto; white-space: pre-wrap;">${prompt}</div>`;
+    // Mostra a sua mensagem
+    chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
     input.value = '';
-    chat.scrollTop = chat.scrollHeight;
 
-    // Balão de loading
-    const loadingId = 'load-ia-' + Date.now();
-    chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:10px; border-radius:8px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
+    // Mostra "Pensando..."
+    const loadingId = 'load-gemini-' + Date.now();
+    chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
     chat.scrollTop = chat.scrollHeight;
 
     try {
-        // Chama a SUA API segura na Vercel
         const res = await fetch('/api/gemini', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ prompt })
         });
-        
         const data = await res.json();
+        
+        // Pega a resposta do Gemini e formata
+        const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
+        const textoFormatado = marked.parse(textoCru);
 
-        if (!res.ok) {
-            document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: ${data.error || 'Falha na Vercel'}</span>`;
-        } else {
-            // Pega o texto da resposta do Gemini
-            const textoCru = data.candidates[0].content.parts[0].text;
-            
-            // Transforma o Markdown (negrito, tabelas) em visual bonito
-            const textoFormatado = typeof marked !== 'undefined' ? marked.parse(textoCru) : textoCru;
-            
-            document.getElementById(loadingId).remove();
-            chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:8px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
-        }
+        // Remove o "Pensando..." e coloca a resposta formatada
+        document.getElementById(loadingId).remove();
+        chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
     } catch(e) {
-        document.getElementById(loadingId).innerText = "Erro ao tentar conectar com a Vercel.";
-        console.error(e);
-    } finally {
-        aiOcupada = false;
-        input.disabled = false;
-        input.placeholder = "Digite sua mensagem... (Shift+Enter pula linha, Enter envia)";
-        input.focus();
-        chat.scrollTop = chat.scrollHeight;
+        document.getElementById(loadingId).innerText = "Erro de conexão.";
     }
+    chat.scrollTop = chat.scrollHeight;
+}
+
+
+// ====== FUNÇÃO DO DOLPHIN (OPENROUTER) ======
+async function enviarPollinations() {
+  const input = document.getElementById('input-pollinations');
+  const chat = document.getElementById('chat-pollinations');
+  const prompt = input.value;
+  if(!prompt.trim()) return;
+
+  // Mostra a sua mensagem
+  chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
+  input.value = '';
+
+  // Mostra "Dolphin pensando..."
+  const loadingId = 'load-dolphin-' + Date.now();
+  chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Hermes pensando...</div>`;
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const res = await fetch('/api/dolphin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    
+    const data = await res.json();
+
+    if (!res.ok) {
+      document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: ${data.error}</span>`;
+      return;
+    }
+
+    // Pega a resposta do Dolphin e formata
+    const textoCru = data.choices[0].message.content;
+    const textoFormatado = marked.parse(textoCru);
+
+    // Remove o "Pensando..." e coloca a resposta formatada
+    document.getElementById(loadingId).remove();
+    chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
+    
+  } catch(e) {
+    document.getElementById(loadingId).innerText = "Erro de conexão local.";
+    console.error(e);
+  }
+  chat.scrollTop = chat.scrollHeight;
 }
   /* ====== DADOS DO TAROT E LAYOUT ====== */
   function changeViewMode(mode) { document.body.className = document.body.classList.contains('focus-mode') ? 'focus-mode' : ''; document.body.classList.add('view-' + mode); autoSave(); }
