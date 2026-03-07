@@ -594,28 +594,9 @@
       </div>
     </div>
 
-  <div style="flex:1; min-width: 250px;" class="section collapsed">
+  <div class="section hide-in-focus collapsed" style="margin-top:16px;">
     <div class="section-header">
-        <span class="drag-section-handle">✥</span>
-        <label>🤖 Gemini (Vercel)</label>
-        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-    </div>
-    <div class="section-content">
-        <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
-        </div>
-        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-            <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
-            <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
-        </div>
-    </div>
-  </div>
-
-
-<br></br>
-  <div style="flex:1; min-width: 250px;" class="section collapsed">
-    <div class="section-header">
-        <span class="drag-section-handle">✥</span>
+        <span class="drag-section-handle" title="Arraste a seção">✥</span>
         <label>🔞 Hermes</label>
         <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
     </div>
@@ -629,13 +610,25 @@
         </div>
     </div>
   </div>
-</div>
+
+     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+    <div class="section-header">
+        <span class="drag-section-handle" title="Arraste a seção">✥</span>
+        <label>🤖 Gemini</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+    </div>
+    <div class="section-content">
+        <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
+        </div>
+        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+            <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
+            <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
+        </div>
+    </div>
+  </div>
     
     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
-        <div class="section-header">
-            <span class="drag-section-handle" title="Arraste a seção">✥</span>
-            
-          <div class="section hide-in-focus collapsed" style="margin-top:16px;">
     <div class="section-header">
         <span class="drag-section-handle" title="Arraste a seção">✥</span>
         <label>🎲 Rolador de Dados RPG</label>
@@ -664,7 +657,12 @@
         <div id="total-dados" style="text-align: center; margin-top: 15px; font-weight: 900; font-size: 20px; color: var(--accent);"></div>
     </div>
 </div>
-          <label>Doodling Livre 🎨</label>
+    
+    <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+        <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+    
+    <label>Doodling Livre 🎨</label>
             <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
         </div>
         <div class="section-content">
