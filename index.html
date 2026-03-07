@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pt-BR" data-theme="noite">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#5D4037">
 <meta charset="utf-8" />
@@ -16,6 +17,15 @@
 </script>
 
   <style>
+    /* Estilos para o Markdown dentro do Chat */
+.msg-ia p { margin: 0 0 8px 0; }
+.msg-ia p:last-child { margin: 0; }
+.msg-ia strong { color: var(--accent); }
+.msg-ia pre { background: var(--ink); color: #fff; padding: 8px; border-radius: 4px; overflow-x: auto; font-family: monospace; font-size: 11px; }
+.msg-ia code { background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 3px; font-family: monospace; }
+.msg-ia table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+.msg-ia th, .msg-ia td { border: 1px solid var(--border); padding: 4px; text-align: left; }
+.msg-ia th { background: var(--drag-bg); font-weight: bold; }
     /* CSS Variables para Temas */
     :root { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; font-size: 13px; --maxw: 1000px; }
     
@@ -866,6 +876,11 @@
           <input type="checkbox" id="print-timeblock-check" checked /> Imprimir Time-blocking
         </label>
       </div>
+
+      <button id="btn-salvar-manual" onclick="salvarManual()" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background: #4CAF50; color: white; border: none; padding: 12px 20px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold;">
+  💾 Salvar Alterações
+</button>
+      
       <div class="controls">
         <button class="ghost" onclick="limparCachePagina()">🧹 Limpar Cache do Navegador</button>
         <button class="ghost" onclick="resetAll()">Limpar Tudo</button>
@@ -890,6 +905,28 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
+  //SALVANDO MANUALMENTE //
+  function salvarManual() {
+    // Chama a função de salvar que já existe no seu código
+    if (typeof saveData === "function") {
+        saveData();
+    } else if (typeof autoSave === "function") {
+        autoSave();
+    }
+
+    // Feedback visual para você saber que salvou
+    const btn = document.getElementById('btn-salvar-manual');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = "✅ Salvo!";
+    btn.style.background = "#2E7D32"; // Muda para um verde mais escuro
+
+    // Volta ao normal depois de 2 segundos
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.style.background = "#4CAF50";
+    }, 2000);
+}
   /* ====== MODO FOCO, POMODORO & SEÇÕES ====== */
   function toggleFocusMode() {
     document.body.classList.toggle('focus-mode');
@@ -1047,42 +1084,57 @@
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-// FUNÇÃO DO GEMINI (Usando sua API na Vercel)
+// ====== FUNÇÃO DO GEMINI ======
 async function enviarChat(btn) {
     const input = btn.parentElement.querySelector('input');
     const chat = document.getElementById('chat-gemini');
     const prompt = input.value;
     if(!prompt.trim()) return;
 
+    // Mostra a sua mensagem
     chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
     input.value = '';
-    
+
+    // Mostra "Pensando..."
+    const loadingId = 'load-gemini-' + Date.now();
+    chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
+    chat.scrollTop = chat.scrollHeight;
+
     try {
-        const res = await fetch('/api/gemini', { // Ajuste para sua rota na Vercel
+        const res = await fetch('/api/gemini', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ prompt })
         });
         const data = await res.json();
-        const texto = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
-        chat.innerHTML += `<div style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">${texto}</div>`;
+        
+        // Pega a resposta do Gemini e formata
+        const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
+        const textoFormatado = marked.parse(textoCru);
+
+        // Remove o "Pensando..." e coloca a resposta formatada
+        document.getElementById(loadingId).remove();
+        chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
     } catch(e) {
-        chat.innerHTML += `<div style="color:red; font-size:10px;">Erro de conexão.</div>`;
+        document.getElementById(loadingId).innerText = "Erro de conexão.";
     }
     chat.scrollTop = chat.scrollHeight;
 }
 
-// FUNÇÃO DO POLLINATIONS (UNFILTERED / NSFW)
+
+// ====== FUNÇÃO DO DOLPHIN (OPENROUTER) ======
 async function enviarPollinations() {
   const input = document.getElementById('input-pollinations');
   const chat = document.getElementById('chat-pollinations');
   const prompt = input.value;
   if(!prompt.trim()) return;
 
+  // Mostra a sua mensagem
   chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
   input.value = '';
 
-  const loadingId = 'load-' + Date.now();
+  // Mostra "Dolphin pensando..."
+  const loadingId = 'load-dolphin-' + Date.now();
   chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Dolphin pensando...</div>`;
   chat.scrollTop = chat.scrollHeight;
 
@@ -1096,14 +1148,17 @@ async function enviarPollinations() {
     const data = await res.json();
 
     if (!res.ok) {
-      // Isso vai mostrar o erro real (ex: "Chave não encontrada" ou "Model overloaded")
       document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: ${data.error}</span>`;
       return;
     }
 
-    const respostaTexto = data.choices[0].message.content;
+    // Pega a resposta do Dolphin e formata
+    const textoCru = data.choices[0].message.content;
+    const textoFormatado = marked.parse(textoCru);
+
+    // Remove o "Pensando..." e coloca a resposta formatada
     document.getElementById(loadingId).remove();
-    chat.innerHTML += `<div style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">${respostaTexto}</div>`;
+    chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
     
   } catch(e) {
     document.getElementById(loadingId).innerText = "Erro de conexão local.";
@@ -1476,7 +1531,7 @@ async function enviarPollinations() {
     else { loadData(); populateTarotSelects(); }
     
     makeSortable(); renderBackups(); initSparkles(); initCanvas(); updateIndex();
-    document.getElementById('planner').addEventListener('input', autoSave);
+    // document.getElementById('planner').addEventListener('input', autoSave);
     document.getElementById('planner').addEventListener('change', autoSave);
   });
 
