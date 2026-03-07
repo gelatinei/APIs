@@ -1079,7 +1079,6 @@ async function enviarPollinations() {
   const prompt = input.value;
   if(!prompt.trim()) return;
 
-  // Mostrar mensagem do usuário
   chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
   input.value = '';
 
@@ -1095,13 +1094,20 @@ async function enviarPollinations() {
     });
     
     const data = await res.json();
-    // O OpenRouter retorna o texto dentro de choices[0].message.content
-    const respostaTexto = data.choices[0].message.content;
 
+    if (!res.ok) {
+      // Isso vai mostrar o erro real (ex: "Chave não encontrada" ou "Model overloaded")
+      document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: ${data.error}</span>`;
+      return;
+    }
+
+    const respostaTexto = data.choices[0].message.content;
     document.getElementById(loadingId).remove();
     chat.innerHTML += `<div style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">${respostaTexto}</div>`;
+    
   } catch(e) {
-    document.getElementById(loadingId).innerText = "Erro na API do OpenRouter.";
+    document.getElementById(loadingId).innerText = "Erro de conexão local.";
+    console.error(e);
   }
   chat.scrollTop = chat.scrollHeight;
 }
