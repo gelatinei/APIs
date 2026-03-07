@@ -1,16 +1,22 @@
 export default async function handler(req, res) {
   const API_KEY = process.env.GEMINI_API_KEY;
 
-  // Log para ver se a chave existe (vai aparecer nos Logs da Vercel)
   if (!API_KEY) {
-    console.error("ERRO: A chave GEMINI_API_KEY não foi encontrada nas variáveis de ambiente!");
+    return res.status(500).json({ error: "Chave GEMINI_API_KEY não configurada na Vercel." });
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Apenas POST permitido' });
   }
 
   try {
     const { prompt } = req.body;
-    console.log("Recebi o prompt:", prompt);
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+    // Mudamos de v1beta para v1 (mais estável)
+    // E garantimos o nome correto do modelo
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -19,17 +25,16 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    
-    // Log da resposta bruta do Google
-    console.log("Resposta do Google:", JSON.stringify(data));
 
+    // Se o Google devolver um erro, repassamos para o seu site entender
     if (data.error) {
-       return res.status(500).json({ error: data.error.message });
+      console.error("Erro do Google:", data.error);
+      return res.status(data.error.code || 500).json({ error: data.error.message });
     }
 
     return res.status(200).json(data);
   } catch (error) {
-    console.error("Erro no servidor:", error);
-    return res.status(500).json({ error: 'Erro interno no servidor' });
+    console.error("Erro no Servidor:", error);
+    return res.status(500).json({ error: 'Erro interno ao processar a requisição.' });
   }
 }
