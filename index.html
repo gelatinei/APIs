@@ -1123,60 +1123,11 @@ async function enviarChat(btn) {
 
 
 // ====== FUNÇÃO DO DOLPHIN (OPENROUTER) ======
-// Variável para saber se o bot está ocupado
-let dolphinOcupado = false;
-
 async function enviarPollinations() {
-  // Se já estiver a pensar, ignora o novo clique/enter
-  if (dolphinOcupado) return; 
-
   const input = document.getElementById('input-pollinations');
   const chat = document.getElementById('chat-pollinations');
   const prompt = input.value;
   if(!prompt.trim()) return;
-
-  // Bloqueia a caixa de texto para evitar spam
-  dolphinOcupado = true;
-  input.disabled = true;
-  input.placeholder = "A aguardar resposta...";
-
-  chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
-  input.value = '';
-
-  const loadingId = 'load-dolphin-' + Date.now();
-  chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Dolphin a pensar...</div>`;
-  chat.scrollTop = chat.scrollHeight;
-
-  try {
-    const res = await fetch('/api/dolphin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-    
-    const data = await res.json();
-
-    if (!res.ok) {
-      document.getElementById(loadingId).innerHTML = `<span style="color:red">Erro: ${data.error}</span>`;
-    } else {
-      const textoCru = data.choices[0].message.content;
-      const textoFormatado = marked.parse(textoCru);
-      document.getElementById(loadingId).remove();
-      chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
-    }
-    
-  } catch(e) {
-    document.getElementById(loadingId).innerText = "Erro de ligação.";
-    console.error(e);
-  } finally {
-    // Desbloqueia a caixa de texto no final (dando certo ou errado)
-    dolphinOcupado = false;
-    input.disabled = false;
-    input.placeholder = "Fale qualquer coisa...";
-    input.focus();
-    chat.scrollTop = chat.scrollHeight;
-  }
-}
 
   // Mostra a sua mensagem
   chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
