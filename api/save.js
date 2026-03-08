@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 
     const saved = await put(BLOB_FILE, data, {
       token,
-      access: 'private',
+      access: 'public',
       addRandomSuffix: false,
       contentType: 'application/json',
       allowOverwrite: true,
