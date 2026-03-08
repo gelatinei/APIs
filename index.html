@@ -1338,11 +1338,16 @@ async function enviarPollinations() {
             chatDolphin: document.getElementById('chat-pollinations').innerHTML
         };
 
-        await fetch('/api/save', {
+        const saveResponse = await fetch('/api/save', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ data: JSON.stringify(estado) })
         });
+
+        if (!saveResponse.ok) {
+            const erroApi = await saveResponse.json().catch(() => ({}));
+            throw new Error(erroApi.error || `Falha ao salvar (${saveResponse.status})`);
+        }
         
         if(btn) {
             btn.innerText = '✅ Salvo!';
@@ -1359,50 +1364,79 @@ async function enviarPollinations() {
     if(btn) btn.innerText = '⏳ Carregando...';
     try {
         const res = await fetch(`/api/load?t=${Date.now()}`, { cache: 'no-store' });
-const result = await res.json();
-        
-        if(result.data) {
-            const estado = JSON.parse(result.data);
 
-            // Restaura o HTML das tabelas
-            if(estado.html) {
-                document.querySelector('#prioTbl tbody').innerHTML = estado.html.prio || '';
-                document.querySelector('#tasksTbl tbody').innerHTML = estado.html.tasks || '';
-                document.querySelector('#timeTbl tbody').innerHTML = estado.html.time || '';
-                document.querySelector('#interruptTbl tbody').innerHTML = estado.html.interrupt || '';
-                document.querySelector('#ideasTbl tbody').innerHTML = estado.html.ideas || '';
-                document.getElementById('projects').innerHTML = estado.html.projects || '';
-                document.getElementById('weeklyTrackersBody').innerHTML = estado.html.weekly || '';
-                document.getElementById('tracker-grid').innerHTML = estado.html.trackerGrid || '';
-                document.getElementById('meals-container').innerHTML = estado.html.meals || '';
-            }
-
-            // Restaura os textos e botões marcados
-            if(estado.inputs) {
-                const allInputs = document.querySelectorAll('input, select, textarea');
-                estado.inputs.forEach((val, i) => {
-                    if(allInputs[i]) {
-                        if(allInputs[i].type === 'checkbox') allInputs[i].checked = val;
-                        else allInputs[i].value = val;
-                    }
-                });
-            }
-
-            // Restaura a memória e as mensagens visuais das IAs
-            if(estado.geminiHistory) geminiHistory = estado.geminiHistory;
-            if(estado.dolphinHistory) dolphinHistory = estado.dolphinHistory;
-            if(estado.chatGemini) document.getElementById('chat-gemini').innerHTML = estado.chatGemini;
-            if(estado.chatDolphin) document.getElementById('chat-pollinations').innerHTML = estado.chatDolphin;
-
-            // Como injetamos HTML novo, precisamos religar os botões de arrastar
-            makeSortable(); 
+        if (!res.ok) {
+            const erroApi = await res.json().catch(() => ({}));
+            throw new Error(erroApi.error || `Falha ao carregar (${res.status})`);
         }
+
+        const result = await res.json();
+        const rawData = typeof result.data === 'string' ? result.data.trim() : '';
+
+        if (!rawData || rawData === '{}' || rawData === 'null' || rawData === 'undefined') {
+            if(btn) {
+                btn.innerText = '✅ Sem dados';
+                setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 3000);
+            }
+            return;
+        }
+
+        let estado;
+        try {
+            estado = JSON.parse(rawData);
+            if (typeof estado === 'string') estado = JSON.parse(estado);
+        } catch {
+            throw new Error('Dados da nuvem inválidos. Salve novamente para recriar o backup.');
+        }
+
+        const setHtml = (selector, html) => {
+            const el = document.querySelector(selector);
+            if (el && typeof html === 'string') el.innerHTML = html;
+        };
+
+        // Restaura o HTML das tabelas
+        if (estado && estado.html) {
+            setHtml('#prioTbl tbody', estado.html.prio || '');
+            setHtml('#tasksTbl tbody', estado.html.tasks || '');
+            setHtml('#timeTbl tbody', estado.html.time || '');
+            setHtml('#interruptTbl tbody', estado.html.interrupt || '');
+            setHtml('#ideasTbl tbody', estado.html.ideas || '');
+            setHtml('#projects', estado.html.projects || '');
+            setHtml('#weeklyTrackersBody', estado.html.weekly || '');
+            setHtml('#tracker-grid', estado.html.trackerGrid || '');
+            setHtml('#meals-container', estado.html.meals || '');
+        }
+
+        // Restaura os textos e botões marcados
+        if (Array.isArray(estado.inputs)) {
+            const allInputs = document.querySelectorAll('input, select, textarea');
+            estado.inputs.forEach((val, i) => {
+                if(allInputs[i]) {
+                    if(allInputs[i].type === 'checkbox') allInputs[i].checked = val;
+                    else allInputs[i].value = val;
+                }
+            });
+        }
+
+        // Restaura a memória e as mensagens visuais das IAs
+        if (Array.isArray(estado.geminiHistory)) geminiHistory = estado.geminiHistory;
+        if (Array.isArray(estado.dolphinHistory)) dolphinHistory = estado.dolphinHistory;
+        setHtml('#chat-gemini', estado.chatGemini || '');
+        setHtml('#chat-pollinations', estado.chatDolphin || '');
+
+        // Como injetamos HTML novo, precisamos religar os botões de arrastar
+        if (typeof makeSortable === 'function') makeSortable();
+
         if(btn) {
             btn.innerText = '✅ Carregado!';
             setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 3000);
         }
     } catch(e) {
-        if(btn) btn.innerText = '❌ Erro';
+        if(btn) {
+            btn.innerText = '❌ Erro';
+            setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 4000);
+            btn.title = e?.message || 'Erro ao carregar da nuvem';
+        }
         console.error("Erro ao carregar da nuvem:", e);
     }
   }

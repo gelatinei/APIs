@@ -18,13 +18,14 @@ export default async function handler(req, res) {
 
   client.on('error', (err) => console.log('Erro no Cliente Redis:', err));
 
+  let isConnected = false;
+
   try {
     await client.connect();
+    isConnected = true;
     
     // Puxa a informação guardada na chave 'planner_data'
     const result = await client.get('planner_data');
-    
-    await client.disconnect();
 
     // Se o banco estiver vazio, retorna um texto de objeto vazio "{}"
     return res.status(200).json({ data: result || "{}" });
@@ -32,5 +33,9 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Erro ao carregar:", error);
     return res.status(500).json({ error: "Falha ao carregar do banco de dados." });
+  } finally {
+    if (isConnected) {
+      await client.disconnect();
+    }
   }
 }
