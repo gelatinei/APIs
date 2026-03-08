@@ -219,6 +219,8 @@
         <button class="btn-foco" onclick="toggleFocusMode()" id="focusToggle">🎯 Modo Foco</button>
       </h1>
       <div class="meta">
+        <button id="btn-nuvem" style="background-color: #4CAF50; color: white; padding: 6px 12px; border-radius: 6px;" onclick="salvarNuvem()">☁️ Salvar Nuvem</button>
+        
         <div class="timer-box">
           🍅 <span id="timerDisplay">25:00</span>
           <button class="timer-btn" onclick="toggleTimer()" id="timerPlayBtn">▶</button>
@@ -489,6 +491,40 @@
           </div>
         </div>
 
+        <div style="flex:1; min-width: 250px;" class="section">
+            <div class="section-header">
+                <span class="drag-section-handle">✥</span>
+                <label>🤖 Gemini (Vercel)</label>
+                <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+            </div>
+            <div class="section-content">
+                <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+                    <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
+                </div>
+                <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+                    <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
+                    <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section hide-in-focus">
+          <div class="section-header">
+              <span class="drag-section-handle" title="Arraste a seção">✥</span>
+              <label>✨ Planner's core</label>
+              <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+          </div>
+          <div class="section-content">
+              <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+                  <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
+              </div>
+              <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+                  <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
+                  <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
+              </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -672,8 +708,6 @@
               </div>
             </div>
 
-
-
             <div class="tracker-box terapia-box">
               <h4>
                 Terapia: Tarefa da Semana
@@ -842,23 +876,6 @@
 
           </div>
         </div>
-
-        <div style="flex:1; min-width: 250px;" class="section collapsed">
-            <div class="section-header">
-                <span class="drag-section-handle">✥</span>
-                <label>🤖 Gemini (Vercel)</label>
-                <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-            </div>
-            <div class="section-content">
-                <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-                    <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
-                </div>
-                <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-                    <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
-                    <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
-                </div>
-            </div>
-        </div>
         
         <div class="section hide-in-focus collapsed">
           <div class="section-header">
@@ -873,23 +890,6 @@
                   sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation"
                   title="Hiwaifu 😘">
               </iframe>
-          </div>
-        </div>
-
-        <div class="section hide-in-focus collapsed">
-          <div class="section-header">
-              <span class="drag-section-handle" title="Arraste a seção">✥</span>
-              <label>✨ Planner's core</label>
-              <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-          </div>
-          <div class="section-content">
-              <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-                  <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
-              </div>
-              <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-                  <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
-                  <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
-              </div>
           </div>
         </div>
 
@@ -1199,15 +1199,22 @@ function rolarTodosOsDados() {
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-// ====== FUNÇÃO DO GEMINI ======
+// ====== MEMÓRIA E FUNÇÕES DAS IAs ======
+let geminiHistory = [];
+let dolphinHistory = [];
+
 async function enviarChat(btn) {
     const input = btn.parentElement.querySelector('input');
     const chat = document.getElementById('chat-gemini');
     const prompt = input.value;
     if(!prompt.trim()) return;
 
+    // Adiciona a pergunta visualmente e no histórico do Gemini
     chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
     input.value = '';
+    
+    // Formato de histórico exigido pelo Google
+    geminiHistory.push({ role: "user", parts: [{ text: prompt }] });
 
     const loadingId = 'load-gemini-' + Date.now();
     chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
@@ -1217,31 +1224,37 @@ async function enviarChat(btn) {
         const res = await fetch('/api/gemini', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ prompt })
+            body: JSON.stringify({ history: geminiHistory })
         });
         const data = await res.json();
         
         const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
         const textoFormatado = marked.parse(textoCru);
 
+        // Salva a resposta no histórico do Gemini
+        geminiHistory.push({ role: "model", parts: [{ text: textoCru }] });
+
         document.getElementById(loadingId).remove();
         chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
+        salvarNuvem(); // Salva estado do chat automaticamente na nuvem
     } catch(e) {
         document.getElementById(loadingId).innerText = "Erro de conexão.";
     }
     chat.scrollTop = chat.scrollHeight;
 }
 
-
-// ====== FUNÇÃO DO DOLPHIN (OPENROUTER) ======
 async function enviarPollinations() {
   const input = document.getElementById('input-pollinations');
   const chat = document.getElementById('chat-pollinations');
   const prompt = input.value;
   if(!prompt.trim()) return;
 
+  // Adiciona a pergunta visualmente e no histórico do Dolphin
   chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
   input.value = '';
+  
+  // Formato de histórico exigido pela OpenAI/OpenRouter
+  dolphinHistory.push({ role: "user", content: prompt });
 
   const loadingId = 'load-dolphin-' + Date.now();
   chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Lan está pensando...</div>`;
@@ -1251,7 +1264,7 @@ async function enviarPollinations() {
     const res = await fetch('/api/dolphin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ history: dolphinHistory })
     });
     
     const data = await res.json();
@@ -1263,9 +1276,13 @@ async function enviarPollinations() {
 
     const textoCru = data.choices[0].message.content;
     const textoFormatado = marked.parse(textoCru);
+    
+    // Salva a resposta no histórico do Dolphin
+    dolphinHistory.push({ role: "assistant", content: textoCru });
 
     document.getElementById(loadingId).remove();
     chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
+    salvarNuvem(); // Salva estado do chat automaticamente na nuvem
     
   } catch(e) {
     document.getElementById(loadingId).innerText = "Erro de conexão local.";
@@ -1284,10 +1301,111 @@ async function enviarPollinations() {
 
   /* ====== TEMAS ====== */
   function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); }
-  
-  // Função autoSave deixada vazia propositalmente para não causar erros de referência
-  // com os botões espalhados pelo HTML e garantir que o armazenamento local esteja desativado.
+
+  // Função antiga desativada
   function autoSave() {}
+
+  /* ====== SALVAMENTO NO VERCEL KV (NUVEM) ====== */
+  async function salvarNuvem() {
+    const btn = document.getElementById('btn-nuvem');
+    if(btn) btn.innerText = '⏳ Salvando...';
+    try {
+        // Pega todo o HTML dinâmico das tabelas pra gente não perder os itens
+        const elementosDinamicos = {
+            prio: document.querySelector('#prioTbl tbody').innerHTML,
+            tasks: document.querySelector('#tasksTbl tbody').innerHTML,
+            time: document.querySelector('#timeTbl tbody').innerHTML,
+            interrupt: document.querySelector('#interruptTbl tbody').innerHTML,
+            ideas: document.querySelector('#ideasTbl tbody').innerHTML,
+            projects: document.getElementById('projects').innerHTML,
+            weekly: document.getElementById('weeklyTrackersBody').innerHTML,
+            trackerGrid: document.getElementById('tracker-grid').innerHTML,
+            meals: document.getElementById('meals-container').innerHTML
+        };
+
+        // Salva os valores de todos os inputs, selects e checkboxes
+        const inputs = Array.from(document.querySelectorAll('input, select, textarea')).map(el => {
+            if(el.type === 'checkbox') return el.checked;
+            return el.value;
+        });
+
+        const estado = {
+            html: elementosDinamicos,
+            inputs: inputs,
+            geminiHistory: geminiHistory,
+            dolphinHistory: dolphinHistory,
+            chatGemini: document.getElementById('chat-gemini').innerHTML,
+            chatDolphin: document.getElementById('chat-pollinations').innerHTML
+        };
+
+        await fetch('/api/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ data: JSON.stringify(estado) })
+        });
+        
+        if(btn) {
+            btn.innerText = '✅ Salvo!';
+            setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 3000);
+        }
+    } catch(e) {
+        if(btn) btn.innerText = '❌ Erro';
+        console.error("Erro ao salvar na nuvem:", e);
+    }
+  }
+
+  async function carregarNuvem() {
+    const btn = document.getElementById('btn-nuvem');
+    if(btn) btn.innerText = '⏳ Carregando...';
+    try {
+        const res = await fetch('/api/load');
+        const result = await res.json();
+        
+        if(result.data) {
+            const estado = JSON.parse(result.data);
+
+            // Restaura o HTML das tabelas
+            if(estado.html) {
+                document.querySelector('#prioTbl tbody').innerHTML = estado.html.prio || '';
+                document.querySelector('#tasksTbl tbody').innerHTML = estado.html.tasks || '';
+                document.querySelector('#timeTbl tbody').innerHTML = estado.html.time || '';
+                document.querySelector('#interruptTbl tbody').innerHTML = estado.html.interrupt || '';
+                document.querySelector('#ideasTbl tbody').innerHTML = estado.html.ideas || '';
+                document.getElementById('projects').innerHTML = estado.html.projects || '';
+                document.getElementById('weeklyTrackersBody').innerHTML = estado.html.weekly || '';
+                document.getElementById('tracker-grid').innerHTML = estado.html.trackerGrid || '';
+                document.getElementById('meals-container').innerHTML = estado.html.meals || '';
+            }
+
+            // Restaura os textos e botões marcados
+            if(estado.inputs) {
+                const allInputs = document.querySelectorAll('input, select, textarea');
+                estado.inputs.forEach((val, i) => {
+                    if(allInputs[i]) {
+                        if(allInputs[i].type === 'checkbox') allInputs[i].checked = val;
+                        else allInputs[i].value = val;
+                    }
+                });
+            }
+
+            // Restaura a memória e as mensagens visuais das IAs
+            if(estado.geminiHistory) geminiHistory = estado.geminiHistory;
+            if(estado.dolphinHistory) dolphinHistory = estado.dolphinHistory;
+            if(estado.chatGemini) document.getElementById('chat-gemini').innerHTML = estado.chatGemini;
+            if(estado.chatDolphin) document.getElementById('chat-pollinations').innerHTML = estado.chatDolphin;
+
+            // Como injetamos HTML novo, precisamos religar os botões de arrastar
+            makeSortable(); 
+        }
+        if(btn) {
+            btn.innerText = '✅ Carregado!';
+            setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 3000);
+        }
+    } catch(e) {
+        if(btn) btn.innerText = '❌ Erro';
+        console.error("Erro ao carregar da nuvem:", e);
+    }
+  }
 
   /* ====== SISTEMA DE DOODLING (CANVAS) ====== */
   function initCanvas() {
@@ -1581,13 +1699,20 @@ async function enviarPollinations() {
 
   /* ====== INITIALIZATION ====== */
   document.addEventListener("DOMContentLoaded", () => {
-    const bq = document.getElementById('bottleQuarters'); 
-    for(let i=1;i<=8;i++){ const lab = document.createElement('label'); lab.className = 'inline-cb'; lab.innerHTML = `<input type="checkbox"/>`; bq.appendChild(lab); }
-    const pomos = document.getElementById('pomos'); 
-    for(let i=0;i<12;i++){ const lab = document.createElement('label'); lab.className = 'small'; lab.innerHTML = `<input type="checkbox"> ${i+1}`; pomos.appendChild(lab); }
-    populateTarotSelects();
-    
-    makeSortable(); initSparkles(); initCanvas(); updateIndex();
+    // Primeiro carrega da nuvem
+    carregarNuvem().then(() => {
+        // Depois de carregar, checa se precisa criar as checkboxes vazias padrão
+        const bq = document.getElementById('bottleQuarters'); 
+        if(bq.innerHTML.trim() === '') {
+            for(let i=1;i<=8;i++){ const lab = document.createElement('label'); lab.className = 'inline-cb'; lab.innerHTML = `<input type="checkbox"/>`; bq.appendChild(lab); }
+        }
+        const pomos = document.getElementById('pomos'); 
+        if(pomos.innerHTML.trim() === '') {
+            for(let i=0;i<12;i++){ const lab = document.createElement('label'); lab.className = 'small'; lab.innerHTML = `<input type="checkbox"> ${i+1}`; pomos.appendChild(lab); }
+        }
+        populateTarotSelects();
+        makeSortable(); initSparkles(); initCanvas(); updateIndex();
+    });
   });
 
 </script>
