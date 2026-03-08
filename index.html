@@ -220,6 +220,8 @@
       </h1>
       <div class="meta">
         <button id="btn-nuvem" style="background-color: #4CAF50; color: white; padding: 6px 12px; border-radius: 6px;" onclick="salvarNuvem()">☁️ Salvar Nuvem</button>
+        <button style="background-color: #7E57C2; color: white; padding: 6px 12px; border-radius: 6px;" onclick="preencherCamposAleatorios()">🎲 Preencher Campos</button>
+        <button style="background-color: #E53935; color: white; padding: 6px 12px; border-radius: 6px;" onclick="limparCamposFormulario()">🧹 Limpar Campos</button>
         
         <div class="timer-box">
           🍅 <span id="timerDisplay">25:00</span>
@@ -1325,6 +1327,92 @@ async function enviarPollinations() {
       ...item,
       content: limitarTexto(String(item?.content || ''), maxCharsPorItem)
     }));
+  }
+
+  function obterCamposDoPlanner() {
+    const planner = document.getElementById('planner');
+    if (!planner) return [];
+
+    return Array.from(planner.querySelectorAll('input, select, textarea')).filter((el) => {
+      if (!el) return false;
+      if (el.disabled || el.readOnly) return false;
+      if (el.closest('#chat-gemini, #chat-pollinations, .resultado-ia')) return false;
+      if (el.closest('.doodle-controls')) return false;
+      if (el.id === 'input-gemini' || el.id === 'input-pollinations') return false;
+      if (el.type === 'file' || el.type === 'hidden' || el.type === 'button' || el.type === 'submit') return false;
+      return true;
+    });
+  }
+
+  function textoAleatorio() {
+    const palavras = ['Aurora', 'Luna', 'Projeto', 'Missão', 'Foco', 'Checklist', 'Planner', 'Ideia', 'Rotina', 'Meta'];
+    const qtd = Math.floor(Math.random() * 4) + 2;
+    const arr = [];
+    for (let i = 0; i < qtd; i++) arr.push(palavras[Math.floor(Math.random() * palavras.length)]);
+    return arr.join(' ');
+  }
+
+  function preencherCamposAleatorios() {
+    const campos = obterCamposDoPlanner();
+    campos.forEach((el) => {
+      if (el.type === 'checkbox') {
+        el.checked = Math.random() > 0.5;
+        return;
+      }
+
+      if (el.tagName === 'SELECT') {
+        if (el.options.length > 0) {
+          const idx = Math.floor(Math.random() * el.options.length);
+          el.selectedIndex = idx;
+        }
+        return;
+      }
+
+      if (el.type === 'number') {
+        const min = Number.isFinite(Number(el.min)) ? Number(el.min) : 0;
+        const max = Number.isFinite(Number(el.max)) ? Number(el.max) : min + 10;
+        const lo = Math.min(min, max);
+        const hi = Math.max(min, max);
+        el.value = String(Math.floor(Math.random() * (hi - lo + 1)) + lo);
+        return;
+      }
+
+      if (el.type === 'date') {
+        const start = new Date(2024, 0, 1).getTime();
+        const end = new Date(2027, 11, 31).getTime();
+        const d = new Date(start + Math.random() * (end - start));
+        el.value = d.toISOString().slice(0, 10);
+        return;
+      }
+
+      if (el.type === 'time') {
+        const hh = String(Math.floor(Math.random() * 24)).padStart(2, '0');
+        const mm = String(Math.floor(Math.random() * 60)).padStart(2, '0');
+        el.value = `${hh}:${mm}`;
+        return;
+      }
+
+      el.value = textoAleatorio();
+    });
+    console.info('Campos preenchidos aleatoriamente:', { total: campos.length });
+  }
+
+  function limparCamposFormulario() {
+    const campos = obterCamposDoPlanner();
+    campos.forEach((el) => {
+      if (el.type === 'checkbox') {
+        el.checked = false;
+        return;
+      }
+
+      if (el.tagName === 'SELECT') {
+        el.selectedIndex = 0;
+        return;
+      }
+
+      el.value = '';
+    });
+    console.info('Campos limpos:', { total: campos.length });
   }
 
   function serializarDoodles() {
