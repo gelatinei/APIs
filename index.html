@@ -1306,6 +1306,20 @@ async function enviarPollinations() {
   function autoSave() {}
 
   /* ====== SALVAMENTO NO VERCEL KV (NUVEM) ====== */
+  function limitarTexto(texto, maxChars = 120000) {
+    if (typeof texto !== 'string') return '';
+    if (texto.length <= maxChars) return texto;
+    return texto.slice(texto.length - maxChars);
+  }
+
+  function limitarHistorico(hist, maxItens = 20, maxCharsPorItem = 4000) {
+    if (!Array.isArray(hist)) return [];
+    return hist.slice(-maxItens).map(item => ({
+      ...item,
+      content: limitarTexto(String(item?.content || ''), maxCharsPorItem)
+    }));
+  }
+
   async function salvarNuvem() {
     const btn = document.getElementById('btn-nuvem');
     if(btn) btn.innerText = '⏳ Salvando...';
@@ -1329,32 +1343,46 @@ async function enviarPollinations() {
             return el.value;
         });
 
+        // Limita campos grandes para evitar 413 (payload excedido) na Vercel
         const estado = {
             html: elementosDinamicos,
             inputs: inputs,
-            geminiHistory: geminiHistory,
-            dolphinHistory: dolphinHistory,
-            chatGemini: document.getElementById('chat-gemini').innerHTML,
-            chatDolphin: document.getElementById('chat-pollinations').innerHTML
+            geminiHistory: limitarHistorico(geminiHistory),
+            dolphinHistory: limitarHistorico(dolphinHistory),
+            chatGemini: limitarTexto(document.getElementById('chat-gemini').innerHTML, 150000),
+            chatDolphin: limitarTexto(document.getElementById('chat-pollinations').innerHTML, 150000)
         };
+
+        const payload = JSON.stringify({ data: JSON.stringify(estado) });
+        const payloadSizeKb = Math.round((new Blob([payload]).size / 1024) * 10) / 10;
+
+        // Limite conservador para não bater no limite do body parser/serverless
+        if (payloadSizeKb > 3800) {
+            throw new Error(`Backup muito grande (${payloadSizeKb}KB). Limpe parte do chat e tente novamente.`);
+        }
 
         const saveResponse = await fetch('/api/save', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ data: JSON.stringify(estado) })
+            body: payload
         });
 
         if (!saveResponse.ok) {
             const erroApi = await saveResponse.json().catch(() => ({}));
             throw new Error(erroApi.error || `Falha ao salvar (${saveResponse.status})`);
         }
-        
+
         if(btn) {
             btn.innerText = '✅ Salvo!';
+            btn.title = `Backup enviado (${payloadSizeKb}KB)`;
             setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 3000);
         }
     } catch(e) {
-        if(btn) btn.innerText = '❌ Erro';
+        if(btn) {
+            btn.innerText = '❌ Erro';
+            btn.title = e?.message || 'Erro ao salvar na nuvem';
+            setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 4000);
+        }
         console.error("Erro ao salvar na nuvem:", e);
     }
   }
