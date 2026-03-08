@@ -1,36 +1,51 @@
-import { createClient } from 'redis';
+import { list } from '@vercel/blob';
+
+const BLOB_FILE = 'planner-data.json';
+
+function getBlobToken() {
+  const raw = process.env.BLOB_READ_WRITE_TOKEN || '';
+  const trimmed = String(raw).trim();
+
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
 
 export default async function handler(req, res) {
-  // Força o navegador a sempre buscar dados novos (evita o erro 304)
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  // Verifica se a URL do banco existe
-  if (!process.env.REDIS_URL) {
-    return res.status(500).json({ error: "Configuração REDIS_URL faltando na Vercel." });
+  const token = getBlobToken();
+  if (!token) {
+    return res.status(500).json({
+      error: 'Configuração faltando: defina BLOB_READ_WRITE_TOKEN na Vercel para carregar da nuvem.'
+    });
   }
 
-  // Criação do "Cliente" (a ponte com o Redis)
-  const client = createClient({
-    url: process.env.REDIS_URL
-  });
-
-  client.on('error', (err) => console.log('Erro no Cliente Redis:', err));
-
   try {
-    await client.connect();
-    
-    // Puxa a informação guardada na chave 'planner_data'
-    const result = await client.get('planner_data');
-    
-    await client.disconnect();
+    const { blobs } = await list({ token, prefix: BLOB_FILE, limit: 1 });
+    const file = blobs?.find((b) => b.pathname === BLOB_FILE) || blobs?.[0];
 
-    // Se o banco estiver vazio, retorna um texto de objeto vazio "{}"
-    return res.status(200).json({ data: result || "{}" });
-    
+    if (!file?.url) {
+      return res.status(200).json({ data: '{}' });
+    }
+
+    const fileResponse = await fetch(file.url, {
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!fileResponse.ok) {
+      console.error('Erro ao baixar blob salvo:', fileResponse.status, file.url);
+      return res.status(500).json({ error: `Falha ao carregar do Vercel Blob (${fileResponse.status}).` });
+    }
+
+    const data = await fileResponse.text();
+    return res.status(200).json({ data: data || '{}' });
   } catch (error) {
-    console.error("Erro ao carregar:", error);
-    return res.status(500).json({ error: "Falha ao carregar do banco de dados." });
+    console.error('Erro ao carregar do Blob:', error);
+    return res.status(500).json({ error: 'Falha ao carregar do Vercel Blob.' });
   }
 }
