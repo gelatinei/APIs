@@ -1327,6 +1327,47 @@ async function enviarPollinations() {
     }));
   }
 
+  function serializarDoodles() {
+    return Array.from(document.querySelectorAll('.doodle-canvas')).map((canvas, index) => {
+      try {
+        return { index, dataUrl: canvas.toDataURL('image/png') };
+      } catch (error) {
+        console.warn('Falha ao serializar doodle:', { index, message: error?.message || String(error) });
+        return { index, dataUrl: null };
+      }
+    });
+  }
+
+  function restaurarDoodles(doodles) {
+    if (!Array.isArray(doodles)) return;
+    const canvases = Array.from(document.querySelectorAll('.doodle-canvas'));
+
+    doodles.forEach((item, i) => {
+      const index = Number.isInteger(item?.index) ? item.index : i;
+      const canvas = canvases[index];
+      const dataUrl = item?.dataUrl;
+      if (!canvas || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.onerror = () => {
+        console.warn('Falha ao restaurar doodle:', { index });
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  function normalizarTextoParaCampo(val) {
+    if (val === null || val === undefined) return '';
+    return typeof val === 'string' ? val : '';
+  }
+
   async function salvarNuvem() {
     const btn = document.getElementById('btn-nuvem');
     if(btn) btn.innerText = '⏳ Salvando...';
@@ -1362,7 +1403,14 @@ async function enviarPollinations() {
             geminiHistory: limitarHistorico(geminiHistory),
             dolphinHistory: limitarHistorico(dolphinHistory),
             chatGemini: limitarTexto(document.getElementById('chat-gemini').innerHTML, 150000),
-            chatDolphin: limitarTexto(document.getElementById('chat-pollinations').innerHTML, 150000)
+            chatDolphin: limitarTexto(document.getElementById('chat-pollinations').innerHTML, 150000),
+            doodles: serializarDoodles(),
+            dadosRpg: {
+                lista: Array.isArray(listaDeDados)
+                    ? listaDeDados.map(d => ({ id: d.id, lados: Number(d.lados) || 6, valor: Number(d.valor) || 1 }))
+                    : [],
+                totalTexto: document.getElementById('total-dados')?.innerText || ''
+            }
         };
 
         const payload = JSON.stringify({ data: JSON.stringify(estado) });
@@ -1438,7 +1486,9 @@ async function enviarPollinations() {
             tamanhoHistoricoDolphin: Array.isArray(estado?.dolphinHistory) ? estado.dolphinHistory.length : 0,
             totalCheckboxesSalvas: Array.isArray(estado?.checkboxes) ? estado.checkboxes.length : 0,
             totalTextFieldsSalvos: Array.isArray(estado?.textFields) ? estado.textFields.length : 0,
-            formatoLegadoInputs: Array.isArray(estado?.inputs)
+            formatoLegadoInputs: Array.isArray(estado?.inputs),
+            totalDoodlesSalvos: Array.isArray(estado?.doodles) ? estado.doodles.length : 0,
+            totalDadosRpgSalvos: Array.isArray(estado?.dadosRpg?.lista) ? estado.dadosRpg.lista.length : 0
         });
 
         const setHtml = (selector, html) => {
@@ -1472,7 +1522,7 @@ async function enviarPollinations() {
                 const el = allTextFields[i];
                 if(!el) return;
                 try {
-                    el.value = val ?? '';
+                    el.value = normalizarTextoParaCampo(val);
                 } catch (restoreError) {
                     restoreWarnings.push({
                         group: 'textFields',
@@ -1514,7 +1564,7 @@ async function enviarPollinations() {
                 if(!el) return;
                 try {
                     if(el.type === 'checkbox') el.checked = Boolean(val);
-                    else el.value = val ?? '';
+                    else el.value = normalizarTextoParaCampo(val);
                 } catch (restoreError) {
                     restoreWarnings.push({
                         group: 'legacyInputs',
@@ -1530,6 +1580,21 @@ async function enviarPollinations() {
         if (restoreWarnings.length) {
             console.warn('Avisos ao restaurar campos da nuvem:', restoreWarnings);
         }
+
+        // Restaura dados do rolador RPG
+        if (Array.isArray(estado?.dadosRpg?.lista)) {
+            listaDeDados = estado.dadosRpg.lista.map((dado, i) => ({
+                id: dado?.id || Date.now() + i,
+                lados: Number(dado?.lados) || 6,
+                valor: Number(dado?.valor) || 1
+            }));
+            renderizarDados();
+            const totalDadosEl = document.getElementById('total-dados');
+            if (totalDadosEl) totalDadosEl.innerText = String(estado?.dadosRpg?.totalTexto || '');
+        }
+
+        // Restaura doodles
+        restaurarDoodles(estado?.doodles);
 
         // Restaura a memória e as mensagens visuais das IAs
         if (Array.isArray(estado.geminiHistory)) geminiHistory = estado.geminiHistory;
@@ -1576,46 +1641,47 @@ async function enviarPollinations() {
   /* ====== SISTEMA DE DOODLING (CANVAS) ====== */
   function initCanvas() {
       const canvasList = document.querySelectorAll('.doodle-canvas');
-      canvasList.forEach(canvas => {
-          const clone = canvas.cloneNode(true);
-          canvas.parentNode.replaceChild(clone, canvas);
-          const newCanvas = clone;
-          const newCtx = newCanvas.getContext('2d');
+      canvasList.forEach((canvas) => {
+          if (canvas.dataset.doodleBound === '1') return;
+          canvas.dataset.doodleBound = '1';
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
           let isDrawing = false;
-          
+
           const getLineColor = () => getComputedStyle(document.body).getPropertyValue('--ink') || 'black';
 
-          newCanvas.addEventListener('pointerdown', (e) => {
+          canvas.addEventListener('pointerdown', (e) => {
               isDrawing = true;
-              newCtx.beginPath();
-              const rect = newCanvas.getBoundingClientRect();
-              const scaleX = newCanvas.width / rect.width;
-              const scaleY = newCanvas.height / rect.height;
-              newCtx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+              ctx.beginPath();
+              const rect = canvas.getBoundingClientRect();
+              const scaleX = canvas.width / rect.width;
+              const scaleY = canvas.height / rect.height;
+              ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
           });
 
-          newCanvas.addEventListener('pointermove', (e) => {
+          canvas.addEventListener('pointermove', (e) => {
               if (!isDrawing) return;
-              e.preventDefault(); 
-              
-              const wrapper = newCanvas.closest('.section-content');
-              const brushSize = wrapper.querySelector('.brush-size').value;
-              const brushType = wrapper.querySelector('.brush-type').value;
-              const pressure = e.pressure !== 0 ? e.pressure : 1; 
-              
-              newCtx.lineWidth = brushSize * pressure * 2;
-              newCtx.lineCap = brushType; 
-              newCtx.strokeStyle = getLineColor();
-              
-              const rect = newCanvas.getBoundingClientRect();
-              const scaleX = newCanvas.width / rect.width;
-              const scaleY = newCanvas.height / rect.height;
-              newCtx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-              newCtx.stroke();
+              e.preventDefault();
+
+              const wrapper = canvas.closest('.section-content');
+              const brushSize = wrapper?.querySelector('.brush-size')?.value || 2;
+              const brushType = wrapper?.querySelector('.brush-type')?.value || 'round';
+              const pressure = e.pressure !== 0 ? e.pressure : 1;
+
+              ctx.lineWidth = brushSize * pressure * 2;
+              ctx.lineCap = brushType;
+              ctx.strokeStyle = getLineColor();
+
+              const rect = canvas.getBoundingClientRect();
+              const scaleX = canvas.width / rect.width;
+              const scaleY = canvas.height / rect.height;
+              ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+              ctx.stroke();
           });
 
-          newCanvas.addEventListener('pointerup', () => { isDrawing = false; });
-          newCanvas.addEventListener('pointerout', () => { isDrawing = false; });
+          canvas.addEventListener('pointerup', () => { isDrawing = false; });
+          canvas.addEventListener('pointerout', () => { isDrawing = false; });
       });
   }
 
