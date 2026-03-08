@@ -1334,14 +1334,18 @@ async function enviarPollinations() {
             projects: document.getElementById('projects').innerHTML,
             weekly: document.getElementById('weeklyTrackersBody').innerHTML,
             trackerGrid: document.getElementById('tracker-grid').innerHTML,
-            meals: document.getElementById('meals-container').innerHTML
+            meals: document.getElementById('meals-container').innerHTML,
+            bottleQuarters: document.getElementById('bottleQuarters').innerHTML,
+            pomos: document.getElementById('pomos').innerHTML
         };
 
-        // Salva os valores de todos os inputs, selects e checkboxes
-        const inputs = Array.from(document.querySelectorAll('input, select, textarea')).map(el => {
-            if(el.type === 'checkbox') return el.checked;
-            return el.value;
-        });
+        // Salva os valores de todos os inputs, selects e textareas (exceto file)
+        const inputs = Array.from(document.querySelectorAll('input, select, textarea'))
+            .filter(el => el.type !== 'file')
+            .map(el => {
+                if(el.type === 'checkbox') return el.checked;
+                return el.value;
+            });
 
         // Limita campos grandes para evitar 413 (payload excedido) na Vercel
         const estado = {
@@ -1434,17 +1438,36 @@ async function enviarPollinations() {
             setHtml('#weeklyTrackersBody', estado.html.weekly || '');
             setHtml('#tracker-grid', estado.html.trackerGrid || '');
             setHtml('#meals-container', estado.html.meals || '');
+            setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
+            setHtml('#pomos', estado.html.pomos || '');
         }
 
         // Restaura os textos e botões marcados
         if (Array.isArray(estado.inputs)) {
-            const allInputs = document.querySelectorAll('input, select, textarea');
+            const allInputs = Array.from(document.querySelectorAll('input, select, textarea'))
+                .filter(el => el.type !== 'file');
+            const restoreWarnings = [];
+
             estado.inputs.forEach((val, i) => {
-                if(allInputs[i]) {
-                    if(allInputs[i].type === 'checkbox') allInputs[i].checked = val;
-                    else allInputs[i].value = val;
+                const el = allInputs[i];
+                if(!el) return;
+
+                try {
+                    if(el.type === 'checkbox') el.checked = Boolean(val);
+                    else el.value = val ?? '';
+                } catch (restoreError) {
+                    restoreWarnings.push({
+                        index: i,
+                        type: el.type,
+                        id: el.id || null,
+                        message: restoreError?.message || String(restoreError)
+                    });
                 }
             });
+
+            if (restoreWarnings.length) {
+                console.warn('Avisos ao restaurar campos da nuvem:', restoreWarnings);
+            }
         }
 
         // Restaura a memória e as mensagens visuais das IAs
