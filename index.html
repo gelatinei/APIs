@@ -1226,8 +1226,13 @@ async function enviarChat(btn) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ history: geminiHistory })
         });
-        const data = await res.json();
-        
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            const detalhe = data?.details ? ` (${JSON.stringify(data.details)})` : '';
+            throw new Error((data?.error || `Falha Gemini (${res.status})`) + detalhe);
+        }
+
         const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
         const textoFormatado = marked.parse(textoCru);
 
@@ -1238,7 +1243,9 @@ async function enviarChat(btn) {
         chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
         salvarNuvem(); // Salva estado do chat automaticamente na nuvem
     } catch(e) {
-        document.getElementById(loadingId).innerText = "Erro de conexão.";
+        console.error('Erro no Gemini:', e);
+        const mensagem = e?.message ? `Erro Gemini: ${e.message}` : "Erro de conexão.";
+        document.getElementById(loadingId).innerText = mensagem;
     }
     chat.scrollTop = chat.scrollHeight;
 }
