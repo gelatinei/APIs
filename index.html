@@ -867,22 +867,22 @@
       </div>
     </div>
 
-    <div class="section hide-in-focus" style="margin-top:16px;">
-      <div class="section-header">
-          <span class="drag-section-handle" title="Arraste a seção">✥</span>
-          <label>🤖 Gemini</label>
-          <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
-      </div>
-      <div class="section-content">
-          <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-              <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">O que você precisa?</div>
-          </div>
-          <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-              <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
-              <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
-          </div>
-      </div>
+     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+    <div class="section-header">
+        <span class="drag-section-handle" title="Arraste a seção">✥</span>
+        <label>🤖 Gemini</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
     </div>
+    <div class="section-content">
+        <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
+        </div>
+        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+            <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
+            <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
+        </div>
+    </div>
+  </div>
 
     <div class="section hide-in-focus" style="margin-top:16px;">
       <div class="section-header">
@@ -1269,42 +1269,44 @@ function rolarTodosOsDados() {
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-// ====== FUNÇÃO DO GEMINI COM MEMÓRIA ======
+// ====== FUNÇÃO DO GEMINI ======
 async function enviarChat(btn) {
-  const input = btn.parentElement.querySelector('input');
-  const chat = document.getElementById('chat-gemini');
-  const prompt = input.value.trim();
-  if (!prompt) return;
+    const input = btn.parentElement.querySelector('input');
+    const chat = document.getElementById('chat-gemini');
+    const prompt = input.value;
+    if(!prompt.trim()) return;
 
-  geminiMessages.push({ role: "user", parts: [{ text: prompt }] });
-  renderizarChatGemini();
-  input.value = '';
+    // Mostra a sua mensagem
+    chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
+    input.value = '';
 
-  const loadingId = 'load-gemini-' + Date.now();
-  chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
-  chat.scrollTop = chat.scrollHeight;
+    // Mostra "Pensando..."
+    const loadingId = 'load-gemini-' + Date.now();
+    chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
+    chat.scrollTop = chat.scrollHeight;
 
-  try {
-    const res = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: geminiMessages })
-    });
+    try {
+        const res = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+        
+        // Pega a resposta do Gemini e formata
+        const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
+        const textoFormatado = marked.parse(textoCru);
 
-    const data = await res.json();
-    document.getElementById(loadingId).remove();
-
-    const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
-
-    geminiMessages.push({ role: "model", parts: [{ text: textoCru }] });
-
-    renderizarChatGemini();
-    salvarHistoricoGemini();
-
-  } catch (e) {
-    document.getElementById(loadingId).innerText = "Erro de conexão.";
-  }
+        // Remove o "Pensando..." e coloca a resposta formatada
+        document.getElementById(loadingId).remove();
+        chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
+    } catch(e) {
+        document.getElementById(loadingId).innerText = "Erro de conexão.";
+    }
+    chat.scrollTop = chat.scrollHeight;
 }
+
+
 // ====== FUNÇÃO DO DOLPHIN (OPENROUTER) ======
 async function enviarPollinations() {
   const input = document.getElementById('input-pollinations');
