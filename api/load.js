@@ -1,12 +1,14 @@
 import { createClient } from 'redis';
 
 function getRedisUrl() {
-  return (
-    process.env.REDIS_URL ||
-    process.env.KV_URL ||
-    process.env.UPSTASH_REDIS_URL ||
-    ''
-  );
+  const raw = process.env.REDIS_URL || process.env.KV_URL || process.env.UPSTASH_REDIS_URL || '';
+  const trimmed = String(raw).trim();
+
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
 }
 
 export default async function handler(req, res) {

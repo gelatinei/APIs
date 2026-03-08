@@ -1,12 +1,15 @@
 import { createClient } from 'redis';
 
 function getRedisUrl() {
-  return (
-    process.env.REDIS_URL ||
-    process.env.KV_URL ||
-    process.env.UPSTASH_REDIS_URL ||
-    ''
-  );
+  const raw = process.env.REDIS_URL || process.env.KV_URL || process.env.UPSTASH_REDIS_URL || '';
+  const trimmed = String(raw).trim();
+
+  // Remove aspas acidentais no valor da env (erro comum de copy/paste na Vercel)
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
 }
 
 function parseBody(body) {
@@ -42,10 +45,15 @@ export default async function handler(req, res) {
 
   try {
     const parsedBody = parseBody(req.body);
-    const { data } = parsedBody || {};
+    const payloadData = parsedBody?.data;
 
-    if (typeof data !== 'string' || !data.trim()) {
-      return res.status(400).json({ error: "Payload inválido: campo 'data' precisa ser string não vazia." });
+    // Aceita string (preferido), mas também objeto/array para tolerar serializações diferentes
+    let data = '';
+    if (typeof payloadData === 'string') data = payloadData;
+    else if (payloadData !== undefined) data = JSON.stringify(payloadData);
+
+    if (!data || !data.trim()) {
+      return res.status(400).json({ error: "Payload inválido: campo 'data' ausente ou vazio." });
     }
 
     await client.connect();
