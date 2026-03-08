@@ -1339,18 +1339,19 @@ async function enviarPollinations() {
             pomos: document.getElementById('pomos').innerHTML
         };
 
-        // Salva os valores de todos os inputs, selects e textareas (exceto file)
-        const inputs = Array.from(document.querySelectorAll('input, select, textarea'))
-            .filter(el => el.type !== 'file')
-            .map(el => {
-                if(el.type === 'checkbox') return el.checked;
-                return el.value;
-            });
+        // Salva os valores de campos de texto/seleção separadamente das checkboxes
+        const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
+            .filter(el => el.type !== 'file' && el.type !== 'checkbox')
+            .map(el => el.value);
+
+        const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"]'))
+            .map(el => el.checked);
 
         // Limita campos grandes para evitar 413 (payload excedido) na Vercel
         const estado = {
             html: elementosDinamicos,
-            inputs: inputs,
+            textFields: textFields,
+            checkboxes: checkboxes,
             geminiHistory: limitarHistorico(geminiHistory),
             dolphinHistory: limitarHistorico(dolphinHistory),
             chatGemini: limitarTexto(document.getElementById('chat-gemini').innerHTML, 150000),
@@ -1422,6 +1423,17 @@ async function enviarPollinations() {
             throw new Error('Dados da nuvem inválidos. Salve novamente para recriar o backup.');
         }
 
+        console.info('Backup carregado da nuvem:', {
+            tamanhoKB: Math.round((new Blob([rawData]).size / 1024) * 10) / 10,
+            possuiChatGemini: Boolean(estado?.chatGemini),
+            possuiChatDolphin: Boolean(estado?.chatDolphin),
+            tamanhoHistoricoGemini: Array.isArray(estado?.geminiHistory) ? estado.geminiHistory.length : 0,
+            tamanhoHistoricoDolphin: Array.isArray(estado?.dolphinHistory) ? estado.dolphinHistory.length : 0,
+            totalCheckboxesSalvas: Array.isArray(estado?.checkboxes) ? estado.checkboxes.length : 0,
+            totalTextFieldsSalvos: Array.isArray(estado?.textFields) ? estado.textFields.length : 0,
+            formatoLegadoInputs: Array.isArray(estado?.inputs)
+        });
+
         const setHtml = (selector, html) => {
             const el = document.querySelector(selector);
             if (el && typeof html === 'string') el.innerHTML = html;
@@ -1443,20 +1455,20 @@ async function enviarPollinations() {
         }
 
         // Restaura os textos e botões marcados
-        if (Array.isArray(estado.inputs)) {
-            const allInputs = Array.from(document.querySelectorAll('input, select, textarea'))
-                .filter(el => el.type !== 'file');
-            const restoreWarnings = [];
+        const restoreWarnings = [];
 
-            estado.inputs.forEach((val, i) => {
-                const el = allInputs[i];
+        if (Array.isArray(estado.textFields)) {
+            const allTextFields = Array.from(document.querySelectorAll('input, select, textarea'))
+                .filter(el => el.type !== 'file' && el.type !== 'checkbox');
+
+            estado.textFields.forEach((val, i) => {
+                const el = allTextFields[i];
                 if(!el) return;
-
                 try {
-                    if(el.type === 'checkbox') el.checked = Boolean(val);
-                    else el.value = val ?? '';
+                    el.value = val ?? '';
                 } catch (restoreError) {
                     restoreWarnings.push({
+                        group: 'textFields',
                         index: i,
                         type: el.type,
                         id: el.id || null,
@@ -1464,10 +1476,52 @@ async function enviarPollinations() {
                     });
                 }
             });
+        }
 
-            if (restoreWarnings.length) {
-                console.warn('Avisos ao restaurar campos da nuvem:', restoreWarnings);
-            }
+        if (Array.isArray(estado.checkboxes)) {
+            const allCheckboxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
+            estado.checkboxes.forEach((val, i) => {
+                const el = allCheckboxes[i];
+                if(!el) return;
+                try {
+                    el.checked = Boolean(val);
+                } catch (restoreError) {
+                    restoreWarnings.push({
+                        group: 'checkboxes',
+                        index: i,
+                        type: el.type,
+                        id: el.id || null,
+                        message: restoreError?.message || String(restoreError)
+                    });
+                }
+            });
+        }
+
+        // Compatibilidade com backups antigos (campo legado `inputs`)
+        if (!Array.isArray(estado.textFields) && !Array.isArray(estado.checkboxes) && Array.isArray(estado.inputs)) {
+            const legacyInputs = Array.from(document.querySelectorAll('input, select, textarea'))
+                .filter(el => el.type !== 'file');
+
+            estado.inputs.forEach((val, i) => {
+                const el = legacyInputs[i];
+                if(!el) return;
+                try {
+                    if(el.type === 'checkbox') el.checked = Boolean(val);
+                    else el.value = val ?? '';
+                } catch (restoreError) {
+                    restoreWarnings.push({
+                        group: 'legacyInputs',
+                        index: i,
+                        type: el.type,
+                        id: el.id || null,
+                        message: restoreError?.message || String(restoreError)
+                    });
+                }
+            });
+        }
+
+        if (restoreWarnings.length) {
+            console.warn('Avisos ao restaurar campos da nuvem:', restoreWarnings);
         }
 
         // Restaura a memória e as mensagens visuais das IAs
@@ -1475,6 +1529,25 @@ async function enviarPollinations() {
         if (Array.isArray(estado.dolphinHistory)) dolphinHistory = estado.dolphinHistory;
         setHtml('#chat-gemini', estado.chatGemini || '');
         setHtml('#chat-pollinations', estado.chatDolphin || '');
+
+        const chatGeminiEl = document.getElementById('chat-gemini');
+        const chatDolphinEl = document.getElementById('chat-pollinations');
+
+        if (chatGeminiEl && !chatGeminiEl.innerHTML.trim() && Array.isArray(geminiHistory) && geminiHistory.length) {
+            chatGeminiEl.innerHTML = geminiHistory.map(item => {
+                const role = item?.role === 'user' ? 'Você' : 'IA';
+                const txt = String(item?.parts?.[0]?.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return `<div><strong>${role}:</strong> ${txt}</div>`;
+            }).join('');
+        }
+
+        if (chatDolphinEl && !chatDolphinEl.innerHTML.trim() && Array.isArray(dolphinHistory) && dolphinHistory.length) {
+            chatDolphinEl.innerHTML = dolphinHistory.map(item => {
+                const role = item?.role === 'user' ? 'Você' : 'Lan';
+                const txt = String(item?.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return `<div><strong>${role}:</strong> ${txt}</div>`;
+            }).join('');
+        }
 
         // Como injetamos HTML novo, precisamos religar os botões de arrastar
         if (typeof makeSortable === 'function') makeSortable();
