@@ -1,20 +1,19 @@
-export default async function handler(req, res) {
-  try {
-    const url = `${process.env.KV_REST_API_URL}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${process.env.KV_REST_API_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      // Comando Redis para buscar a chave "planner_data"
-      body: JSON.stringify(["GET", "planner_data"])
-    });
+import { createClient } from 'redis';
 
-    const result = await response.json();
-    return res.status(200).json({ data: result.result });
+export default async function handler(req, res) {
+  const client = createClient({
+    url: process.env.REDIS_URL
+  });
+
+  try {
+    await client.connect();
+    // Busca os dados
+    const result = await client.get('planner_data');
+    await client.disconnect();
+
+    return res.status(200).json({ data: result });
   } catch (error) {
-    return res.status(500).json({ error: "Erro ao carregar da nuvem." });
+    console.error(error);
+    return res.status(500).json({ error: "Erro ao carregar do Redis." });
   }
 }
