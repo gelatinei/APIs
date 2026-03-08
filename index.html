@@ -1358,7 +1358,7 @@ async function enviarPollinations() {
     const btn = document.getElementById('btn-nuvem');
     if(btn) btn.innerText = '⏳ Carregando...';
     try {
-        const res = await fetch('/api/load');
+        fetch(`/api/load?t=${Date.now()}`, { cache: 'no-store' })
         const result = await res.json();
         
         if(result.data) {
