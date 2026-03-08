@@ -101,8 +101,7 @@
     #lista-indice li a { color: var(--ink); text-decoration: none; font-size: 12px; background: var(--drag-bg); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); display: block;}
     #lista-indice li a:hover { background: var(--accent); color: var(--bg); }
 
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start; transition: all 0.3s ease; }
-    .col { display: flex; flex-direction: column; gap: 12px; min-height: 100px; } 
+    .grid { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; transition: all 0.3s ease; }
     
     label { display: block; font-size: 12px; margin-bottom: 6px; color: var(--accent); font-weight: 600; }
     .tiny-lbl { display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; font-weight: normal; }
@@ -305,7 +304,6 @@
     </div>
 
     <div class="grid flex-row" id="main-grid">
-      <div class="col flex-col" id="col-left">
         
         <div class="section">
           <div class="section-header">
@@ -411,7 +409,6 @@
 
       </div>
 
-      <div class="col flex-col" id="col-right">
         
         <div id="timeblock-wrapper" class="section">
           <div class="section-header">
