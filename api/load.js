@@ -33,7 +33,10 @@ export default async function handler(req, res) {
       return res.status(200).json({ data: '{}' });
     }
 
-    const fileResponse = await fetch(file.url, { cache: 'no-store' });
+    const fileResponse = await fetch(file.url, {
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${token}` },
+    });
     if (!fileResponse.ok) {
       console.error('Erro ao baixar blob salvo:', fileResponse.status, file.url);
       return res.status(500).json({ error: `Falha ao carregar do Vercel Blob (${fileResponse.status}).` });
