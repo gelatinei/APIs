@@ -1,42 +1,66 @@
 import { createClient } from 'redis';
 
-export default async function handler(req, res) {
-  // 1. Só permite salvar se for um envio de dados (POST)
-  if (req.method !== 'POST') return res.status(405).json({ error: "Método não permitido" });
+function getRedisUrl() {
+  return (
+    process.env.REDIS_URL ||
+    process.env.KV_URL ||
+    process.env.UPSTASH_REDIS_URL ||
+    ''
+  );
+}
 
-  // 2. Verifica se a URL do banco existe
-  if (!process.env.REDIS_URL) {
-    return res.status(500).json({ error: "Configuração REDIS_URL faltando na Vercel." });
+function parseBody(body) {
+  if (!body) return {};
+
+  if (typeof body === 'string') {
+    return JSON.parse(body);
   }
 
-  // 3. Criação do "Cliente" (a ponte com o Redis)
-  // Ele usa automaticamente o REDIS_URL que você configurou no painel da Vercel
-  const client = createClient({
-    url: process.env.REDIS_URL
-  });
+  if (Buffer.isBuffer(body)) {
+    return JSON.parse(body.toString('utf8'));
+  }
 
-  // Mostra erro no log da Vercel se a conexão cair
-  client.on('error', (err) => console.log('Erro no Cliente Redis:', err));
+  return body;
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+
+  const redisUrl = getRedisUrl();
+  if (!redisUrl) {
+    return res.status(500).json({
+      error: 'Configuração de Redis faltando. Defina REDIS_URL (ou KV_URL/UPSTASH_REDIS_URL) na Vercel.'
+    });
+  }
+
+  const client = createClient({ url: redisUrl });
+  client.on('error', (err) => console.error('Erro no Cliente Redis:', err));
 
   let isConnected = false;
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { data } = body || {};
+    const parsedBody = parseBody(req.body);
+    const { data } = parsedBody || {};
 
-    if (typeof data !== 'string') {
-      return res.status(400).json({ error: "Payload inválido: campo 'data' precisa ser string." });
+    if (typeof data !== 'string' || !data.trim()) {
+      return res.status(400).json({ error: "Payload inválido: campo 'data' precisa ser string não vazia." });
     }
-    
-    // 4. Abre a conexão, salva os dados e fecha
+
     await client.connect();
     isConnected = true;
+
     await client.set('planner_data', data);
 
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error("Erro ao salvar:", error);
-    return res.status(500).json({ error: "Falha ao salvar no banco de dados." });
+    if (error instanceof SyntaxError) {
+      return res.status(400).json({ error: 'JSON inválido no corpo da requisição.' });
+    }
+
+    console.error('Erro ao salvar:', error);
+    return res.status(500).json({ error: 'Falha ao salvar no banco de dados.' });
   } finally {
     if (isConnected) {
       await client.disconnect();
