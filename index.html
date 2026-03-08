@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" data-theme="noite">
+<html lang="pt-BR" data-theme="retro">
 <head>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://js.puter.com/v2/"></script>
@@ -75,11 +75,13 @@
     html[data-theme="outono"] { --bg: #FFF8E1; --ink: #E65100; --muted: #FFB300; --accent: #F57C00; --card-bg: #FFF; --border: #FFE082; --drag-bg: #FFECB3; }
     html[data-theme="hacker"] { --bg: #000000; --ink: #00FF00; --muted: #008800; --accent: #00CC00; --card-bg: #0A0A0A; --border: #004400; --drag-bg: #002200; }
     
-    /* Novos Temas Clássicos */
+    /* Novos Temas Clássicos e Personalizados */
     html[data-theme="dracula"] { --bg: #282a36; --ink: #f8f8f2; --muted: #6272a4; --accent: #ff79c6; --card-bg: #44475a; --border: #bd93f9; --drag-bg: #6272a4; }
     html[data-theme="solarized"] { --bg: #fdf6e3; --ink: #586e75; --muted: #93a1a1; --accent: #2aa198; --card-bg: #eee8d5; --border: #cb4b16; --drag-bg: #e4e0ce; }
     html[data-theme="nord"] { --bg: #ECEFF4; --ink: #2E3440; --muted: #4C566A; --accent: #5E81AC; --card-bg: #E5E9F0; --border: #D8DEE9; --drag-bg: #D8DEE9; }
     html[data-theme="retro"] { --bg: #1a002a; --ink: #00ffcc; --muted: #ff00ff; --accent: #ff00ff; --card-bg: #2d004d; --border: #00ffcc; --drag-bg: #4d0080; }
+    html[data-theme="cyberpunk"] { --bg: #0d0221; --ink: #0ff; --muted: #ff007f; --accent: #fdf200; --card-bg: #261447; --border: #ff007f; --drag-bg: #2a004d; }
+    html[data-theme="ethereal"] { --bg: #f8fbff; --ink: #5a6b7c; --muted: #a6b8c7; --accent: #9fbce8; --card-bg: #ffffff; --border: #e2eaf3; --drag-bg: #edf2f8; }
 
     /* Ajustes Mobile e Gutter de Rolagem */
     html, body { background: var(--bg); color: var(--ink); margin: 0; padding: 10px; padding-right: 30px; transition: background 0.3s, color 0.3s; -webkit-tap-highlight-color: transparent;}
@@ -172,9 +174,6 @@
     .tarot-card-row select { flex: 1; min-width: 120px; }
     .tarot-card-row input { flex: 2; min-width: 120px; }
 
-    .backup-area { margin-top:16px; background: var(--drag-bg); padding: 12px; border-radius: 8px; border: 1px dashed var(--border); }
-    .backup-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--card-bg); border-radius: 6px; margin-bottom: 6px; font-size: 12px; border: 1px solid var(--border);}
-
     /* Scroll/Layout Responsivo */
     body.view-mobile .grid { grid-template-columns: 1fr; }
     body.view-mobile .flex-row { flex-direction: column; }
@@ -196,7 +195,7 @@
       .page { box-shadow: none; border: none; max-width: 100%; padding: 0; min-width: auto !important; }
       .grid { grid-template-columns: 1fr 1fr !important; } 
       .section, .tracker-box { page-break-inside: avoid; break-inside: avoid; border-color: var(--border) !important; overflow: visible !important;}
-      .xbtn, .xbtn-sec, .controls, button, .drag-handle, .drag-section-handle, .txt-btn, .theme-select, .btn-foco, .timer-box, .backup-area { display: none !important; }
+      .xbtn, .xbtn-sec, .controls, button, .drag-handle, .drag-section-handle, .txt-btn, .theme-select, .btn-foco, .timer-box { display: none !important; }
       input[type=text], select, input[type=date], input[type=time] { border: none; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent !important; }
       .page-break-print { page-break-before: always; }
       .no-print { display: none !important; }
@@ -233,6 +232,11 @@
         </select>
 
         <select id="themeSelect" class="theme-select" onchange="changeTheme(this.value)">
+          <optgroup label="Novos Temas">
+            <option value="retro" selected>Synthwave Retrô</option>
+            <option value="cyberpunk">Cyberpunk Neon</option>
+            <option value="ethereal">Ethereal (Celestial)</option>
+          </optgroup>
           <optgroup label="Escuros (Dark Mode)">
             <option value="noite">Noite Enluarada</option>
             <option value="cafe">Café Expresso</option>
@@ -251,28 +255,27 @@
             <option value="dracula">Tema Drácula</option>
             <option value="solarized">Solarized Light</option>
             <option value="nord">Nord (Gélido)</option>
-            <option value="retro">Synthwave Retrô</option>
           </optgroup>
         </select>
       </div>
     </header>
 
-    <div id="indice-container" class="hide-in-focus section collapsed" style="margin-top:16px;">
+    <div id="indice-container" class="hide-in-focus section" style="margin-top:16px;">
         <div class="section-header" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>📖 Índice Rápido</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
         </div>
         <div class="section-content">
             <ul id="lista-indice" style="margin-top: 10px;"></ul>
         </div>
     </div>
 
-    <div style="margin-top:16px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;" class="section collapsed">
+    <div style="margin-top:16px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;" class="section">
       <div class="section-header" style="width: 100%; margin-bottom: 0; padding-bottom: 0; border:none;">
           <span class="drag-section-handle" title="Arraste a seção">✥</span>
           <label style="flex:1;">Controle de Tempo do Dia</label>
-          <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+          <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
       </div>
       <div class="section-content" style="width:100%; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-top: 8px;">
           <div style="flex: 1; min-width: 130px;">
@@ -308,11 +311,11 @@
     <div class="grid flex-row" id="main-grid">
       <div class="col flex-col" id="col-left">
         
-        <div class="section collapsed">
+        <div class="section">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Top Prioridades do Dia</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
               <div class="table-container">
@@ -336,13 +339,13 @@
         </div>
 
         <div id="decomp-container" class="hide-in-focus" style="display:flex; flex-direction:column; gap:12px;">
-          <div class="section collapsed decomp-box">
+          <div class="section decomp-box">
             <div class="section-header">
               <span class="drag-section-handle" title="Arraste a seção">✥</span>
               <label>Decomposição de Tarefas</label>
               <div>
                   <button class="xbtn-sec" onclick="removeBox(this, 'decomp-box')" style="margin-right: 4px;">✕</button>
-                  <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+                  <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
               </div>
             </div>
             <div class="section-content">
@@ -355,11 +358,11 @@
           </div>
         </div>
 
-        <div class="section collapsed">
+        <div class="section">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Checklist Rápido</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
               <div class="table-container">
@@ -385,11 +388,11 @@
           </div>
         </div>
 
-        <div class="section hide-in-focus collapsed">
+        <div class="section hide-in-focus">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Saúde & Medicação</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
               <div class="checkbox-row" style="margin-bottom: 8px;">
@@ -414,11 +417,11 @@
 
       <div class="col flex-col" id="col-right">
         
-        <div id="timeblock-wrapper" class="section collapsed">
+        <div id="timeblock-wrapper" class="section">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Time‑blocking</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
               <div class="table-container">
@@ -440,11 +443,11 @@
           </div>
         </div>
 
-        <div class="section hide-in-focus collapsed" id="meal-planner">
+        <div class="section hide-in-focus" id="meal-planner">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Planejador de Refeições</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
               <div id="meals-container" style="display:flex; flex-direction:column; gap:12px;"></div>
@@ -452,22 +455,22 @@
           </div>
         </div>
 
-        <div class="section hide-in-focus collapsed">
+        <div class="section hide-in-focus">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Pomodoros Concluídos</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
               <div class="checkbox-row" id="pomos"></div>
           </div>
         </div>
 
-        <div class="section hide-in-focus collapsed">
+        <div class="section hide-in-focus">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Registro de Interrupções</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
               <div class="table-container">
@@ -490,11 +493,11 @@
     </div>
 
     <div class="flex-row hide-in-focus" style="display:flex; gap:16px; margin-top:16px; flex-wrap: wrap;">
-      <div style="flex:1; min-width: 250px;" class="section collapsed">
+      <div style="flex:1; min-width: 250px;" class="section">
         <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Caixa de Ideias (Brain Dump)</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
         </div>
         <div class="section-content">
             <div class="table-container">
@@ -518,11 +521,11 @@
         </div>
       </div>
 
-      <div style="flex:2; min-width: 300px;" class="section collapsed">
+      <div style="flex:2; min-width: 300px;" class="section">
         <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
             <label>Projetos em Andamento</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
         </div>
         <div class="section-content">
             <div class="table-container">
@@ -550,397 +553,401 @@
       </div>
     </div>
 
-    <div id="weekly-tracker-section" class="section hide-in-focus collapsed" style="margin-top:16px;">
-      <div class="section-header">
-          <span class="drag-section-handle" title="Arraste a seção">✥</span>
-          <label style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            Tracker Semanal
-            <input type="text" placeholder="Semana (ex: Sem. 2)" style="width: 150px; font-weight: normal; font-size: 12px; margin:0;" />
-            <input type="text" placeholder="Mês (ex: Março)" style="width: 150px; font-weight: normal; font-size: 12px; margin:0;" />
-          </label>
-          <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-      </div>
-      <div class="section-content">
-          <div class="table-container" style="margin-top: 10px;">
-            <table id="weeklyTrackerTbl" style="min-width: 600px; text-align: center;">
-              <thead>
-                <tr>
-                  <th style="width: 20px;"></th>
-                  <th style="text-align:left;">Hábito</th>
-                  <th style="width:70px;">Qtd/Dia</th>
-                  <th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th>
-                  <th style="width: 30px;"></th>
-                </tr>
-              </thead>
-              <tbody id="weeklyTrackersBody">
-                <tr class="sortable-row" draggable="true">
-                  <td class="drag-handle">☰</td>
-                  <td><input type="text" placeholder="Nome do hábito"/></td>
-                  <td><input type="number" min="1" max="10" value="1" onchange="updateWeeklyCheckboxes(this)"/></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="controls">
-            <button onclick="addWeeklyTracker()">+ Hábito</button>
-          </div>
-      </div>
-    </div>
-
-<div style="flex:1; min-width: 250px;" class="section collapsed">
-    <div class="section-header">
-        <span class="drag-section-handle">✥</span>
-        <label>🤖 Gemini (Vercel)</label>
-        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-    </div>
-    <div class="section-content">
-        <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
-        </div>
-        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-            <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
-            <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
-        </div>
-    </div>
-  </div>
+    <div class="col flex-col" style="width: 100%; margin-top: 16px;">
     
-      <div class="section hide-in-focus" style="margin-top:16px;">
-      <div class="section-header">
-          <span class="drag-section-handle" title="Arraste a seção">✥</span>
-          <label>Hiwaifu</label>
-          <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
-      </div>
-      <div class="section-content">
-          <iframe 
-              src="https://www.hiwaifu.com/pt" 
-              style="width: 100%; height: 500px; border: none; border-radius: 6px; margin-top: 8px; background: var(--bg);" 
-              sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation"
-              title="Hiwaifu 😘">
-          </iframe>
-      </div>
-    </div>
-
-    <div class="section hide-in-focus" style="margin-top:16px;">
-      <div class="section-header">
-          <span class="drag-section-handle" title="Arraste a seção">✥</span>
-          <label>✨ Planner's core</label>
-          <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
-      </div>
-      <div class="section-content">
-          <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-              <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
-          </div>
-          <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-              <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
-              <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
-          </div>
-      </div>
-    </div>
-
-    <div class="section hide-in-focus collapsed" style="margin-top:16px;">
-    <div class="section-header">
-        <span class="drag-section-handle" title="Arraste a seção">✥</span>
-        <label>🎲 Rolador de Dados RPG</label>
-        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-    </div>
-    <div class="section-content">
-        <div id="mesa-dados" class="mesa-dados">
-            <span style="color: var(--muted); font-size: 13px;">Adicione dados nos botões abaixo...</span>
-        </div>
-        
-        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px;">
-            <button class="ghost mini-add" onclick="adicionarDado(2)">+ d2</button>
-            <button class="ghost mini-add" onclick="adicionarDado(4)">+ d4</button>
-            <button class="ghost mini-add" onclick="adicionarDado(6)">+ d6</button>
-            <button class="ghost mini-add" onclick="adicionarDado(8)">+ d8</button>
-            <button class="ghost mini-add" onclick="adicionarDado(10)">+ d10</button>
-            <button class="ghost mini-add" onclick="adicionarDado(12)">+ d12</button>
-            <button class="ghost mini-add" onclick="adicionarDado(20)" style="font-weight:bold; color:var(--accent);">+ d20</button>
-        </div>
-        
-        <div style="display: flex; gap: 8px;">
-            <button onclick="rolarTodosOsDados()" style="flex: 1; padding: 12px; font-weight: bold; background: var(--accent); color: white; font-size: 15px; box-shadow: 0 4px 0 rgba(0,0,0,0.2);">🎲 Rolar Tudo</button>
-            <button onclick="limparDados()" class="ghost" style="padding: 12px; color: #e53935;">🗑️ Limpar</button>
-        </div>
-        
-        <div id="total-dados" style="text-align: center; margin-top: 15px; font-weight: 900; font-size: 20px; color: var(--accent);"></div>
-    </div>
-</div>
-    
-    <div class="section hide-in-focus collapsed" style="margin-top:16px;">
-        <div class="section-header">
-            <span class="drag-section-handle" title="Arraste a seção">✥</span>
-          <label>Doodling Livre 🎨</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-        </div>
-        <div class="section-content">
-            <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <label style="margin:0;">Tamanho: <input type="range" class="brush-size" min="1" max="20" value="3" style="width: 100px; display:inline-block; vertical-align:middle;"></label>
-              <label style="margin:0;">Pincel: 
-                <select class="brush-type" style="width: auto; padding: 4px;">
-                  <option value="round">Redondo</option>
-                  <option value="square">Quadrado</option>
-                </select>
+        <div id="weekly-tracker-section" class="section hide-in-focus">
+          <div class="section-header">
+              <span class="drag-section-handle" title="Arraste a seção">✥</span>
+              <label style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                Tracker Semanal
+                <input type="text" placeholder="Semana (ex: Sem. 2)" style="width: 150px; font-weight: normal; font-size: 12px; margin:0;" />
+                <input type="text" placeholder="Mês (ex: Março)" style="width: 150px; font-weight: normal; font-size: 12px; margin:0;" />
               </label>
-              <button class="ghost mini-add" onclick="limparCanvas(this)">Limpar Tela</button>
-              <button class="ghost mini-add" onclick="exportarCanvas(this)">Salvar (PNG)</button>
-            </div>
-            <canvas class="doodle-canvas" width="800" height="300" style="border: 2px dashed var(--border); border-radius: 8px; touch-action: none; background: transparent; width: 100%; max-width: 100%; display: block; cursor: crosshair;"></canvas>
-        </div>
-    </div>
-
-    <div class="section hide-in-focus collapsed" style="margin-top:16px;">
-      <div class="section-header">
-          <span class="drag-section-handle" title="Arraste a seção">✥</span>
-          <label>Trackers Pessoais</label>
-          <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-      </div>
-      <div class="section-content tracker-grid" id="tracker-grid">
-
-        <div class="tracker-box">
-          <h4>🚿 Banho & Cuidados</h4>
-          <div class="field-group" style="margin-top: 10px;">
-            <label class="inline-cb"><input type="checkbox"/> Lavei o Cabelo</label>
-            <label class="inline-cb"><input type="checkbox"/> Depilação</label>
+              <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
-          <div class="field-group" style="display:flex; gap:8px; flex-wrap: wrap;">
-            <div style="flex:1; min-width: 90px;"><label class="tiny-lbl">Horário</label><input type="time"/></div>
-            <div style="flex:1; min-width: 100px;"><label class="tiny-lbl">Último banho</label><input type="date"/></div>
-          </div>
-          <div class="field-group">
-            <label class="tiny-lbl">Perfume do Dia</label>
-            <input type="text" placeholder="Qual a fragrância?"/>
-          </div>
-        </div>
-
-        <div class="tracker-box">
-          <h4>💼 Trabalho do Dia</h4>
-          <div class="field-group">
-            <label class="tiny-lbl">Foco Principal</label>
-            <select id="foco-trabalho" onchange="const out = this.nextElementSibling; out.style.display = this.value === 'Outro' ? 'block' : 'none'; autoSave();">
-              <option disabled selected>Selecione...</option>
-              <option>Tarot</option><option>RPG</option><option>Vídeos</option>
-              <option>Músicas</option><option>Criação de Jogos</option><option value="Outro">Outro...</option>
-            </select>
-            <input type="text" placeholder="Qual?" style="display:none; margin-top:4px;">
-          </div>
-          <div class="field-group">
-            <label class="tiny-lbl" style="display:flex; justify-content:space-between;">O que eu fiz? <button class="ghost mini-add" onclick="addGenericField(this, 'Descreva a tarefa...')">+</button></label>
-            <div class="dynamic-fields">
-               <div style="display:flex; gap:4px; margin-top:4px;"><input type="text" placeholder="Descreva a tarefa..." /><button class="xbtn" onclick="this.parentElement.remove(); autoSave();">✕</button></div>
-            </div>
-          </div>
-          <div class="field-group" style="margin-top: 8px;">
-            <label class="tiny-lbl">Tempo investido</label>
-            <input type="text" placeholder="Ex: 2h 30m"/>
-          </div>
-        </div>
-
-        <div class="tracker-box">
-          <h4>✒️ Poeminhas</h4>
-          <div class="field-group" style="display:flex; gap:8px; align-items:center;">
-            <button class="ghost mini-add" style="margin:0;" onclick="gerarPalavra(this)">Gerar Inspiração</button>
-            <span class="palavra-gerada" style="font-weight: bold; font-size: 11px; color: var(--accent);">---</span>
-          </div>
-          <div class="field-group">
-            <label class="tiny-lbl">Tema / Título</label>
-            <input type="text" placeholder="Sobre o que é?">
-          </div>
-          <div class="field-group">
-            <label class="tiny-lbl" style="display:flex; justify-content:space-between;">Versos <button class="ghost mini-add" onclick="addVersoField(this)">+</button></label>
-            <div class="dynamic-fields versos-container">
-               <div style="display:flex; gap:4px; margin-top:4px;">
-                 <input type="text" placeholder="Verso..." style="flex:3;">
-                 <select class="rima-select" onchange="analisarRimas(this)" style="flex:1; padding: 4px;"><option value="-">-</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
-                 <button class="xbtn" onclick="const p = this.parentElement.parentElement; this.parentElement.remove(); analisarRimasContainer(p); autoSave();">✕</button>
-               </div>
-            </div>
-          </div>
-          <div class="field-group" style="margin-top: 8px;">
-            <label class="tiny-lbl">Esquema Rímico: <span class="analise-rima" style="font-weight:bold;">Nenhum</span></label>
-          </div>
-        </div>
-
-
-
-        <div class="tracker-box terapia-box">
-          <h4>
-            Terapia: Tarefa da Semana
-            <div>
-              <button class="ghost mini-add" onclick="duplicateBox(this, 'terapia-box')">+</button>
-              <button class="xbtn-sec" style="margin-right:0;" onclick="removeBox(this, 'terapia-box')">✕</button>
-            </div>
-          </h4>
-          <div class="field-group">
-            <label class="tiny-lbl">Tarefa a cumprir</label>
-            <textarea rows="2" placeholder="O que foi combinado na sessão?"></textarea>
-          </div>
-          <div class="field-group" style="margin-top: 6px;">
-            <label class="inline-cb"><input type="checkbox"/> Tarefa concluída?</label>
-          </div>
-          <div class="field-group" style="margin-top: 6px;">
-            <label class="tiny-lbl">Resultados / Observações</label>
-            <textarea rows="2" placeholder="Como me senti? O que aprendi?"></textarea>
-          </div>
-        </div>
-
-        <div class="tracker-box">
-          <h4>🌙 Sono & Despertar</h4>
-          <div class="field-group" style="display:flex; gap:8px;">
-            <div style="flex:1">
-              <label class="tiny-lbl">Hora que acordou</label>
-              <input type="time" />
-            </div>
-            <div style="flex:1">
-              <label class="tiny-lbl">Horas dormidas</label>
-              <input type="number" placeholder="Ex: 7.5" step="0.5" />
-            </div>
-          </div>
-          <div class="field-group">
-            <label class="tiny-lbl">Qualidade do Sono</label>
-            <input type="range" min="1" max="10" value="5" />
-            <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:-4px;"><span>Péssimo</span><span>Excelente</span></div>
-          </div>
-          <div class="field-group">
-            <label class="tiny-lbl">Forma que acordou</label>
-            <select>
-              <option disabled selected>Selecione...</option>
-              <option>Naturalmente</option>
-              <option>Despertador</option>
-              <option>Barulho</option>
-              <option>Luz</option>
-              <option>Gato</option>
-              <option>Outro</option>
-            </select>
-          </div>
-          <div class="field-group">
-            <label class="tiny-lbl">Ambiente</label>
-            <select>
-              <option disabled selected>Selecione...</option>
-              <option>Escuro total</option>
-              <option>Pouca luz</option>
-              <option>Claro</option>
-            </select>
-          </div>
-          <div class="field-group" style="margin-top: 8px;">
-            <label class="inline-cb"><input type="checkbox"/> Tive refluxo?</label>
+          <div class="section-content">
+              <div class="table-container" style="margin-top: 10px;">
+                <table id="weeklyTrackerTbl" style="min-width: 600px; text-align: center;">
+                  <thead>
+                    <tr>
+                      <th style="width: 20px;"></th>
+                      <th style="text-align:left;">Hábito</th>
+                      <th style="width:70px;">Qtd/Dia</th>
+                      <th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th>
+                      <th style="width: 30px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="weeklyTrackersBody">
+                    <tr class="sortable-row" draggable="true">
+                      <td class="drag-handle">☰</td>
+                      <td><input type="text" placeholder="Nome do hábito"/></td>
+                      <td><input type="number" min="1" max="10" value="1" onchange="updateWeeklyCheckboxes(this)"/></td>
+                      <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                      <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                      <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                      <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                      <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                      <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                      <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                      <td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="controls">
+                <button onclick="addWeeklyTracker()">+ Hábito</button>
+              </div>
           </div>
         </div>
         
-        <div class="tracker-box tarot-box">
-          <h4>
-            Leitura de Tarot 
-            <div>
-              <button class="ghost mini-add" onclick="duplicateBox(this, 'tarot-box')">+</button>
-              <button class="xbtn-sec" style="margin-right:0;" onclick="removeBox(this, 'tarot-box')">✕</button>
-            </div>
-          </h4>
-          <div class="field-group">
-            <label class="tiny-lbl">🔮 Pergunta ou Tema</label>
-            <input type="text" placeholder="O que estou consultando?" />
+        <div class="section hide-in-focus">
+          <div class="section-header">
+              <span class="drag-section-handle" title="Arraste a seção">✥</span>
+              <label>Trackers Pessoais</label>
+              <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
-          <div class="field-group">
-            <label class="tiny-lbl">🎴 Cartas <button class="ghost mini-add" onclick="addTarotCardField(this)">+ Carta</button></label>
-            <div class="dynamic-fields tarot-cards-container">
-              <div class="tarot-card-row">
-                <select class="rws-select"><option>Carregando cartas...</option></select>
-                <input type="text" placeholder="Significado / Intuição" />
-                <button class="xbtn" onclick="this.parentElement.remove(); autoSave();">✕</button>
+          <div class="section-content tracker-grid" id="tracker-grid">
+
+            <div class="tracker-box">
+              <h4>🚿 Banho & Cuidados</h4>
+              <div class="field-group" style="margin-top: 10px;">
+                <label class="inline-cb"><input type="checkbox"/> Lavei o Cabelo</label>
+                <label class="inline-cb"><input type="checkbox"/> Depilação</label>
+              </div>
+              <div class="field-group" style="display:flex; gap:8px; flex-wrap: wrap;">
+                <div style="flex:1; min-width: 90px;"><label class="tiny-lbl">Horário</label><input type="time"/></div>
+                <div style="flex:1; min-width: 100px;"><label class="tiny-lbl">Último banho</label><input type="date"/></div>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">Perfume do Dia</label>
+                <input type="text" placeholder="Qual a fragrância?"/>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div class="tracker-box">
-          <h4>Mística & Mente</h4>
-          <div class="field-group">
-            <label class="tiny-lbl">🌖 Fase da Lua</label>
-            <input type="text" placeholder="Fase..." />
-          </div>
-          <div class="field-group" style="margin-top: 10px;">
-            <label class="inline-cb"><input type="checkbox"/> Magia do Caos <button class="ghost mini-add" onclick="addGenericField(this, 'Tracker/Sigilo...')">+</button></label>
-            <div class="dynamic-fields"><input type="text" placeholder="Tracker de Magia" /></div>
-          </div>
-          <div class="field-group">
-            <label class="inline-cb"><input type="checkbox"/> Tive um sonho?</label>
-            <textarea rows="2" placeholder="Descreva o sonho..." style="margin-top:4px;"></textarea>
-          </div>
-        </div>
-
-        <div class="tracker-box">
-          <h4>Corpo & Água</h4>
-          <div class="field-group">
-            <label class="tiny-lbl">💧 Hidratação (8 Copos)</label>
-            <div class="checkbox-row" id="bottleQuarters" style="gap:4px; margin-top:4px;"></div>
-          </div>
-          <div class="field-group" style="margin-top: 12px;">
-            <label class="inline-cb"><input type="checkbox"/> Pratiquei Exercício <button class="ghost mini-add" onclick="addGenericField(this, 'Qual atividade?')">+</button></label>
-            <div class="dynamic-fields"><input type="text" placeholder="Qual atividade?" /></div>
-          </div>
-          <div class="field-group" style="display:flex; justify-content:space-between; align-items:center;">
-            <label class="inline-cb"><input type="checkbox"/> Menstruada?</label>
-            <select style="width:70px;"><option>Fluxo</option><option>Leve</option><option>Méd.</option><option>Int.</option></select>
-          </div>
-          <div class="field-group"><label class="inline-cb"><input type="checkbox"/> Sexo</label></div>
-          <div class="field-group"><label class="inline-cb"><input type="checkbox"/> Masturbação</label></div>
-        </div>
-
-        <div class="tracker-box">
-          <h4>Casa & Gato</h4>
-          <div class="field-group">
-            <label class="tiny-lbl">🐈 Refeições do Gato:</label>
-            <div style="display:flex; gap:8px; margin-top:4px;">
-              <label class="inline-cb"><input type="checkbox"/> 1</label><label class="inline-cb"><input type="checkbox"/> 2</label><label class="inline-cb"><input type="checkbox"/> 3</label>
-            </div>
-          </div>
-          <div class="table-container">
-            <table style="font-size:11px; margin-top:10px;" id="houseTbl">
-              <tr><th style="text-align:left;">Tarefa</th><th>Precisa?</th><th>Feito</th></tr>
-              <tr><td>Tirar Lixo</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
-              <tr><td>Lavar Roupa</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
-              <tr><td>Arrumar Quarto</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
-              <tr><td>Arrumar Sala</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
-              <tr><td>Lavar Banheiro</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
-              <tr><td>Lavar Louça</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
-            </table>
-          </div>
-        </div>
-
-        <div class="tracker-box">
-          <h4>🎁 Cardápio de Dopamina</h4>
-          <div class="tiny-lbl" style="margin-bottom: 8px;">Recompensas rápidas por completar tarefas difíceis.</div>
-          <div class="field-group">
-            <label class="tiny-lbl">Pausas Curtas (5-15m) <button class="ghost mini-add" onclick="addGenericField(this, 'Ex: Comer um doce')">+</button></label>
-            <div class="dynamic-fields">
-              <div style="display:flex; gap:4px; margin-top:4px;">
-                <input type="text" placeholder="Ex: Ver 2 TikToks" />
-                <button class="xbtn" onclick="this.parentElement.remove(); autoSave();">✕</button>
+            <div class="tracker-box">
+              <h4>💼 Trabalho do Dia</h4>
+              <div class="field-group">
+                <label class="tiny-lbl">Foco Principal</label>
+                <select id="foco-trabalho" onchange="const out = this.nextElementSibling; out.style.display = this.value === 'Outro' ? 'block' : 'none';">
+                  <option disabled selected>Selecione...</option>
+                  <option>Tarot</option><option>RPG</option><option>Vídeos</option>
+                  <option>Músicas</option><option>Criação de Jogos</option><option value="Outro">Outro...</option>
+                </select>
+                <input type="text" placeholder="Qual?" style="display:none; margin-top:4px;">
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl" style="display:flex; justify-content:space-between;">O que eu fiz? <button class="ghost mini-add" onclick="addGenericField(this, 'Descreva a tarefa...')">+</button></label>
+                <div class="dynamic-fields">
+                   <div style="display:flex; gap:4px; margin-top:4px;"><input type="text" placeholder="Descreva a tarefa..." /><button class="xbtn" onclick="this.parentElement.remove();">✕</button></div>
+                </div>
+              </div>
+              <div class="field-group" style="margin-top: 8px;">
+                <label class="tiny-lbl">Tempo investido</label>
+                <input type="text" placeholder="Ex: 2h 30m"/>
               </div>
             </div>
-          </div>
-          <div class="field-group" style="margin-top:12px;">
-            <label class="tiny-lbl">Recompensas Maiores (Fim do dia) <button class="ghost mini-add" onclick="addGenericField(this, 'Ex: Jogar videogame')">+</button></label>
-            <div class="dynamic-fields">
-              <div style="display:flex; gap:4px; margin-top:4px;">
-                <input type="text" placeholder="Ex: Assistir 1 ep de série" />
-                <button class="xbtn" onclick="this.parentElement.remove(); autoSave();">✕</button>
+
+            <div class="tracker-box">
+              <h4>✒️ Poeminhas</h4>
+              <div class="field-group" style="display:flex; gap:8px; align-items:center;">
+                <button class="ghost mini-add" style="margin:0;" onclick="gerarPalavra(this)">Gerar Inspiração</button>
+                <span class="palavra-gerada" style="font-weight: bold; font-size: 11px; color: var(--accent);">---</span>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">Tema / Título</label>
+                <input type="text" placeholder="Sobre o que é?">
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl" style="display:flex; justify-content:space-between;">Versos <button class="ghost mini-add" onclick="addVersoField(this)">+</button></label>
+                <div class="dynamic-fields versos-container">
+                   <div style="display:flex; gap:4px; margin-top:4px;">
+                     <input type="text" placeholder="Verso..." style="flex:3;">
+                     <select class="rima-select" onchange="analisarRimas(this)" style="flex:1; padding: 4px;"><option value="-">-</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
+                     <button class="xbtn" onclick="const p = this.parentElement.parentElement; this.parentElement.remove(); analisarRimasContainer(p);">✕</button>
+                   </div>
+                </div>
+              </div>
+              <div class="field-group" style="margin-top: 8px;">
+                <label class="tiny-lbl">Esquema Rímico: <span class="analise-rima" style="font-weight:bold;">Nenhum</span></label>
               </div>
             </div>
+
+
+
+            <div class="tracker-box terapia-box">
+              <h4>
+                Terapia: Tarefa da Semana
+                <div>
+                  <button class="ghost mini-add" onclick="duplicateBox(this, 'terapia-box')">+</button>
+                  <button class="xbtn-sec" style="margin-right:0;" onclick="removeBox(this, 'terapia-box')">✕</button>
+                </div>
+              </h4>
+              <div class="field-group">
+                <label class="tiny-lbl">Tarefa a cumprir</label>
+                <textarea rows="2" placeholder="O que foi combinado na sessão?"></textarea>
+              </div>
+              <div class="field-group" style="margin-top: 6px;">
+                <label class="inline-cb"><input type="checkbox"/> Tarefa concluída?</label>
+              </div>
+              <div class="field-group" style="margin-top: 6px;">
+                <label class="tiny-lbl">Resultados / Observações</label>
+                <textarea rows="2" placeholder="Como me senti? O que aprendi?"></textarea>
+              </div>
+            </div>
+
+            <div class="tracker-box">
+              <h4>🌙 Sono & Despertar</h4>
+              <div class="field-group" style="display:flex; gap:8px;">
+                <div style="flex:1">
+                  <label class="tiny-lbl">Hora que acordou</label>
+                  <input type="time" />
+                </div>
+                <div style="flex:1">
+                  <label class="tiny-lbl">Horas dormidas</label>
+                  <input type="number" placeholder="Ex: 7.5" step="0.5" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">Qualidade do Sono</label>
+                <input type="range" min="1" max="10" value="5" />
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:-4px;"><span>Péssimo</span><span>Excelente</span></div>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">Forma que acordou</label>
+                <select>
+                  <option disabled selected>Selecione...</option>
+                  <option>Naturalmente</option>
+                  <option>Despertador</option>
+                  <option>Barulho</option>
+                  <option>Luz</option>
+                  <option>Gato</option>
+                  <option>Outro</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">Ambiente</label>
+                <select>
+                  <option disabled selected>Selecione...</option>
+                  <option>Escuro total</option>
+                  <option>Pouca luz</option>
+                  <option>Claro</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-top: 8px;">
+                <label class="inline-cb"><input type="checkbox"/> Tive refluxo?</label>
+              </div>
+            </div>
+            
+            <div class="tracker-box tarot-box">
+              <h4>
+                Leitura de Tarot 
+                <div>
+                  <button class="ghost mini-add" onclick="duplicateBox(this, 'tarot-box')">+</button>
+                  <button class="xbtn-sec" style="margin-right:0;" onclick="removeBox(this, 'tarot-box')">✕</button>
+                </div>
+              </h4>
+              <div class="field-group">
+                <label class="tiny-lbl">🔮 Pergunta ou Tema</label>
+                <input type="text" placeholder="O que estou consultando?" />
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">🎴 Cartas <button class="ghost mini-add" onclick="addTarotCardField(this)">+ Carta</button></label>
+                <div class="dynamic-fields tarot-cards-container">
+                  <div class="tarot-card-row">
+                    <select class="rws-select"><option>Carregando cartas...</option></select>
+                    <input type="text" placeholder="Significado / Intuição" />
+                    <button class="xbtn" onclick="this.parentElement.remove();">✕</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tracker-box">
+              <h4>Mística & Mente</h4>
+              <div class="field-group">
+                <label class="tiny-lbl">🌖 Fase da Lua</label>
+                <input type="text" placeholder="Fase..." />
+              </div>
+              <div class="field-group" style="margin-top: 10px;">
+                <label class="inline-cb"><input type="checkbox"/> Magia do Caos <button class="ghost mini-add" onclick="addGenericField(this, 'Tracker/Sigilo...')">+</button></label>
+                <div class="dynamic-fields"><input type="text" placeholder="Tracker de Magia" /></div>
+              </div>
+              <div class="field-group">
+                <label class="inline-cb"><input type="checkbox"/> Tive um sonho?</label>
+                <textarea rows="2" placeholder="Descreva o sonho..." style="margin-top:4px;"></textarea>
+              </div>
+            </div>
+
+            <div class="tracker-box">
+              <h4>Corpo & Água</h4>
+              <div class="field-group">
+                <label class="tiny-lbl">💧 Hidratação (8 Copos)</label>
+                <div class="checkbox-row" id="bottleQuarters" style="gap:4px; margin-top:4px;"></div>
+              </div>
+              <div class="field-group" style="margin-top: 12px;">
+                <label class="inline-cb"><input type="checkbox"/> Pratiquei Exercício <button class="ghost mini-add" onclick="addGenericField(this, 'Qual atividade?')">+</button></label>
+                <div class="dynamic-fields"><input type="text" placeholder="Qual atividade?" /></div>
+              </div>
+              <div class="field-group" style="display:flex; justify-content:space-between; align-items:center;">
+                <label class="inline-cb"><input type="checkbox"/> Menstruada?</label>
+                <select style="width:70px;"><option>Fluxo</option><option>Leve</option><option>Méd.</option><option>Int.</option></select>
+              </div>
+              <div class="field-group"><label class="inline-cb"><input type="checkbox"/> Sexo</label></div>
+              <div class="field-group"><label class="inline-cb"><input type="checkbox"/> Masturbação</label></div>
+            </div>
+
+            <div class="tracker-box">
+              <h4>Casa & Gato</h4>
+              <div class="field-group">
+                <label class="tiny-lbl">🐈 Refeições do Gato:</label>
+                <div style="display:flex; gap:8px; margin-top:4px;">
+                  <label class="inline-cb"><input type="checkbox"/> 1</label><label class="inline-cb"><input type="checkbox"/> 2</label><label class="inline-cb"><input type="checkbox"/> 3</label>
+                </div>
+              </div>
+              <div class="table-container">
+                <table style="font-size:11px; margin-top:10px;" id="houseTbl">
+                  <tr><th style="text-align:left;">Tarefa</th><th>Precisa?</th><th>Feito</th></tr>
+                  <tr><td>Tirar Lixo</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
+                  <tr><td>Lavar Roupa</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
+                  <tr><td>Arrumar Quarto</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
+                  <tr><td>Arrumar Sala</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
+                  <tr><td>Lavar Banheiro</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
+                  <tr><td>Lavar Louça</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
+                </table>
+              </div>
+            </div>
+
+            <div class="tracker-box">
+              <h4>🎁 Cardápio de Dopamina</h4>
+              <div class="tiny-lbl" style="margin-bottom: 8px;">Recompensas rápidas por completar tarefas difíceis.</div>
+              <div class="field-group">
+                <label class="tiny-lbl">Pausas Curtas (5-15m) <button class="ghost mini-add" onclick="addGenericField(this, 'Ex: Comer um doce')">+</button></label>
+                <div class="dynamic-fields">
+                  <div style="display:flex; gap:4px; margin-top:4px;">
+                    <input type="text" placeholder="Ex: Ver 2 TikToks" />
+                    <button class="xbtn" onclick="this.parentElement.remove();">✕</button>
+                  </div>
+                </div>
+              </div>
+              <div class="field-group" style="margin-top:12px;">
+                <label class="tiny-lbl">Recompensas Maiores (Fim do dia) <button class="ghost mini-add" onclick="addGenericField(this, 'Ex: Jogar videogame')">+</button></label>
+                <div class="dynamic-fields">
+                  <div style="display:flex; gap:4px; margin-top:4px;">
+                    <input type="text" placeholder="Ex: Assistir 1 ep de série" />
+                    <button class="xbtn" onclick="this.parentElement.remove();">✕</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-      </div>
+        <div style="flex:1; min-width: 250px;" class="section collapsed">
+            <div class="section-header">
+                <span class="drag-section-handle">✥</span>
+                <label>🤖 Gemini (Vercel)</label>
+                <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            </div>
+            <div class="section-content">
+                <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+                    <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
+                </div>
+                <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+                    <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
+                    <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section hide-in-focus collapsed">
+          <div class="section-header">
+              <span class="drag-section-handle" title="Arraste a seção">✥</span>
+              <label>Hiwaifu</label>
+              <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+          </div>
+          <div class="section-content">
+              <iframe 
+                  src="https://www.hiwaifu.com/pt" 
+                  style="width: 100%; height: 500px; border: none; border-radius: 6px; margin-top: 8px; background: var(--bg);" 
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation"
+                  title="Hiwaifu 😘">
+              </iframe>
+          </div>
+        </div>
+
+        <div class="section hide-in-focus collapsed">
+          <div class="section-header">
+              <span class="drag-section-handle" title="Arraste a seção">✥</span>
+              <label>✨ Planner's core</label>
+              <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+          </div>
+          <div class="section-content">
+              <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+                  <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
+              </div>
+              <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+                  <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
+                  <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
+              </div>
+          </div>
+        </div>
+
+        <div class="section hide-in-focus collapsed">
+            <div class="section-header">
+                <span class="drag-section-handle" title="Arraste a seção">✥</span>
+                <label>🎲 Rolador de Dados RPG</label>
+                <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            </div>
+            <div class="section-content">
+                <div id="mesa-dados" class="mesa-dados">
+                    <span style="color: var(--muted); font-size: 13px;">Adicione dados nos botões abaixo...</span>
+                </div>
+                
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px;">
+                    <button class="ghost mini-add" onclick="adicionarDado(2)">+ d2</button>
+                    <button class="ghost mini-add" onclick="adicionarDado(4)">+ d4</button>
+                    <button class="ghost mini-add" onclick="adicionarDado(6)">+ d6</button>
+                    <button class="ghost mini-add" onclick="adicionarDado(8)">+ d8</button>
+                    <button class="ghost mini-add" onclick="adicionarDado(10)">+ d10</button>
+                    <button class="ghost mini-add" onclick="adicionarDado(12)">+ d12</button>
+                    <button class="ghost mini-add" onclick="adicionarDado(20)" style="font-weight:bold; color:var(--accent);">+ d20</button>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="rolarTodosOsDados()" style="flex: 1; padding: 12px; font-weight: bold; background: var(--accent); color: white; font-size: 15px; box-shadow: 0 4px 0 rgba(0,0,0,0.2);">🎲 Rolar Tudo</button>
+                    <button onclick="limparDados()" class="ghost" style="padding: 12px; color: #e53935;">🗑️ Limpar</button>
+                </div>
+                
+                <div id="total-dados" style="text-align: center; margin-top: 15px; font-weight: 900; font-size: 20px; color: var(--accent);"></div>
+            </div>
+        </div>
+        
+        <div class="section hide-in-focus collapsed">
+            <div class="section-header">
+                <span class="drag-section-handle" title="Arraste a seção">✥</span>
+              <label>Doodling Livre 🎨</label>
+                <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+            </div>
+            <div class="section-content">
+                <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                  <label style="margin:0;">Tamanho: <input type="range" class="brush-size" min="1" max="20" value="3" style="width: 100px; display:inline-block; vertical-align:middle;"></label>
+                  <label style="margin:0;">Pincel: 
+                    <select class="brush-type" style="width: auto; padding: 4px;">
+                      <option value="round">Redondo</option>
+                      <option value="square">Quadrado</option>
+                    </select>
+                  </label>
+                  <button class="ghost mini-add" onclick="limparCanvas(this)">Limpar Tela</button>
+                  <button class="ghost mini-add" onclick="exportarCanvas(this)">Salvar (PNG)</button>
+                </div>
+                <canvas class="doodle-canvas" width="800" height="300" style="border: 2px dashed var(--border); border-radius: 8px; touch-action: none; background: transparent; width: 100%; max-width: 100%; display: block; cursor: crosshair;"></canvas>
+            </div>
+        </div>
+        
     </div>
 
-    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center; flex-wrap:wrap; gap:12px;" class="section hide-in-focus collapsed">
+    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center; flex-wrap:wrap; gap:12px;" class="section hide-in-focus">
       <div class="controls">
         <button onclick="printPlanner()">Imprimir (A4 Comum)</button>
         <button style="background: #2E7D32;" onclick="gerarPDFIninterrupto()">📥 Baixar PDF Ininterrupto</button>
@@ -948,67 +955,20 @@
       </div>
 
       <div class="controls">
-        <button class="ghost" onclick="saveInternalBackup()">💾 Salvar Backup no App e Resetar Semana</button>
         <label style="display:inline-flex; align-items:center; gap:4px; margin:0 12px; font-weight:normal; font-size:12px; color:var(--ink);">
           <input type="checkbox" id="print-timeblock-check" checked /> Imprimir Time-blocking
         </label>
       </div>
-
-      <button id="btn-salvar-manual" onclick="salvarManual()" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background: #4CAF50; color: white; border: none; padding: 12px 20px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold;">
-  💾 Salvar Alterações
-</button>
-      
-      <div class="controls">
-        <button class="ghost" onclick="limparCachePagina()">🧹 Limpar Cache do Navegador</button>
-        <button class="ghost" onclick="resetAll()">Limpar Tudo</button>
-      </div>
     </div>
 
-    <div id="backup-section" class="backup-area hide-in-focus">
-        <label>Histórico de Backups Salvos <span class="tiny-lbl" style="display:inline;">(Visualize semanas anteriores)</span></label>
-        <div id="backup-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 250px; overflow-y: auto; margin-top: 8px;">
-            <div class="tiny-lbl">Nenhum backup salvo ainda.</div>
-        </div>
-    </div>
-
-  </div>
-
-  <div id="backup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; overflow-y:auto; padding:16px; box-sizing:border-box;">
-    <button onclick="closeBackupPreview()" style="width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:16px; font-weight:bold; margin-bottom:16px; position:sticky; top:0; z-index:10000; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2);">
-      🔙 Fechar e Voltar ao Planner Atual
-    </button>
-    <div id="backup-content" style="pointer-events: none; opacity: 0.95;"></div>
   </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-  //SALVANDO MANUALMENTE //
-  function salvarManual() {
-    // Chama a função de salvar que já existe no seu código
-    if (typeof saveData === "function") {
-        saveData();
-    } else if (typeof autoSave === "function") {
-        autoSave();
-    }
-
-    // Feedback visual para você saber que salvou
-    const btn = document.getElementById('btn-salvar-manual');
-    const originalText = btn.innerHTML;
-    
-    btn.innerHTML = "✅ Salvo!";
-    btn.style.background = "#2E7D32"; // Muda para um verde mais escuro
-
-    // Volta ao normal depois de 2 segundos
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.background = "#4CAF50";
-    }, 2000);
-}
   // ====== SISTEMA DE DADOS ======
 let listaDeDados = [];
 
 function adicionarDado(lados) {
-    // Adiciona um novo dado à lista com ID único
     listaDeDados.push({ id: Date.now() + Math.random(), lados: lados, valor: lados });
     renderizarDados();
 }
@@ -1016,7 +976,7 @@ function adicionarDado(lados) {
 function removerDado(id) {
     listaDeDados = listaDeDados.filter(d => d.id !== id);
     renderizarDados();
-    document.getElementById('total-dados').innerText = ''; // Limpa o total ao remover
+    document.getElementById('total-dados').innerText = ''; 
 }
 
 function limparDados() {
@@ -1040,7 +1000,7 @@ function renderizarDados() {
         const elementoDado = document.createElement('div');
         elementoDado.className = 'dado-3d';
         elementoDado.id = 'dado-' + dado.id;
-        elementoDado.innerText = dado.valor; // Começa mostrando o valor máximo
+        elementoDado.innerText = dado.valor; 
         
         const etiquetaTipo = document.createElement('span');
         etiquetaTipo.className = 'dado-tipo';
@@ -1061,38 +1021,35 @@ function renderizarDados() {
 function rolarTodosOsDados() {
     if (listaDeDados.length === 0) return;
     
-    // 1. Inicia a animação em todos os dados
     listaDeDados.forEach(dado => {
         const el = document.getElementById('dado-' + dado.id);
         if(el) {
             el.classList.add('rolando');
-            el.innerText = '?'; // Esconde o valor enquanto roda
+            el.innerText = '?'; 
         }
     });
     
     document.getElementById('total-dados').innerText = 'Rolando...';
     
-    // 2. Espera 600 milissegundos (o tempo da animação) para dar o resultado
     setTimeout(() => {
         let somaTotal = 0;
         
         listaDeDados.forEach(dado => {
-            // Sorteia um número de 1 até o número de lados do dado
             const resultado = Math.floor(Math.random() * dado.lados) + 1;
             dado.valor = resultado;
             somaTotal += resultado;
             
             const el = document.getElementById('dado-' + dado.id);
             if(el) {
-                el.classList.remove('rolando'); // Para a animação
-                el.innerText = resultado; // Mostra o resultado final
+                el.classList.remove('rolando'); 
+                el.innerText = resultado; 
             }
         });
         
-        // Atualiza a soma na tela
         document.getElementById('total-dados').innerText = `Total: ${somaTotal}`;
     }, 600);
 }
+
   /* ====== MODO FOCO, POMODORO & SEÇÕES ====== */
   function toggleFocusMode() {
     document.body.classList.toggle('focus-mode');
@@ -1104,7 +1061,6 @@ function rolarTodosOsDados() {
     const section = btn.closest('.section');
     section.classList.toggle('collapsed');
     btn.innerText = section.classList.contains('collapsed') ? '➕' : '➖';
-    autoSave();
   }
 
   /* ====== ATUALIZAÇÃO DO ÍNDICE DINÂMICO ====== */
@@ -1114,13 +1070,11 @@ function rolarTodosOsDados() {
     indice.innerHTML = '';
     const labels = document.querySelectorAll('.section-header label');
     labels.forEach((lbl, i) => {
-        // Ignora o label do próprio índice para não ficar recursivo
         if(lbl.innerText.includes("Índice Rápido")) return;
 
         const sec = lbl.closest('.section');
         if(!sec.id) sec.id = 'secao-' + i;
         
-        // Transforma o título num botão de voltar
         lbl.style.cursor = 'pointer';
         lbl.title = "Voltar ao Índice";
         lbl.onclick = () => { window.location.hash = '#indice-container'; };
@@ -1158,7 +1112,6 @@ function rolarTodosOsDados() {
   function setUsableTimer() {
     const hours = parseFloat(document.getElementById('usableHours').value) || 0;
     if (!isUsableRunning) { usableSecondsLeft = Math.floor(hours * 3600); updateUsableDisplay(); }
-    autoSave();
   }
 
   function updateUsableDisplay() {
@@ -1182,9 +1135,9 @@ function rolarTodosOsDados() {
   }
 
   /* ====== REMOÇÃO E DUPLICAÇÃO SEGURA ====== */
-  function removeBox(btn, className) { const boxes = document.querySelectorAll('.' + className); if(boxes.length > 1) { btn.closest('.' + className).remove(); } else { const box = btn.closest('.' + className); box.querySelectorAll('input[type="text"], textarea').forEach(i => i.value = ''); box.querySelectorAll('select').forEach(s => s.selectedIndex = 0); box.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false); alert("Campos limpos. Pelo menos uma caixa deve permanecer."); } autoSave(); }
-  function duplicateDecomp(btn) { const box = btn.closest('.decomp-box'); const clone = box.cloneNode(true); clone.querySelectorAll('input').forEach(i => i.value = ''); box.parentElement.appendChild(clone); autoSave(); }
-  function duplicateBox(btn, className) { const box = btn.closest('.' + className); const clone = box.cloneNode(true); clone.querySelectorAll('input, textarea').forEach(i => { if(i.type==='checkbox') i.checked=false; else i.value = ''; }); box.parentElement.insertBefore(clone, box.nextSibling); autoSave(); }
+  function removeBox(btn, className) { const boxes = document.querySelectorAll('.' + className); if(boxes.length > 1) { btn.closest('.' + className).remove(); } else { const box = btn.closest('.' + className); box.querySelectorAll('input[type="text"], textarea').forEach(i => i.value = ''); box.querySelectorAll('select').forEach(s => s.selectedIndex = 0); box.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false); alert("Campos limpos. Pelo menos uma caixa deve permanecer."); } }
+  function duplicateDecomp(btn) { const box = btn.closest('.decomp-box'); const clone = box.cloneNode(true); clone.querySelectorAll('input').forEach(i => i.value = ''); box.parentElement.appendChild(clone); }
+  function duplicateBox(btn, className) { const box = btn.closest('.' + className); const clone = box.cloneNode(true); clone.querySelectorAll('input, textarea').forEach(i => { if(i.type==='checkbox') i.checked=false; else i.value = ''; }); box.parentElement.insertBefore(clone, box.nextSibling); }
 
   /* ====== PLANEJADOR DE REFEIÇÕES ====== */
   function addMeal() {
@@ -1196,22 +1149,20 @@ function rolarTodosOsDados() {
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
           <input type="text" placeholder="Qual refeição? (Ex: Almoço)" style="flex:2; min-width:120px;">
           <select style="flex:1; min-width:100px;"><option>Rápida 🥪</option><option>Elaborada 🍲</option></select>
-          <button class="xbtn-sec" style="margin:0;" onclick="this.closest('.meal-box').remove(); autoSave();">✕</button>
+          <button class="xbtn-sec" style="margin:0;" onclick="this.closest('.meal-box').remove();">✕</button>
       </div>
       <div class="meal-items-container" style="display:flex; flex-direction:column; gap:6px; padding-left:8px; border-left:2px solid var(--border);"></div>
       <button class="ghost mini-add" style="margin-top:8px;" onclick="addMealItem(this)">+ Elemento</button>
     `;
     container.appendChild(div);
-    autoSave();
   }
 
   function addMealItem(btn) {
     const container = btn.previousElementSibling;
     const div = document.createElement('div');
     div.style.display = 'flex'; div.style.gap = '6px'; div.style.alignItems = 'center';
-    div.innerHTML = `<input type="checkbox"><input type="text" placeholder="Item (Ex: Arroz, Salada, Fruta)"><button class="xbtn" onclick="this.parentElement.remove(); autoSave();">✕</button>`;
+    div.innerHTML = `<input type="checkbox"><input type="text" placeholder="Item (Ex: Arroz, Salada, Fruta)"><button class="xbtn" onclick="this.parentElement.remove();">✕</button>`;
     container.appendChild(div);
-    autoSave();
   }
 
   /* ====== LOGICA DO TRACKER DE POEMAS ====== */
@@ -1226,17 +1177,15 @@ function rolarTodosOsDados() {
           const fallback = ["Saudade", "Caos", "Oceano", "Espelho", "Neblina"];
           span.innerText = fallback[Math.floor(Math.random() * fallback.length)];
       }
-      autoSave();
   }
   function addVersoField(btn) {
       const container = btn.closest('.field-group').querySelector('.versos-container');
       const div = document.createElement('div');
       div.style.display = 'flex'; div.style.gap = '4px'; div.style.marginTop = '4px';
-      div.innerHTML = `<input type="text" placeholder="Verso..." style="flex:3;"><select class="rima-select" onchange="analisarRimas(this)" style="flex:1; padding: 4px;"><option value="-">-</option><option>A</option><option>B</option><option>C</option><option>D</option></select><button class="xbtn" onclick="const p = this.parentElement.parentElement; this.parentElement.remove(); analisarRimasContainer(p); autoSave();">✕</button>`;
+      div.innerHTML = `<input type="text" placeholder="Verso..." style="flex:3;"><select class="rima-select" onchange="analisarRimas(this)" style="flex:1; padding: 4px;"><option value="-">-</option><option>A</option><option>B</option><option>C</option><option>D</option></select><button class="xbtn" onclick="const p = this.parentElement.parentElement; this.parentElement.remove(); analisarRimasContainer(p);">✕</button>`;
       container.appendChild(div);
-      autoSave();
   }
-  function analisarRimas(select) { analisarRimasContainer(select.closest('.versos-container')); autoSave(); }
+  function analisarRimas(select) { analisarRimasContainer(select.closest('.versos-container')); }
   function analisarRimasContainer(container) {
       if(!container) return;
       const selects = container.querySelectorAll('.rima-select');
@@ -1249,6 +1198,7 @@ function rolarTodosOsDados() {
       const resultSpan = container.closest('.tracker-box').querySelector('.analise-rima');
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
+
 // ====== FUNÇÃO DO GEMINI ======
 async function enviarChat(btn) {
     const input = btn.parentElement.querySelector('input');
@@ -1256,11 +1206,9 @@ async function enviarChat(btn) {
     const prompt = input.value;
     if(!prompt.trim()) return;
 
-    // Mostra a sua mensagem
     chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
     input.value = '';
 
-    // Mostra "Pensando..."
     const loadingId = 'load-gemini-' + Date.now();
     chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
     chat.scrollTop = chat.scrollHeight;
@@ -1273,11 +1221,9 @@ async function enviarChat(btn) {
         });
         const data = await res.json();
         
-        // Pega a resposta do Gemini e formata
         const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
         const textoFormatado = marked.parse(textoCru);
 
-        // Remove o "Pensando..." e coloca a resposta formatada
         document.getElementById(loadingId).remove();
         chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
     } catch(e) {
@@ -1327,45 +1273,32 @@ async function enviarPollinations() {
   }
   chat.scrollTop = chat.scrollHeight;
 }
+
   /* ====== DADOS DO TAROT E LAYOUT ====== */
-  function changeViewMode(mode) { document.body.className = document.body.classList.contains('focus-mode') ? 'focus-mode' : ''; document.body.classList.add('view-' + mode); autoSave(); }
+  function changeViewMode(mode) { document.body.className = document.body.classList.contains('focus-mode') ? 'focus-mode' : ''; document.body.classList.add('view-' + mode); }
   const tarotDeck = ["--- Arcanos Maiores ---", "O Louco", "O Mago", "A Sacerdotisa", "A Imperatriz", "O Imperador", "O Hierofante", "Os Enamorados", "O Carro", "A Força", "O Eremita", "A Roda da Fortuna", "A Justiça", "O Enforcado", "A Morte", "A Temperança", "O Diabo", "A Torre", "A Estrela", "A Lua", "O Sol", "O Julgamento", "O Mundo", "--- Paus ---", ...[1,2,3,4,5,6,7,8,9,10,"Pajem","Cavaleiro","Rainha","Rei"].map(v=>`${v} de Paus`), "--- Copas ---", ...[1,2,3,4,5,6,7,8,9,10,"Pajem","Cavaleiro","Rainha","Rei"].map(v=>`${v} de Copas`), "--- Espadas ---", ...[1,2,3,4,5,6,7,8,9,10,"Pajem","Cavaleiro","Rainha","Rei"].map(v=>`${v} de Espadas`), "--- Ouros ---", ...[1,2,3,4,5,6,7,8,9,10,"Pajem","Cavaleiro","Rainha","Rei"].map(v=>`${v} de Ouros`)];
   function getTarotOptions() { return tarotDeck.map(c => c.startsWith("---") ? `<option disabled>${c}</option>` : `<option value="${c}">${c}</option>`).join(''); }
   function populateTarotSelects() { document.querySelectorAll('.rws-select').forEach(sel => { if(sel.options.length <= 1) { sel.innerHTML = getTarotOptions(); } }); }
-  function addTarotCardField(btn) { const container = btn.closest('.field-group').querySelector('.tarot-cards-container'); const row = document.createElement('div'); row.className = 'tarot-card-row'; row.innerHTML = `<select class="rws-select">${getTarotOptions()}</select><input type="text" placeholder="Significado / Intuição" /><button class="xbtn" onclick="this.parentElement.remove(); autoSave();">✕</button>`; container.appendChild(row); autoSave(); }
-  function addGenericField(btn, placeholderText) { const container = btn.closest('.field-group').querySelector('.dynamic-fields'); const row = document.createElement('div'); row.style.display = 'flex'; row.style.gap = '4px'; row.style.marginTop = '4px'; row.innerHTML = `<input type="text" placeholder="${placeholderText}" /><button class="xbtn" onclick="this.parentElement.remove(); autoSave();">✕</button>`; container.appendChild(row); autoSave(); }
+  function addTarotCardField(btn) { const container = btn.closest('.field-group').querySelector('.tarot-cards-container'); const row = document.createElement('div'); row.className = 'tarot-card-row'; row.innerHTML = `<select class="rws-select">${getTarotOptions()}</select><input type="text" placeholder="Significado / Intuição" /><button class="xbtn" onclick="this.parentElement.remove();">✕</button>`; container.appendChild(row); }
+  function addGenericField(btn, placeholderText) { const container = btn.closest('.field-group').querySelector('.dynamic-fields'); const row = document.createElement('div'); row.style.display = 'flex'; row.style.gap = '4px'; row.style.marginTop = '4px'; row.innerHTML = `<input type="text" placeholder="${placeholderText}" /><button class="xbtn" onclick="this.parentElement.remove();">✕</button>`; container.appendChild(row); }
 
-  /* ====== TEMAS E AUTO-SAVE ====== */
-  function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); autoSave(); }
-  function syncToAttributes() {
-    document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea').forEach(el => { el.setAttribute('value', el.value); if(el.tagName === 'TEXTAREA') el.innerHTML = el.value; });
-    document.querySelectorAll('input[type="range"]').forEach(el => el.setAttribute('value', el.value));
-    document.querySelectorAll('input[type="checkbox"]').forEach(el => { if(el.checked) el.setAttribute('checked', 'checked'); else el.removeAttribute('checked'); });
-    document.querySelectorAll('select').forEach(el => { const opts = el.querySelectorAll('option'); opts.forEach(opt => opt.removeAttribute('selected')); if(el.selectedIndex >= 0) opts[el.selectedIndex].setAttribute('selected', 'selected'); });
-  }
-  function autoSave() { syncToAttributes(); const plannerHtml = document.getElementById('planner').innerHTML; const theme = document.documentElement.getAttribute('data-theme') || 'creme'; const layout = document.getElementById('viewMode').value || 'auto'; localStorage.setItem('tdah_planner_save', JSON.stringify({ html: plannerHtml, theme: theme, layout: layout })); updateIndex(); }
-  function loadData() {
-    const saved = localStorage.getItem('tdah_planner_save');
-    if(saved) { 
-      const data = JSON.parse(saved); document.getElementById('planner').innerHTML = data.html; 
-      if(data.theme) { document.documentElement.setAttribute('data-theme', data.theme); document.getElementById('themeSelect').value = data.theme; } 
-      if(data.layout) { document.getElementById('viewMode').value = data.layout; changeViewMode(data.layout); } 
-      if(document.getElementById('usableHours') && document.getElementById('usableHours').value) setUsableTimer();
-    }
-  }
+  /* ====== TEMAS ====== */
+  function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); }
+  
+  // Função autoSave deixada vazia propositalmente para não causar erros de referência
+  // com os botões espalhados pelo HTML e garantir que o armazenamento local esteja desativado.
+  function autoSave() {}
 
   /* ====== SISTEMA DE DOODLING (CANVAS) ====== */
   function initCanvas() {
       const canvasList = document.querySelectorAll('.doodle-canvas');
       canvasList.forEach(canvas => {
-          // Clona o canvas para remover os event listeners antigos em caso de reload
           const clone = canvas.cloneNode(true);
           canvas.parentNode.replaceChild(clone, canvas);
           const newCanvas = clone;
           const newCtx = newCanvas.getContext('2d');
           let isDrawing = false;
           
-          // Tenta puxar a cor principal do tema do seu css
           const getLineColor = () => getComputedStyle(document.body).getPropertyValue('--ink') || 'black';
 
           newCanvas.addEventListener('pointerdown', (e) => {
@@ -1379,7 +1312,7 @@ async function enviarPollinations() {
 
           newCanvas.addEventListener('pointermove', (e) => {
               if (!isDrawing) return;
-              e.preventDefault(); // Impede de arrastar a tela no celular
+              e.preventDefault(); 
               
               const wrapper = newCanvas.closest('.section-content');
               const brushSize = wrapper.querySelector('.brush-size').value;
@@ -1397,15 +1330,8 @@ async function enviarPollinations() {
               newCtx.stroke();
           });
 
-          newCanvas.addEventListener('pointerup', () => { isDrawing = false; newCanvas.setAttribute('data-saved-image', newCanvas.toDataURL()); autoSave(); });
+          newCanvas.addEventListener('pointerup', () => { isDrawing = false; });
           newCanvas.addEventListener('pointerout', () => { isDrawing = false; });
-          
-          // Se houver desenho salvo no atributo de dados, ele recarrega na tela
-          if(newCanvas.getAttribute('data-saved-image')) {
-              const img = new Image();
-              img.onload = () => newCtx.drawImage(img, 0, 0);
-              img.src = newCanvas.getAttribute('data-saved-image');
-          }
       });
   }
 
@@ -1413,8 +1339,6 @@ async function enviarPollinations() {
       const canvas = btn.closest('.section-content').querySelector('.doodle-canvas');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height); 
-      canvas.removeAttribute('data-saved-image');
-      autoSave();
   }
   
   function exportarCanvas(btn) {
@@ -1513,13 +1437,12 @@ async function enviarPollinations() {
           let newRow; if(targetTable.id === 'prioTbl') newRow = addPriority(); else if(targetTable.id === 'tasksTbl') newRow = addTask(); else if(targetTable.id === 'interruptTbl') newRow = addInterrupt(); else if(targetTable.id === 'ideasTbl') newRow = addIdea(); else if(targetTable.id === 'projectsTbl') newRow = addProject(); else if(targetTable.id === 'weeklyTrackerTbl') newRow = addWeeklyTracker(); else if(targetTable.id === 'timeTbl') newRow = addTimeblock();
           if(newRow) { const newInput = newRow.querySelector('input[type="text"]:not([readonly])'); if(newInput && text !== "row") newInput.value = text; if (targetRow) targetTable.querySelector('tbody').insertBefore(newRow, targetRow); }
         }
-        if (sourceTableId === 'timeTbl') { const input = draggedElement.querySelector('input[type="text"]'); if (input) input.value = ''; } else draggedElement.remove(); autoSave(); return false;
+        if (sourceTableId === 'timeTbl') { const input = draggedElement.querySelector('input[type="text"]'); if (input) input.value = ''; } else draggedElement.remove(); return false;
       }
       
       if (draggedElement && targetRow && draggedElement !== targetRow && draggedElement.parentNode === targetRow.parentNode) {
         const tbody = targetRow.parentNode; const rows = Array.from(tbody.children);
         if (rows.indexOf(draggedElement) < rows.indexOf(targetRow)) tbody.insertBefore(draggedElement, targetRow.nextSibling); else tbody.insertBefore(draggedElement, targetRow);
-        autoSave();
       }
     } 
     else if (dragType === 'section') {
@@ -1535,7 +1458,6 @@ async function enviarPollinations() {
             } else {
                 targetCol.appendChild(draggedElement);
             }
-            autoSave();
         }
     }
     return false;
@@ -1544,54 +1466,33 @@ async function enviarPollinations() {
   function handleDragEnd(e) {
     if(dragType === 'row') { e.target.classList.remove('dragging'); document.querySelectorAll('.sortable-row').forEach(r => r.classList.remove('drag-over', 'drop-target-timeblock')); } 
     else if (dragType === 'section') { e.target.classList.remove('dragging'); document.querySelectorAll('.section').forEach(s => s.classList.remove('drag-over')); e.target.removeAttribute('draggable');}
-    draggedElement = null; dragType = null; autoSave();
+    draggedElement = null; dragType = null;
   }
 
   /* ====== BUILDERS DE LINHA ====== */
-  function deleteRow(btn){ const tr = btn.closest('tr'); if(tr) { tr.remove(); autoSave(); } }
-  function addPriority(){ const tbody = document.querySelector('#prioTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nova prioridade"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); autoSave(); return tr; }
-  function addTask(){ const tbody = document.querySelector('#tasksTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row task-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:24px"><input type="checkbox" /></td><td><input type="text" class="task-input" placeholder="Tarefa"/></td><td style="width:100px"><select><option>casa</option><option>trabalho</option><option>online</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); autoSave(); return tr; }
-  function addInterrupt(){ const tbody = document.querySelector('#interruptTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="O que me distraiu?"/></td><td style="width:80px"><input type="text" placeholder="Tempo"/></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); autoSave(); return tr; }
-  function addIdea(){ const tbody = document.querySelector('#ideasTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Ideia..."/></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); autoSave(); return tr; }
-  function addProject(){ const tbody = document.getElementById('projects'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nome"></td><td><input type="text" placeholder="Próximo passo"></td><td><input type="text" placeholder="__/__"></td><td><input type="number" min="0" max="100"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); autoSave(); return tr; }
-  function addTimeblock(){ const tbody = document.getElementById('timeTblBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row timeblock-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:100px"><input type="time" class="timeblock-time" /></td><td><input type="text" class="timeblock-input" placeholder="Foco / Ação"/></td><td style="width:100px"><select><option>Imutável</option><option>Mutável</option><option>Opcional</option><option>Remarcável</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); autoSave(); return tr; }
+  function deleteRow(btn){ const tr = btn.closest('tr'); if(tr) { tr.remove(); } }
+  function addPriority(){ const tbody = document.querySelector('#prioTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nova prioridade"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
+  function addTask(){ const tbody = document.querySelector('#tasksTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row task-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:24px"><input type="checkbox" /></td><td><input type="text" class="task-input" placeholder="Tarefa"/></td><td style="width:100px"><select><option>casa</option><option>trabalho</option><option>online</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
+  function addInterrupt(){ const tbody = document.querySelector('#interruptTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="O que me distraiu?"/></td><td style="width:80px"><input type="text" placeholder="Tempo"/></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
+  function addIdea(){ const tbody = document.querySelector('#ideasTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Ideia..."/></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
+  function addProject(){ const tbody = document.getElementById('projects'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nome"></td><td><input type="text" placeholder="Próximo passo"></td><td><input type="text" placeholder="__/__"></td><td><input type="number" min="0" max="100"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
+  function addTimeblock(){ const tbody = document.getElementById('timeTblBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row timeblock-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:100px"><input type="time" class="timeblock-time" /></td><td><input type="text" class="timeblock-input" placeholder="Foco / Ação"/></td><td style="width:100px"><select><option>Imutável</option><option>Mutável</option><option>Opcional</option><option>Remarcável</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
   
-  function updateWeeklyCheckboxes(input) { const tr = input.closest('tr'); let qty = parseInt(input.value) || 1; if(qty < 1) qty = 1; if(qty > 20) qty = 20; const containers = tr.querySelectorAll('.day-cb-container'); containers.forEach(td => { td.innerHTML = ''; const flexDiv = document.createElement('div'); flexDiv.style.display = 'flex'; flexDiv.style.flexWrap = 'wrap'; flexDiv.style.gap = '2px'; flexDiv.style.justifyContent = 'center'; for(let i=0; i<qty; i++) { const cb = document.createElement('input'); cb.type = 'checkbox'; flexDiv.appendChild(cb); } td.appendChild(flexDiv); }); autoSave(); }
-  function addWeeklyTracker() { const tbody = document.getElementById('weeklyTrackersBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Novo hábito"/></td><td><input type="number" min="1" max="10" value="1" onchange="updateWeeklyCheckboxes(this)"/></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); autoSave(); return tr; }
+  function updateWeeklyCheckboxes(input) { const tr = input.closest('tr'); let qty = parseInt(input.value) || 1; if(qty < 1) qty = 1; if(qty > 20) qty = 20; const containers = tr.querySelectorAll('.day-cb-container'); containers.forEach(td => { td.innerHTML = ''; const flexDiv = document.createElement('div'); flexDiv.style.display = 'flex'; flexDiv.style.flexWrap = 'wrap'; flexDiv.style.gap = '2px'; flexDiv.style.justifyContent = 'center'; for(let i=0; i<qty; i++) { const cb = document.createElement('input'); cb.type = 'checkbox'; flexDiv.appendChild(cb); } td.appendChild(flexDiv); }); }
+  function addWeeklyTracker() { const tbody = document.getElementById('weeklyTrackersBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Novo hábito"/></td><td><input type="number" min="1" max="10" value="1" onchange="updateWeeklyCheckboxes(this)"/></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
 
-  /* ====== IMPRESSÃO, PDF E BACKUP ====== */
+  /* ====== IMPRESSÃO E PDF ====== */
   function printPlanner() { window.print(); }
   
   function gerarTemplatePDF() {
-      // Adiciona a classe que apaga visualmente textos e placeholders
       document.body.classList.add('template-mode');
-      // Espera 1 segundo para a renderização e abre o menu de impressão
       setTimeout(() => {
           window.print();
-          // Remove a classe logo depois para voltar ao normal no PC
           setTimeout(() => document.body.classList.remove('template-mode'), 1000);
       }, 500);
   }
 
-  function gerarPDFIninterrupto() { const elemento = document.getElementById('planner'); const alturaPx = elemento.scrollHeight; const larguraPx = elemento.scrollWidth; const alturaMm = alturaPx * 0.264583; const larguraMm = larguraPx * 0.264583; const opcoes = { margin: 5, filename: 'Meu_Planner_TDAH_Continuo.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 }, jsPDF: { unit: 'mm', format: [larguraMm + 10, alturaMm + 10], orientation: 'portrait' } }; const botoes = document.querySelectorAll('button, .controls, .theme-select, .backup-area, .drag-section-handle'); botoes.forEach(b => b.style.visibility = 'hidden'); html2pdf().set(opcoes).from(elemento).save().then(() => { botoes.forEach(b => b.style.visibility = 'visible'); }); }
-
-  function renderBackups() { const backups = JSON.parse(localStorage.getItem('tdah_backups') || '[]'); const list = document.getElementById('backup-list'); list.innerHTML = ''; if (backups.length === 0) { list.innerHTML = '<div class="tiny-lbl">Nenhum backup salvo ainda.</div>'; return; } backups.forEach((bkp, index) => { const div = document.createElement('div'); div.className = 'backup-item'; div.innerHTML = `<span>📅 ${bkp.date}</span> <button class="ghost mini-add" onclick="viewBackup(${index})">👁️ Visualizar</button>`; list.appendChild(div); }); }
-  function saveInternalBackup() { if(!confirm('Salvar o planner atual no histórico e limpar tarefas diárias? (Projetos, Hábitos e Refeições serão mantidos)')) return; syncToAttributes(); const htmlContent = document.getElementById('planner').innerHTML; const dataHj = document.getElementById('date').value.split('-').reverse().join('/') || new Date().toLocaleString('pt-BR'); const backups = JSON.parse(localStorage.getItem('tdah_backups') || '[]'); backups.unshift({ date: dataHj, html: htmlContent, theme: document.documentElement.getAttribute('data-theme') }); if(backups.length > 10) backups.pop(); localStorage.setItem('tdah_backups', JSON.stringify(backups)); 
-    document.querySelectorAll('input[type="text"], input[type="number"], input[type="time"], textarea').forEach(inp => { const isProject = inp.closest('#projectsTbl'); const isIdea = inp.closest('#ideasTbl'); const isTarot = inp.closest('.tarot-box'); const isWeekly = inp.closest('#weekly-tracker-section'); const isMeal = inp.closest('#meal-planner'); const isTerapia = inp.closest('.terapia-box'); if (!isProject && !isIdea && !isTarot && !isWeekly && !isMeal && !isTerapia && inp.id !== 'date') { inp.value = ''; } });
-    document.querySelectorAll('input[type="checkbox"]').forEach(cb => { const isProject = cb.closest('#projectsTbl'); const isIdea = cb.closest('#ideasTbl'); const isTarot = cb.closest('.tarot-box'); const isWeekly = cb.closest('#weekly-tracker-section'); const isMeal = cb.closest('#meal-planner'); if (!isProject && !isIdea && !isTarot && !isWeekly && !isMeal && cb.id !== 'print-timeblock-check') { cb.checked = false; } });
-    const clearTable = (id) => { const tbody = document.querySelector(`#${id} tbody`); if(tbody) { const rows = Array.from(tbody.querySelectorAll('tr')); while(rows.length > 1) { rows.pop().remove(); } } }; clearTable('prioTbl'); clearTable('tasksTbl'); clearTable('interruptTbl'); clearTable('timeTbl'); const decomps = document.querySelectorAll('.decomp-box'); decomps.forEach((box, i) => { if(i > 0) box.remove(); });
-    autoSave(); renderBackups(); alert('Backup salvo no app!'); }
-  function viewBackup(index) { const backups = JSON.parse(localStorage.getItem('tdah_backups') || '[]'); const bkp = backups[index]; if(bkp) { document.getElementById('backup-content').innerHTML = bkp.html; document.getElementById('backup-overlay').style.display = 'block'; } }
-  function closeBackupPreview() { document.getElementById('backup-overlay').style.display = 'none'; document.getElementById('backup-content').innerHTML = ''; }
-  
-  function limparCachePagina() { 
-      if(!confirm('Atenção: Isso vai limpar completamente o cache e deletar TODOS os dados e backups salvos desse planner no navegador. Tem certeza?')) return; 
-      localStorage.removeItem('tdah_planner_save');
-      localStorage.removeItem('tdah_backups');
-      window.location.reload(true); 
-  }
-  
-  function resetAll() { if(!confirm('Limpar o planner? Todo o conteúdo e BACKUPS salvos serão apagados.')) return; localStorage.removeItem('tdah_planner_save'); localStorage.removeItem('tdah_backups'); location.reload(); }
+  function gerarPDFIninterrupto() { const elemento = document.getElementById('planner'); const alturaPx = elemento.scrollHeight; const larguraPx = elemento.scrollWidth; const alturaMm = alturaPx * 0.264583; const larguraMm = larguraPx * 0.264583; const opcoes = { margin: 5, filename: 'Meu_Planner_TDAH_Continuo.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 }, jsPDF: { unit: 'mm', format: [larguraMm + 10, alturaMm + 10], orientation: 'portrait' } }; const botoes = document.querySelectorAll('button, .controls, .theme-select, .drag-section-handle'); botoes.forEach(b => b.style.visibility = 'hidden'); html2pdf().set(opcoes).from(elemento).save().then(() => { botoes.forEach(b => b.style.visibility = 'visible'); }); }
 
   /* ====== SISTEMA DE PARTÍCULAS / BRILHOS MÁGICOS ====== */
   function initSparkles() {
@@ -1613,14 +1514,13 @@ async function enviarPollinations() {
 
       const particles = [];
       
-      // Mapeia as cores baseado no tema
       function getSparkleColor() {
-          const theme = document.documentElement.getAttribute('data-theme') || 'creme';
+          const theme = document.documentElement.getAttribute('data-theme') || 'retro';
           const warm = ['creme', 'outono', 'cafe', 'solarized'];
-          const neon = ['hacker', 'retro', 'dracula'];
-          if (warm.includes(theme)) return {r: 255, g: 215, b: 0}; // Dourado
-          if (neon.includes(theme)) return {r: 57, g: 255, b: 20}; // Verde Neon
-          return {r: 210, g: 225, b: 255}; // Prateado/Azulado (Frias)
+          const neon = ['hacker', 'retro', 'dracula', 'cyberpunk'];
+          if (warm.includes(theme)) return {r: 255, g: 215, b: 0}; 
+          if (neon.includes(theme)) return {r: 255, g: 0, b: 255}; // Rosa choque Neon
+          return {r: 210, g: 225, b: 255}; 
       }
 
       function addParticle(x, y) {
@@ -1636,7 +1536,6 @@ async function enviarPollinations() {
           });
       }
 
-      // Brilhos no Mouse e Touch
       window.addEventListener('mousemove', e => { if(Math.random() > 0.6) addParticle(e.clientX, e.clientY); });
       window.addEventListener('touchmove', e => { 
           if(e.touches.length > 0) {
@@ -1648,14 +1547,13 @@ async function enviarPollinations() {
 
       function animate() {
           ctx.clearRect(0, 0, w, h);
-          // Ocasionalmente cai um brilho do topo (Magic ambience)
           if(Math.random() > 0.92) addParticle(Math.random() * w, -10);
           
           for(let i=particles.length-1; i>=0; i--) {
               let p = particles[i];
               p.x += p.vx;
               p.y += p.vy;
-              p.life -= 0.015; // Velocidade que apaga
+              p.life -= 0.015; 
               p.sparkle += 0.1;
               
               if(p.life <= 0 || p.y > h) {
@@ -1667,7 +1565,6 @@ async function enviarPollinations() {
                   ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                   ctx.fill();
                   
-                  // Efeito de cintilação
                   if(Math.sin(p.sparkle) > 0.5) {
                       ctx.fillStyle = 'white';
                       ctx.beginPath();
@@ -1684,16 +1581,13 @@ async function enviarPollinations() {
 
   /* ====== INITIALIZATION ====== */
   document.addEventListener("DOMContentLoaded", () => {
-    if (!localStorage.getItem('tdah_planner_save')) {
-        const bq = document.getElementById('bottleQuarters'); for(let i=1;i<=8;i++){ const lab = document.createElement('label'); lab.className = 'inline-cb'; lab.innerHTML = `<input type="checkbox"/>`; bq.appendChild(lab); }
-        const pomos = document.getElementById('pomos'); for(let i=0;i<12;i++){ const lab = document.createElement('label'); lab.className = 'small'; lab.innerHTML = `<input type="checkbox"> ${i+1}`; pomos.appendChild(lab); }
-        populateTarotSelects();
-    }
-    else { loadData(); populateTarotSelects(); }
+    const bq = document.getElementById('bottleQuarters'); 
+    for(let i=1;i<=8;i++){ const lab = document.createElement('label'); lab.className = 'inline-cb'; lab.innerHTML = `<input type="checkbox"/>`; bq.appendChild(lab); }
+    const pomos = document.getElementById('pomos'); 
+    for(let i=0;i<12;i++){ const lab = document.createElement('label'); lab.className = 'small'; lab.innerHTML = `<input type="checkbox"> ${i+1}`; pomos.appendChild(lab); }
+    populateTarotSelects();
     
-    makeSortable(); renderBackups(); initSparkles(); initCanvas(); updateIndex();
-    // document.getElementById('planner').addEventListener('input', autoSave);
-    document.getElementById('planner').addEventListener('change', autoSave);
+    makeSortable(); initSparkles(); initCanvas(); updateIndex();
   });
 
 </script>
