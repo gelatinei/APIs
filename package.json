@@ -2,6 +2,7 @@
   "name": "meu-planner",
   "version": "1.0.0",
   "dependencies": {
-    "openai": "^4.28.0"
+    "openai": "^4.28.0",
+    "redis": "^4.6.10"
   }
 }
