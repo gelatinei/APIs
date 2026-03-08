@@ -984,6 +984,37 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
+// ====== MEMÓRIA DO GEMINI ======
+let geminiMessages = [];
+
+function carregarHistoricoGemini() {
+  const saved = localStorage.getItem('geminiChatHistory');
+  if (saved) {
+    geminiMessages = JSON.parse(saved);
+  }
+  renderizarChatGemini();
+}
+
+function salvarHistoricoGemini() {
+  localStorage.setItem('geminiChatHistory', JSON.stringify(geminiMessages));
+}
+
+function renderizarChatGemini() {
+  const chat = document.getElementById('chat-gemini');
+  let html = `<div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>`;
+
+  geminiMessages.forEach(msg => {
+    if (msg.role === 'user') {
+      html += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${msg.parts[0].text}</div>`;
+    } else {
+      const textoFormatado = marked.parse(msg.parts[0].text);
+      html += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
+    }
+  });
+
+  chat.innerHTML = html;
+  chat.scrollTop = chat.scrollHeight;
+}
   //SALVANDO MANUALMENTE //
   function salvarManual() {
     // Chama a função de salvar que já existe no seu código
@@ -1252,44 +1283,45 @@ function rolarTodosOsDados() {
       if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
   }
 
-// ====== FUNÇÃO DO GEMINI ======
+// ====== FUNÇÃO DO GEMINI COM MEMÓRIA ======
 async function enviarChat(btn) {
-    const input = btn.parentElement.querySelector('input');
-    const chat = document.getElementById('chat-gemini');
-    const prompt = input.value;
-    if(!prompt.trim()) return;
+  const input = btn.parentElement.querySelector('input');
+  const chat = document.getElementById('chat-gemini');
+  const prompt = input.value.trim();
+  if (!prompt) return;
 
-    // Mostra a sua mensagem
-    chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
-    input.value = '';
+  // Adiciona a mensagem do usuário na memória
+  geminiMessages.push({ role: "user", parts: [{ text: prompt }] });
+  renderizarChatGemini();           // mostra imediatamente
+  input.value = '';
 
-    // Mostra "Pensando..."
-    const loadingId = 'load-gemini-' + Date.now();
-    chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
-    chat.scrollTop = chat.scrollHeight;
+  // Loading
+  const loadingId = 'load-gemini-' + Date.now();
+  chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
+  chat.scrollTop = chat.scrollHeight;
 
-    try {
-        const res = await fetch('/api/gemini', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ prompt })
-        });
-        const data = await res.json();
-        
-        // Pega a resposta do Gemini e formata
-        const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
-        const textoFormatado = marked.parse(textoCru);
+  try {
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: geminiMessages })   // ← agora envia o histórico completo
+    });
 
-        // Remove o "Pensando..." e coloca a resposta formatada
-        document.getElementById(loadingId).remove();
-        chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
-    } catch(e) {
-        document.getElementById(loadingId).innerText = "Erro de conexão.";
-    }
-    chat.scrollTop = chat.scrollHeight;
+    const data = await res.json();
+    document.getElementById(loadingId).remove();
+
+    const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
+
+    // Salva resposta na memória
+    geminiMessages.push({ role: "model", parts: [{ text: textoCru }] });
+
+    renderizarChatGemini();
+    salvarHistoricoGemini();
+
+  } catch (e) {
+    document.getElementById(loadingId).innerText = "Erro de conexão.";
+  }
 }
-
-
 // ====== FUNÇÃO DO DOLPHIN (OPENROUTER) ======
 async function enviarPollinations() {
   const input = document.getElementById('input-pollinations');
@@ -1703,6 +1735,7 @@ async function enviarPollinations() {
     document.getElementById('planner').addEventListener('change', autoSave);
   });
 
+window.addEventListener('load', carregarHistoricoGemini);
 </script>
 </body>
 </html>
