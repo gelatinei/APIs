@@ -516,189 +516,6 @@
             </div>
         </div>
       </div>
-
-      <div style="flex:2; min-width: 300px;" class="section collapsed">
-        <div class="section-header">
-            <span class="drag-section-handle" title="Arraste a seção">✥</span>
-            <label>Projetos em Andamento</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-        </div>
-        <div class="section-content">
-            <div class="table-container">
-              <table class="projects" id="projectsTbl">
-                <thead><tr><th></th><th style="text-align:left;">Projeto</th><th style="text-align:left;">Próxima ação</th><th style="text-align:left;">Prazo</th><th style="width:50px">%</th><th></th></tr></thead>
-                <tbody id="projects">
-                  <tr class="sortable-row" draggable="true">
-                    <td class="drag-handle">☰</td>
-                    <td><input type="text" placeholder="Nome"/></td>
-                    <td><input type="text" placeholder="Próximo passo"/></td>
-                    <td><input type="text" placeholder="__/__"/></td>
-                    <td><input type="number" min="0" max="100"/></td>
-                    <td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="controls">
-              <button onclick="addProject()">+ projeto</button>
-              <button class="txt-btn" onclick="exportTXT('projectsTbl', 'Projetos')">↓ Ex. Nomes</button>
-              <button class="txt-btn" onclick="document.getElementById('file-proj').click()">↑ Im. Nomes</button>
-              <input type="file" id="file-proj" style="display:none" accept=".txt" onchange="importTXT(event, 'projectsTbl', addProject, false)">
-            </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="weekly-tracker-section" class="section hide-in-focus collapsed" style="margin-top:16px;">
-      <div class="section-header">
-          <span class="drag-section-handle" title="Arraste a seção">✥</span>
-          <label style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            Tracker Semanal
-            <input type="text" placeholder="Semana (ex: Sem. 2)" style="width: 150px; font-weight: normal; font-size: 12px; margin:0;" />
-            <input type="text" placeholder="Mês (ex: Março)" style="width: 150px; font-weight: normal; font-size: 12px; margin:0;" />
-          </label>
-          <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-      </div>
-      <div class="section-content">
-          <div class="table-container" style="margin-top: 10px;">
-            <table id="weeklyTrackerTbl" style="min-width: 600px; text-align: center;">
-              <thead>
-                <tr>
-                  <th style="width: 20px;"></th>
-                  <th style="text-align:left;">Hábito</th>
-                  <th style="width:70px;">Qtd/Dia</th>
-                  <th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th>
-                  <th style="width: 30px;"></th>
-                </tr>
-              </thead>
-              <tbody id="weeklyTrackersBody">
-                <tr class="sortable-row" draggable="true">
-                  <td class="drag-handle">☰</td>
-                  <td><input type="text" placeholder="Nome do hábito"/></td>
-                  <td><input type="number" min="1" max="10" value="1" onchange="updateWeeklyCheckboxes(this)"/></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
-                  <td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="controls">
-            <button onclick="addWeeklyTracker()">+ Hábito</button>
-          </div>
-      </div>
-    </div>
-
-  <div class="section hide-in-focus collapsed" style="margin-top:16px;">
-    <div class="section-header">
-        <span class="drag-section-handle" title="Arraste a seção">✥</span>
-        <label>✨ Planner's core</label>
-        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-    </div>
-    <div class="section-content">
-        <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
-        </div>
-        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-            <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
-            <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
-        </div>
-    </div>
-  </div>
-
-<div class="section hide-in-focus collapsed" style="margin-top:16px;">
-    <div class="section-header">
-        <span class="drag-section-handle" title="Arraste a seção">✥</span>
-        <label>Hiwaifu</label>
-        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-    </div>
-    <div class="section-content">
-        <iframe 
-            src="https://www.hiwaifu.com/pt" 
-            style="width: 100%; height: 500px; border: none; border-radius: 6px; margin-top: 8px; background: var(--bg);" 
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation"
-            title="Hiwaifu 😘">
-        </iframe>
-    </div>
-</div>
-
-
-
-     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
-    <div class="section-header">
-        <span class="drag-section-handle" title="Arraste a seção">✥</span>
-        <label>🤖 Gemini</label>
-        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-    </div>
-    <div class="section-content">
-        <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
-        </div>
-        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-            <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
-            <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
-        </div>
-    </div>
-  </div>
-    
-    <div class="section hide-in-focus collapsed" style="margin-top:16px;">
-    <div class="section-header">
-        <span class="drag-section-handle" title="Arraste a seção">✥</span>
-        <label>🎲 Rolador de Dados RPG</label>
-        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-    </div>
-    <div class="section-content">
-        <div id="mesa-dados" class="mesa-dados">
-            <span style="color: var(--muted); font-size: 13px;">Adicione dados nos botões abaixo...</span>
-        </div>
-        
-        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px;">
-            <button class="ghost mini-add" onclick="adicionarDado(2)">+ d2</button>
-            <button class="ghost mini-add" onclick="adicionarDado(4)">+ d4</button>
-            <button class="ghost mini-add" onclick="adicionarDado(6)">+ d6</button>
-            <button class="ghost mini-add" onclick="adicionarDado(8)">+ d8</button>
-            <button class="ghost mini-add" onclick="adicionarDado(10)">+ d10</button>
-            <button class="ghost mini-add" onclick="adicionarDado(12)">+ d12</button>
-            <button class="ghost mini-add" onclick="adicionarDado(20)" style="font-weight:bold; color:var(--accent);">+ d20</button>
-        </div>
-        
-        <div style="display: flex; gap: 8px;">
-            <button onclick="rolarTodosOsDados()" style="flex: 1; padding: 12px; font-weight: bold; background: var(--accent); color: white; font-size: 15px; box-shadow: 0 4px 0 rgba(0,0,0,0.2);">🎲 Rolar Tudo</button>
-            <button onclick="limparDados()" class="ghost" style="padding: 12px; color: #e53935;">🗑️ Limpar</button>
-        </div>
-        
-        <div id="total-dados" style="text-align: center; margin-top: 15px; font-weight: 900; font-size: 20px; color: var(--accent);"></div>
-    </div>
-</div>
-    
-    <div class="section hide-in-focus collapsed" style="margin-top:16px;">
-        <div class="section-header">
-            <span class="drag-section-handle" title="Arraste a seção">✥</span>
-    
-    <label>Doodling Livre 🎨</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-        </div>
-        <div class="section-content">
-            <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <label style="margin:0;">Tamanho: <input type="range" class="brush-size" min="1" max="20" value="3" style="width: 100px; display:inline-block; vertical-align:middle;"></label>
-              <label style="margin:0;">Pincel: 
-                <select class="brush-type" style="width: auto; padding: 4px;">
-                  <option value="round">Redondo</option>
-                  <option value="square">Quadrado</option>
-                </select>
-              </label>
-              <button class="ghost mini-add" onclick="limparCanvas(this)">Limpar Tela</button>
-              <button class="ghost mini-add" onclick="exportarCanvas(this)">Salvar (PNG)</button>
-            </div>
-            <canvas class="doodle-canvas" width="800" height="300" style="border: 2px dashed var(--border); border-radius: 8px; touch-action: none; background: transparent; width: 100%; max-width: 100%; display: block; cursor: crosshair;"></canvas>
-        </div>
-    </div>
-
     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
       <div class="section-header">
           <span class="drag-section-handle" title="Arraste a seção">✥</span>
@@ -940,6 +757,191 @@
         </div>
 
       </div>
+
+      
+      <div style="flex:2; min-width: 300px;" class="section collapsed">
+        <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+            <label>Projetos em Andamento</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+        </div>
+        <div class="section-content">
+            <div class="table-container">
+              <table class="projects" id="projectsTbl">
+                <thead><tr><th></th><th style="text-align:left;">Projeto</th><th style="text-align:left;">Próxima ação</th><th style="text-align:left;">Prazo</th><th style="width:50px">%</th><th></th></tr></thead>
+                <tbody id="projects">
+                  <tr class="sortable-row" draggable="true">
+                    <td class="drag-handle">☰</td>
+                    <td><input type="text" placeholder="Nome"/></td>
+                    <td><input type="text" placeholder="Próximo passo"/></td>
+                    <td><input type="text" placeholder="__/__"/></td>
+                    <td><input type="number" min="0" max="100"/></td>
+                    <td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="controls">
+              <button onclick="addProject()">+ projeto</button>
+              <button class="txt-btn" onclick="exportTXT('projectsTbl', 'Projetos')">↓ Ex. Nomes</button>
+              <button class="txt-btn" onclick="document.getElementById('file-proj').click()">↑ Im. Nomes</button>
+              <input type="file" id="file-proj" style="display:none" accept=".txt" onchange="importTXT(event, 'projectsTbl', addProject, false)">
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="weekly-tracker-section" class="section hide-in-focus collapsed" style="margin-top:16px;">
+      <div class="section-header">
+          <span class="drag-section-handle" title="Arraste a seção">✥</span>
+          <label style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            Tracker Semanal
+            <input type="text" placeholder="Semana (ex: Sem. 2)" style="width: 150px; font-weight: normal; font-size: 12px; margin:0;" />
+            <input type="text" placeholder="Mês (ex: Março)" style="width: 150px; font-weight: normal; font-size: 12px; margin:0;" />
+          </label>
+          <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+      </div>
+      <div class="section-content">
+          <div class="table-container" style="margin-top: 10px;">
+            <table id="weeklyTrackerTbl" style="min-width: 600px; text-align: center;">
+              <thead>
+                <tr>
+                  <th style="width: 20px;"></th>
+                  <th style="text-align:left;">Hábito</th>
+                  <th style="width:70px;">Qtd/Dia</th>
+                  <th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th>
+                  <th style="width: 30px;"></th>
+                </tr>
+              </thead>
+              <tbody id="weeklyTrackersBody">
+                <tr class="sortable-row" draggable="true">
+                  <td class="drag-handle">☰</td>
+                  <td><input type="text" placeholder="Nome do hábito"/></td>
+                  <td><input type="number" min="1" max="10" value="1" onchange="updateWeeklyCheckboxes(this)"/></td>
+                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                  <td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td>
+                  <td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="controls">
+            <button onclick="addWeeklyTracker()">+ Hábito</button>
+          </div>
+      </div>
+    </div>
+
+  <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+    <div class="section-header">
+        <span class="drag-section-handle" title="Arraste a seção">✥</span>
+        <label>✨ Planner's core</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+    </div>
+    <div class="section-content">
+        <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
+        </div>
+        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+            <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
+            <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
+        </div>
+    </div>
+  </div>
+
+<div class="section hide-in-focus collapsed" style="margin-top:16px;">
+    <div class="section-header">
+        <span class="drag-section-handle" title="Arraste a seção">✥</span>
+        <label>Hiwaifu</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+    </div>
+    <div class="section-content">
+        <iframe 
+            src="https://www.hiwaifu.com/pt" 
+            style="width: 100%; height: 500px; border: none; border-radius: 6px; margin-top: 8px; background: var(--bg);" 
+            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation"
+            title="Hiwaifu 😘">
+        </iframe>
+    </div>
+</div>
+
+
+
+     <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+    <div class="section-header">
+        <span class="drag-section-handle" title="Arraste a seção">✥</span>
+        <label>🤖 Gemini</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+    </div>
+    <div class="section-content">
+        <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
+        </div>
+        <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+            <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
+            <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
+        </div>
+    </div>
+  </div>
+    
+    <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+    <div class="section-header">
+        <span class="drag-section-handle" title="Arraste a seção">✥</span>
+        <label>🎲 Rolador de Dados RPG</label>
+        <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+    </div>
+    <div class="section-content">
+        <div id="mesa-dados" class="mesa-dados">
+            <span style="color: var(--muted); font-size: 13px;">Adicione dados nos botões abaixo...</span>
+        </div>
+        
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 12px;">
+            <button class="ghost mini-add" onclick="adicionarDado(2)">+ d2</button>
+            <button class="ghost mini-add" onclick="adicionarDado(4)">+ d4</button>
+            <button class="ghost mini-add" onclick="adicionarDado(6)">+ d6</button>
+            <button class="ghost mini-add" onclick="adicionarDado(8)">+ d8</button>
+            <button class="ghost mini-add" onclick="adicionarDado(10)">+ d10</button>
+            <button class="ghost mini-add" onclick="adicionarDado(12)">+ d12</button>
+            <button class="ghost mini-add" onclick="adicionarDado(20)" style="font-weight:bold; color:var(--accent);">+ d20</button>
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+            <button onclick="rolarTodosOsDados()" style="flex: 1; padding: 12px; font-weight: bold; background: var(--accent); color: white; font-size: 15px; box-shadow: 0 4px 0 rgba(0,0,0,0.2);">🎲 Rolar Tudo</button>
+            <button onclick="limparDados()" class="ghost" style="padding: 12px; color: #e53935;">🗑️ Limpar</button>
+        </div>
+        
+        <div id="total-dados" style="text-align: center; margin-top: 15px; font-weight: 900; font-size: 20px; color: var(--accent);"></div>
+    </div>
+</div>
+    
+    <div class="section hide-in-focus collapsed" style="margin-top:16px;">
+        <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+    
+    <label>Doodling Livre 🎨</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
+        </div>
+        <div class="section-content">
+            <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <label style="margin:0;">Tamanho: <input type="range" class="brush-size" min="1" max="20" value="3" style="width: 100px; display:inline-block; vertical-align:middle;"></label>
+              <label style="margin:0;">Pincel: 
+                <select class="brush-type" style="width: auto; padding: 4px;">
+                  <option value="round">Redondo</option>
+                  <option value="square">Quadrado</option>
+                </select>
+              </label>
+              <button class="ghost mini-add" onclick="limparCanvas(this)">Limpar Tela</button>
+              <button class="ghost mini-add" onclick="exportarCanvas(this)">Salvar (PNG)</button>
+            </div>
+            <canvas class="doodle-canvas" width="800" height="300" style="border: 2px dashed var(--border); border-radius: 8px; touch-action: none; background: transparent; width: 100%; max-width: 100%; display: block; cursor: crosshair;"></canvas>
+        </div>
+    </div>
+
+
     </div>
 
     <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center; flex-wrap:wrap; gap:12px;" class="section hide-in-focus collapsed">
