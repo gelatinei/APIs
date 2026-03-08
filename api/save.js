@@ -1,25 +1,24 @@
+import { createClient } from 'redis';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: "Método não permitido" });
+
+  // Cria o cliente usando a REDIS_URL que você tem no painel
+  const client = createClient({
+    url: process.env.REDIS_URL
+  });
 
   try {
     const { data } = req.body;
     
-    // Conecta com o Vercel KV usando as chaves geradas automaticamente
-    const url = `${process.env.KV_REST_API_URL}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${process.env.KV_REST_API_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      // Comando Redis para salvar a chave "planner_data"
-      body: JSON.stringify(["SET", "planner_data", data])
-    });
+    await client.connect();
+    // Salva os dados no Redis
+    await client.set('planner_data', data);
+    await client.disconnect();
 
-    const result = await response.json();
-    return res.status(200).json({ success: true, result });
+    return res.status(200).json({ success: true });
   } catch (error) {
-    return res.status(500).json({ error: "Erro ao salvar na nuvem." });
+    console.error(error);
+    return res.status(500).json({ error: "Erro ao salvar no Redis." });
   }
 }
