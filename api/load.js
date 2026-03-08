@@ -1,7 +1,8 @@
-import { createClient } from 'redis';
+const BLOB_FILE = 'planner-data.json';
+const BLOB_API_BASE = 'https://blob.vercel-storage.com';
 
-function getRedisUrl() {
-  const raw = process.env.REDIS_URL || process.env.KV_URL || process.env.UPSTASH_REDIS_URL || '';
+function getBlobToken() {
+  const raw = process.env.BLOB_READ_WRITE_TOKEN || '';
   const trimmed = String(raw).trim();
 
   if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
@@ -16,31 +17,35 @@ export default async function handler(req, res) {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  const redisUrl = getRedisUrl();
-  if (!redisUrl) {
+  const token = getBlobToken();
+  if (!token) {
     return res.status(500).json({
-      error: 'Configuração de Redis faltando. Defina REDIS_URL (ou KV_URL/UPSTASH_REDIS_URL) na Vercel.'
+      error: 'Configuração faltando: defina BLOB_READ_WRITE_TOKEN na Vercel para carregar da nuvem.'
     });
   }
 
-  const client = createClient({ url: redisUrl });
-  client.on('error', (err) => console.error('Erro no Cliente Redis:', err));
-
-  let isConnected = false;
-
   try {
-    await client.connect();
-    isConnected = true;
+    const loadUrl = `${BLOB_API_BASE}/${BLOB_FILE}`;
+    const blobResponse = await fetch(loadUrl, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
 
-    const result = await client.get('planner_data');
+    if (blobResponse.status === 404) {
+      return res.status(200).json({ data: '{}' });
+    }
 
-    return res.status(200).json({ data: result || '{}' });
+    if (!blobResponse.ok) {
+      const blobErrorText = await blobResponse.text().catch(() => '');
+      console.error('Erro Vercel Blob (load):', blobResponse.status, blobErrorText);
+      return res.status(500).json({ error: `Falha ao carregar do Vercel Blob (${blobResponse.status}).` });
+    }
+
+    const data = await blobResponse.text();
+    return res.status(200).json({ data: data || '{}' });
   } catch (error) {
     console.error('Erro ao carregar:', error);
-    return res.status(500).json({ error: 'Falha ao carregar do banco de dados.' });
-  } finally {
-    if (isConnected) {
-      await client.disconnect();
-    }
+    return res.status(500).json({ error: 'Falha ao carregar do storage da nuvem.' });
   }
 }

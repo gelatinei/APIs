@@ -1,10 +1,10 @@
-import { createClient } from 'redis';
+const BLOB_FILE = 'planner-data.json';
+const BLOB_API_BASE = 'https://blob.vercel-storage.com';
 
-function getRedisUrl() {
-  const raw = process.env.REDIS_URL || process.env.KV_URL || process.env.UPSTASH_REDIS_URL || '';
+function getBlobToken() {
+  const raw = process.env.BLOB_READ_WRITE_TOKEN || '';
   const trimmed = String(raw).trim();
 
-  // Remove aspas acidentais no valor da env (erro comum de copy/paste na Vercel)
   if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
     return trimmed.slice(1, -1).trim();
   }
@@ -14,15 +14,8 @@ function getRedisUrl() {
 
 function parseBody(body) {
   if (!body) return {};
-
-  if (typeof body === 'string') {
-    return JSON.parse(body);
-  }
-
-  if (Buffer.isBuffer(body)) {
-    return JSON.parse(body.toString('utf8'));
-  }
-
+  if (typeof body === 'string') return JSON.parse(body);
+  if (Buffer.isBuffer(body)) return JSON.parse(body.toString('utf8'));
   return body;
 }
 
@@ -31,23 +24,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const redisUrl = getRedisUrl();
-  if (!redisUrl) {
+  const token = getBlobToken();
+  if (!token) {
     return res.status(500).json({
-      error: 'Configuração de Redis faltando. Defina REDIS_URL (ou KV_URL/UPSTASH_REDIS_URL) na Vercel.'
+      error: 'Configuração faltando: defina BLOB_READ_WRITE_TOKEN na Vercel para salvar na nuvem.'
     });
   }
-
-  const client = createClient({ url: redisUrl });
-  client.on('error', (err) => console.error('Erro no Cliente Redis:', err));
-
-  let isConnected = false;
 
   try {
     const parsedBody = parseBody(req.body);
     const payloadData = parsedBody?.data;
 
-    // Aceita string (preferido), mas também objeto/array para tolerar serializações diferentes
     let data = '';
     if (typeof payloadData === 'string') data = payloadData;
     else if (payloadData !== undefined) data = JSON.stringify(payloadData);
@@ -56,22 +43,31 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Payload inválido: campo 'data' ausente ou vazio." });
     }
 
-    await client.connect();
-    isConnected = true;
+    const saveUrl = `${BLOB_API_BASE}/${BLOB_FILE}`;
+    const blobResponse = await fetch(saveUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'x-add-random-suffix': 'false',
+        'x-content-type': 'application/json',
+      },
+      body: data,
+    });
 
-    await client.set('planner_data', data);
+    if (!blobResponse.ok) {
+      const blobErrorText = await blobResponse.text().catch(() => '');
+      console.error('Erro Vercel Blob (save):', blobResponse.status, blobErrorText);
+      return res.status(500).json({ error: `Falha ao salvar no Vercel Blob (${blobResponse.status}).` });
+    }
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, storage: 'vercel-blob' });
   } catch (error) {
     if (error instanceof SyntaxError) {
       return res.status(400).json({ error: 'JSON inválido no corpo da requisição.' });
     }
 
     console.error('Erro ao salvar:', error);
-    return res.status(500).json({ error: 'Falha ao salvar no banco de dados.' });
-  } finally {
-    if (isConnected) {
-      await client.disconnect();
-    }
+    return res.status(500).json({ error: 'Falha ao salvar no storage da nuvem.' });
   }
 }
