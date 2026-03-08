@@ -1,9 +1,10 @@
 {
   "name": "meu-planner",
   "version": "1.0.0",
-  "type": "module", 
+  "type": "module",
   "dependencies": {
     "openai": "^4.28.0",
-    "redis": "^4.6.10"
+    "redis": "^4.6.10",
+    "@vercel/blob": "^0.27.0"
   }
 }

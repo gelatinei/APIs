@@ -1,5 +1,6 @@
+import { put } from '@vercel/blob';
+
 const BLOB_FILE = 'planner-data.json';
-const BLOB_API_BASE = 'https://blob.vercel-storage.com';
 
 function getBlobToken() {
   const raw = process.env.BLOB_READ_WRITE_TOKEN || '';
@@ -43,31 +44,21 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Payload inválido: campo 'data' ausente ou vazio." });
     }
 
-    const saveUrl = `${BLOB_API_BASE}/${BLOB_FILE}`;
-    const blobResponse = await fetch(saveUrl, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'x-add-random-suffix': 'false',
-        'x-content-type': 'application/json',
-      },
-      body: data,
+    const saved = await put(BLOB_FILE, data, {
+      token,
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'application/json',
+      allowOverwrite: true,
     });
 
-    if (!blobResponse.ok) {
-      const blobErrorText = await blobResponse.text().catch(() => '');
-      console.error('Erro Vercel Blob (save):', blobResponse.status, blobErrorText);
-      return res.status(500).json({ error: `Falha ao salvar no Vercel Blob (${blobResponse.status}).` });
-    }
-
-    return res.status(200).json({ success: true, storage: 'vercel-blob' });
+    return res.status(200).json({ success: true, storage: 'vercel-blob', url: saved.url });
   } catch (error) {
     if (error instanceof SyntaxError) {
       return res.status(400).json({ error: 'JSON inválido no corpo da requisição.' });
     }
 
-    console.error('Erro ao salvar:', error);
-    return res.status(500).json({ error: 'Falha ao salvar no storage da nuvem.' });
+    console.error('Erro ao salvar no Blob:', error);
+    return res.status(500).json({ error: 'Falha ao salvar no Vercel Blob.' });
   }
 }

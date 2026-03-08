@@ -1,5 +1,6 @@
+import { list } from '@vercel/blob';
+
 const BLOB_FILE = 'planner-data.json';
-const BLOB_API_BASE = 'https://blob.vercel-storage.com';
 
 function getBlobToken() {
   const raw = process.env.BLOB_READ_WRITE_TOKEN || '';
@@ -25,27 +26,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const loadUrl = `${BLOB_API_BASE}/${BLOB_FILE}`;
-    const blobResponse = await fetch(loadUrl, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    });
+    const { blobs } = await list({ token, prefix: BLOB_FILE, limit: 1 });
+    const file = blobs?.find((b) => b.pathname === BLOB_FILE) || blobs?.[0];
 
-    if (blobResponse.status === 404) {
+    if (!file?.url) {
       return res.status(200).json({ data: '{}' });
     }
 
-    if (!blobResponse.ok) {
-      const blobErrorText = await blobResponse.text().catch(() => '');
-      console.error('Erro Vercel Blob (load):', blobResponse.status, blobErrorText);
-      return res.status(500).json({ error: `Falha ao carregar do Vercel Blob (${blobResponse.status}).` });
+    const fileResponse = await fetch(file.url, { cache: 'no-store' });
+    if (!fileResponse.ok) {
+      console.error('Erro ao baixar blob salvo:', fileResponse.status, file.url);
+      return res.status(500).json({ error: `Falha ao carregar do Vercel Blob (${fileResponse.status}).` });
     }
 
-    const data = await blobResponse.text();
+    const data = await fileResponse.text();
     return res.status(200).json({ data: data || '{}' });
   } catch (error) {
-    console.error('Erro ao carregar:', error);
-    return res.status(500).json({ error: 'Falha ao carregar do storage da nuvem.' });
+    console.error('Erro ao carregar do Blob:', error);
+    return res.status(500).json({ error: 'Falha ao carregar do Vercel Blob.' });
   }
 }
