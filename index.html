@@ -1395,7 +1395,8 @@ async function enviarPollinations() {
 
         if (!res.ok) {
             const erroApi = await res.json().catch(() => ({}));
-            throw new Error(erroApi.error || `Falha ao carregar (${res.status})`);
+            const detalhe = erroApi.details ? ` Detalhe: ${erroApi.details}` : '';
+            throw new Error((erroApi.error || `Falha ao carregar (${res.status})`) + detalhe);
         }
 
         const result = await res.json();

@@ -13,6 +13,35 @@ function getBlobToken() {
   return trimmed;
 }
 
+async function downloadBlobText(fileUrl, token) {
+  const attempts = [
+    { mode: 'public', headers: {} },
+    { mode: 'authorized', headers: { Authorization: `Bearer ${token}` } },
+  ];
+
+  let lastError = null;
+
+  for (const attempt of attempts) {
+    try {
+      const response = await fetch(fileUrl, {
+        cache: 'no-store',
+        headers: attempt.headers,
+      });
+
+      if (response.ok) {
+        return await response.text();
+      }
+
+      const responseBody = await response.text().catch(() => '');
+      lastError = `modo=${attempt.mode} status=${response.status} body=${responseBody.slice(0, 200)}`;
+    } catch (err) {
+      lastError = `modo=${attempt.mode} erro=${err?.message || String(err)}`;
+    }
+  }
+
+  throw new Error(lastError || 'Falha desconhecida ao baixar blob');
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' });
@@ -30,7 +59,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { blobs } = await list({ token, prefix: BLOB_FILE, limit: 1000 });
+    const { blobs } = await list({ token, prefix: BLOB_FILE, limit: 100 });
 
     const sorted = [...(blobs || [])].sort((a, b) => {
       const timeA = new Date(a.uploadedAt || 0).getTime();
@@ -44,16 +73,17 @@ export default async function handler(req, res) {
       return res.status(200).json({ data: '{}' });
     }
 
-    const fileResponse = await fetch(file.url, { cache: 'no-store' });
-    if (!fileResponse.ok) {
-      console.error('Erro ao baixar blob salvo:', fileResponse.status, file.url);
-      return res.status(500).json({ error: `Falha ao carregar do Vercel Blob (${fileResponse.status}).` });
-    }
-
-    const data = await fileResponse.text();
+    const data = await downloadBlobText(file.url, token);
     return res.status(200).json({ data: data || '{}' });
   } catch (error) {
-    console.error('Erro ao carregar do Blob:', error);
-    return res.status(500).json({ error: 'Falha ao carregar do Vercel Blob.' });
+    console.error('Erro ao carregar do Blob:', {
+      message: error?.message,
+      stack: error?.stack,
+    });
+
+    return res.status(500).json({
+      error: 'Falha ao carregar do Vercel Blob.',
+      details: error?.message || String(error),
+    });
   }
 }
