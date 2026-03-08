@@ -14,6 +14,10 @@ function getBlobToken() {
 }
 
 export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -26,17 +30,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { blobs } = await list({ token, prefix: BLOB_FILE, limit: 1 });
-    const file = blobs?.find((b) => b.pathname === BLOB_FILE) || blobs?.[0];
+    const { blobs } = await list({ token, prefix: BLOB_FILE, limit: 1000 });
+
+    const sorted = [...(blobs || [])].sort((a, b) => {
+      const timeA = new Date(a.uploadedAt || 0).getTime();
+      const timeB = new Date(b.uploadedAt || 0).getTime();
+      return timeB - timeA;
+    });
+
+    const file = sorted.find((b) => b.pathname === BLOB_FILE) || sorted[0];
 
     if (!file?.url) {
       return res.status(200).json({ data: '{}' });
     }
 
-    const fileResponse = await fetch(file.url, {
-      cache: 'no-store',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const fileResponse = await fetch(file.url, { cache: 'no-store' });
     if (!fileResponse.ok) {
       console.error('Erro ao baixar blob salvo:', fileResponse.status, file.url);
       return res.status(500).json({ error: `Falha ao carregar do Vercel Blob (${fileResponse.status}).` });
