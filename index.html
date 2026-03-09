@@ -220,6 +220,8 @@
       </h1>
       <div class="meta">
         <button id="btn-nuvem" style="background-color: #4CAF50; color: white; padding: 6px 12px; border-radius: 6px;" onclick="salvarNuvem()">☁️ Salvar Nuvem</button>
+        <button style="background-color: #7E57C2; color: white; padding: 6px 12px; border-radius: 6px;" onclick="preencherCamposAleatorios()">🎲 Preencher Campos</button>
+        <button style="background-color: #E53935; color: white; padding: 6px 12px; border-radius: 6px;" onclick="limparCamposFormulario()">🧹 Limpar Campos</button>
         
         <div class="timer-box">
           🍅 <span id="timerDisplay">25:00</span>
@@ -494,17 +496,16 @@
         <div style="flex:1; min-width: 250px;" class="section">
             <div class="section-header">
                 <span class="drag-section-handle">✥</span>
-                <label>🤖 Gemini (Vercel)</label>
+                <label>🔎 Busca Google (Embed)</label>
                 <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
             </div>
             <div class="section-content">
-                <div class="resultado-ia chat-history" id="chat-gemini" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-                    <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Pronto para ajudar via Vercel.</div>
-                </div>
                 <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-                    <input type="text" id="input-gemini" class="termo-ia" placeholder="Pergunte ao Gemini..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarChat(this)">
-                    <button class="ghost mini-add" onclick="enviarChat(this)">Enviar</button>
+                    <input type="text" id="google-query" class="termo-ia" placeholder="Buscar no Google..." style="flex:1;" onkeypress="if(event.key === 'Enter') abrirBuscaGoogle()">
+                    <button class="ghost mini-add" onclick="abrirBuscaGoogle()">Buscar</button>
                 </div>
+                <iframe id="google-embed" src="https://www.google.com/search?q=Planner+TDAH" style="width: 100%; height: 260px; border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; background: var(--bg);" referrerpolicy="no-referrer"></iframe>
+                <div class="tiny-lbl" style="margin-top: 6px;">Se o embed for bloqueado pelo navegador/rede, o botão abre em nova aba automaticamente.</div>
             </div>
         </div>
 
@@ -515,9 +516,23 @@
               <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
-              <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-                  <div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Try me.</div>
+              <div class="field-group" style="display:flex; gap:6px; align-items:flex-end; flex-wrap:wrap; margin-bottom:8px;">
+                <div style="flex:2; min-width:170px;">
+                  <label class="tiny-lbl">Thread da IA</label>
+                  <select id="core-thread-select" onchange="trocarThreadCore(this.value)"></select>
+                </div>
+                <button class="ghost mini-add" onclick="novaThreadCore()">+ Thread</button>
+                <button class="xbtn-sec" style="margin:0;" onclick="apagarThreadAtualCore()">Apagar Thread</button>
               </div>
+
+              <div class="field-group" style="margin-top:4px;">
+                <label class="tiny-lbl" style="display:flex; justify-content:space-between; align-items:center;">Memória de Longo Prazo (Planner's core)
+                  <button class="ghost mini-add" onclick="salvarMemoriaCore()">Salvar Memória</button>
+                </label>
+                <textarea id="core-memory" rows="3" placeholder="Informações permanentes do planner para você/IA..." style="margin-top:4px;"></textarea>
+              </div>
+
+              <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;"></div>
               <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
                   <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
                   <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
@@ -848,6 +863,57 @@
                   <tr><td>Lavar Banheiro</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
                   <tr><td>Lavar Louça</td><td style="text-align:center;"><input type="checkbox"/></td><td style="text-align:center;"><input type="checkbox"/></td></tr>
                 </table>
+              </div>
+            </div>
+
+            <div class="tracker-box">
+              <h4>🧠 Energia Mental (0-10)</h4>
+              <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:90px;"><label class="tiny-lbl">Foco</label><input type="number" min="0" max="10" placeholder="0-10"></div>
+                <div style="flex:1; min-width:90px;"><label class="tiny-lbl">Ansiedade</label><input type="number" min="0" max="10" placeholder="0-10"></div>
+                <div style="flex:1; min-width:90px;"><label class="tiny-lbl">Cansaço</label><input type="number" min="0" max="10" placeholder="0-10"></div>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">O que ajudou hoje?</label>
+                <textarea rows="2" placeholder="Ex: pausa, banho, música, respiração..."></textarea>
+              </div>
+              <div class="field-group">
+                <label class="inline-cb"><input type="checkbox"/> Fiz pausa consciente de 5 minutos</label>
+              </div>
+            </div>
+
+            <div class="tracker-box">
+              <h4>💰 Tracker Financeiro Rápido</h4>
+              <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:120px;"><label class="tiny-lbl">Gasto do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div>
+                <div style="flex:1; min-width:120px;"><label class="tiny-lbl">Entrada do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">Categoria principal</label>
+                <select><option>Alimentação</option><option>Transporte</option><option>Casa</option><option>Lazer</option><option>Saúde</option><option>Trabalho</option><option>Outro</option></select>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">Observação</label>
+                <input type="text" placeholder="Resumo financeiro do dia">
+              </div>
+            </div>
+
+            <div class="tracker-box">
+              <h4>📚 Estudo & Aprendizado</h4>
+              <div class="field-group">
+                <label class="tiny-lbl">Tema estudado</label>
+                <input type="text" placeholder="Ex: JavaScript, Tarot, Inglês...">
+              </div>
+              <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:120px;"><label class="tiny-lbl">Tempo (min)</label><input type="number" min="0" max="600" placeholder="0"></div>
+                <div style="flex:1; min-width:120px;"><label class="tiny-lbl">Dificuldade</label><select><option>Baixa</option><option>Média</option><option>Alta</option></select></div>
+              </div>
+              <div class="field-group">
+                <label class="tiny-lbl">Resumo do que aprendi</label>
+                <textarea rows="2" placeholder="3 pontos principais..."></textarea>
+              </div>
+              <div class="field-group">
+                <label class="inline-cb"><input type="checkbox"/> Revisei o conteúdo no fim do dia</label>
               </div>
             </div>
 
@@ -1202,45 +1268,134 @@ function rolarTodosOsDados() {
 // ====== MEMÓRIA E FUNÇÕES DAS IAs ======
 let geminiHistory = [];
 let dolphinHistory = [];
+let coreThreads = [];
+let coreActiveThreadId = null;
 
-async function enviarChat(btn) {
-    const input = btn.parentElement.querySelector('input');
-    const chat = document.getElementById('chat-gemini');
-    const prompt = input.value;
-    if(!prompt.trim()) return;
+function abrirBuscaGoogle() {
+  const input = document.getElementById('google-query');
+  const iframe = document.getElementById('google-embed');
+  const query = (input?.value || '').trim() || 'Planner TDAH';
+  const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 
-    // Adiciona a pergunta visualmente e no histórico do Gemini
-    chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
-    input.value = '';
-    
-    // Formato de histórico exigido pelo Google
-    geminiHistory.push({ role: "user", parts: [{ text: prompt }] });
+  if (iframe) iframe.src = url;
+  try { window.open(url, '_blank', 'noopener'); } catch {}
+}
 
-    const loadingId = 'load-gemini-' + Date.now();
-    chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Pensando...</div>`;
-    chat.scrollTop = chat.scrollHeight;
+function getCoreMemory() {
+  return String(localStorage.getItem('planner_core_memory') || '');
+}
 
-    try {
-        const res = await fetch('/api/gemini', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ history: geminiHistory })
-        });
-        const data = await res.json();
-        
-        const textoCru = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
-        const textoFormatado = marked.parse(textoCru);
+function salvarMemoriaCore() {
+  const el = document.getElementById('core-memory');
+  const valor = String(el?.value || '');
+  localStorage.setItem('planner_core_memory', valor);
+  console.info('Memória core salva.', { tamanho: valor.length });
+}
 
-        // Salva a resposta no histórico do Gemini
-        geminiHistory.push({ role: "model", parts: [{ text: textoCru }] });
+function salvarThreadsCore() {
+  localStorage.setItem('planner_core_threads', JSON.stringify(coreThreads));
+  localStorage.setItem('planner_core_active_thread', coreActiveThreadId || '');
+}
 
-        document.getElementById(loadingId).remove();
-        chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
-        salvarNuvem(); // Salva estado do chat automaticamente na nuvem
-    } catch(e) {
-        document.getElementById(loadingId).innerText = "Erro de conexão.";
+function carregarThreadsCore() {
+  const raw = localStorage.getItem('planner_core_threads');
+  if (!raw) {
+    coreThreads = [{ id: String(Date.now()), nome: 'Thread principal', messages: [] }];
+    coreActiveThreadId = coreThreads[0].id;
+    salvarThreadsCore();
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length) {
+      coreThreads = parsed.map((t, i) => ({
+        id: String(t?.id || (Date.now() + i)),
+        nome: String(t?.nome || `Thread ${i + 1}`),
+        messages: Array.isArray(t?.messages) ? t.messages : []
+      }));
+    } else {
+      coreThreads = [{ id: String(Date.now()), nome: 'Thread principal', messages: [] }];
     }
-    chat.scrollTop = chat.scrollHeight;
+  } catch {
+    coreThreads = [{ id: String(Date.now()), nome: 'Thread principal', messages: [] }];
+  }
+
+  const storedActive = String(localStorage.getItem('planner_core_active_thread') || '');
+  coreActiveThreadId = coreThreads.some(t => t.id === storedActive) ? storedActive : coreThreads[0].id;
+}
+
+function getThreadAtivaCore() {
+  const found = coreThreads.find(t => t.id === coreActiveThreadId);
+  return found || coreThreads[0];
+}
+
+function renderThreadSelectCore() {
+  const sel = document.getElementById('core-thread-select');
+  if (!sel) return;
+  sel.innerHTML = coreThreads.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+  sel.value = coreActiveThreadId;
+}
+
+function renderChatCore() {
+  const chat = document.getElementById('chat-pollinations');
+  if (!chat) return;
+  const thread = getThreadAtivaCore();
+  dolphinHistory = thread?.messages || [];
+
+  if (!dolphinHistory.length) {
+    chat.innerHTML = `<div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Thread pronta. Use a memória de longo prazo quando quiser.</div>`;
+    return;
+  }
+
+  chat.innerHTML = dolphinHistory.map(item => {
+    const isUser = item?.role === 'user';
+    const txt = String(item?.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return isUser
+      ? `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${txt}</div>`
+      : `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${marked.parse(txt)}</div>`;
+  }).join('');
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function trocarThreadCore(threadId) {
+  coreActiveThreadId = threadId;
+  salvarThreadsCore();
+  renderThreadSelectCore();
+  renderChatCore();
+}
+
+function novaThreadCore() {
+  const nome = prompt('Nome da nova thread:','Nova thread');
+  if (nome === null) return;
+  const nova = { id: String(Date.now()), nome: String(nome || 'Nova thread'), messages: [] };
+  coreThreads.push(nova);
+  coreActiveThreadId = nova.id;
+  salvarThreadsCore();
+  renderThreadSelectCore();
+  renderChatCore();
+}
+
+function apagarThreadAtualCore() {
+  if (coreThreads.length <= 1) {
+    alert('Mantenha pelo menos uma thread.');
+    return;
+  }
+  const atual = getThreadAtivaCore();
+  if (!confirm(`Apagar a thread "${atual.nome}"?`)) return;
+  coreThreads = coreThreads.filter(t => t.id !== coreActiveThreadId);
+  coreActiveThreadId = coreThreads[0].id;
+  salvarThreadsCore();
+  renderThreadSelectCore();
+  renderChatCore();
+}
+
+function initCoreMemoryAndThreads() {
+  const mem = document.getElementById('core-memory');
+  if (mem) mem.value = getCoreMemory();
+  carregarThreadsCore();
+  renderThreadSelectCore();
+  renderChatCore();
 }
 
 async function enviarPollinations() {
@@ -1253,8 +1408,20 @@ async function enviarPollinations() {
   chat.innerHTML += `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${prompt}</div>`;
   input.value = '';
   
-  // Formato de histórico exigido pela OpenAI/OpenRouter
-  dolphinHistory.push({ role: "user", content: prompt });
+  const thread = getThreadAtivaCore();
+  if (!thread) return;
+
+  const memoria = getCoreMemory();
+  const historyParaApi = [...(thread.messages || [])];
+  if (historyParaApi.length === 0 && memoria.trim()) {
+    historyParaApi.push({ role: "user", content: `Memória de longo prazo do planner:
+${memoria}` });
+  }
+  historyParaApi.push({ role: "user", content: prompt });
+
+  thread.messages = [...(thread.messages || []), { role: "user", content: prompt }];
+  dolphinHistory = thread.messages;
+  salvarThreadsCore();
 
   const loadingId = 'load-dolphin-' + Date.now();
   chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Lan está pensando...</div>`;
@@ -1264,7 +1431,7 @@ async function enviarPollinations() {
     const res = await fetch('/api/dolphin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history: dolphinHistory })
+      body: JSON.stringify({ history: historyParaApi })
     });
     
     const data = await res.json();
@@ -1277,8 +1444,10 @@ async function enviarPollinations() {
     const textoCru = data.choices[0].message.content;
     const textoFormatado = marked.parse(textoCru);
     
-    // Salva a resposta no histórico do Dolphin
-    dolphinHistory.push({ role: "assistant", content: textoCru });
+    // Salva a resposta no histórico da thread ativa
+    thread.messages.push({ role: "assistant", content: textoCru });
+    dolphinHistory = thread.messages;
+    salvarThreadsCore();
 
     document.getElementById(loadingId).remove();
     chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
@@ -1287,6 +1456,7 @@ async function enviarPollinations() {
   } catch(e) {
     document.getElementById(loadingId).innerText = "Erro de conexão local.";
     console.error(e);
+    renderChatCore();
   }
   chat.scrollTop = chat.scrollHeight;
 }
@@ -1320,43 +1490,190 @@ async function enviarPollinations() {
     }));
   }
 
+  function obterCamposDoPlanner() {
+    const planner = document.getElementById('planner');
+    if (!planner) return [];
+
+    return Array.from(planner.querySelectorAll('input, select, textarea')).filter((el) => {
+      if (!el) return false;
+      if (el.disabled || el.readOnly) return false;
+      if (el.closest('#chat-gemini, #chat-pollinations, .resultado-ia')) return false;
+      if (el.closest('.doodle-controls')) return false;
+      if (el.id === 'input-gemini' || el.id === 'input-pollinations') return false;
+      if (el.type === 'file' || el.type === 'hidden' || el.type === 'button' || el.type === 'submit') return false;
+      return true;
+    });
+  }
+
+  function textoAleatorio() {
+    const palavras = ['Aurora', 'Luna', 'Projeto', 'Missão', 'Foco', 'Checklist', 'Planner', 'Ideia', 'Rotina', 'Meta'];
+    const qtd = Math.floor(Math.random() * 4) + 2;
+    const arr = [];
+    for (let i = 0; i < qtd; i++) arr.push(palavras[Math.floor(Math.random() * palavras.length)]);
+    return arr.join(' ');
+  }
+
+  function preencherCamposAleatorios() {
+    const campos = obterCamposDoPlanner();
+    campos.forEach((el) => {
+      if (el.type === 'checkbox') {
+        el.checked = Math.random() > 0.5;
+        return;
+      }
+
+      if (el.tagName === 'SELECT') {
+        if (el.options.length > 0) {
+          const idx = Math.floor(Math.random() * el.options.length);
+          el.selectedIndex = idx;
+        }
+        return;
+      }
+
+      if (el.type === 'number') {
+        const min = Number.isFinite(Number(el.min)) ? Number(el.min) : 0;
+        const max = Number.isFinite(Number(el.max)) ? Number(el.max) : min + 10;
+        const lo = Math.min(min, max);
+        const hi = Math.max(min, max);
+        el.value = String(Math.floor(Math.random() * (hi - lo + 1)) + lo);
+        return;
+      }
+
+      if (el.type === 'date') {
+        const start = new Date(2024, 0, 1).getTime();
+        const end = new Date(2027, 11, 31).getTime();
+        const d = new Date(start + Math.random() * (end - start));
+        el.value = d.toISOString().slice(0, 10);
+        return;
+      }
+
+      if (el.type === 'time') {
+        const hh = String(Math.floor(Math.random() * 24)).padStart(2, '0');
+        const mm = String(Math.floor(Math.random() * 60)).padStart(2, '0');
+        el.value = `${hh}:${mm}`;
+        return;
+      }
+
+      el.value = textoAleatorio();
+    });
+    console.info('Campos preenchidos aleatoriamente:', { total: campos.length });
+  }
+
+  function limparCamposFormulario() {
+    const campos = obterCamposDoPlanner();
+    campos.forEach((el) => {
+      if (el.type === 'checkbox') {
+        el.checked = false;
+        return;
+      }
+
+      if (el.tagName === 'SELECT') {
+        el.selectedIndex = 0;
+        return;
+      }
+
+      el.value = '';
+    });
+    console.info('Campos limpos:', { total: campos.length });
+  }
+
+  function serializarDoodles() {
+    return Array.from(document.querySelectorAll('.doodle-canvas')).map((canvas, index) => {
+      try {
+        return { index, dataUrl: canvas.toDataURL('image/png') };
+      } catch (error) {
+        console.warn('Falha ao serializar doodle:', { index, message: error?.message || String(error) });
+        return { index, dataUrl: null };
+      }
+    });
+  }
+
+  function restaurarDoodles(doodles) {
+    if (!Array.isArray(doodles)) return;
+    const canvases = Array.from(document.querySelectorAll('.doodle-canvas'));
+
+    doodles.forEach((item, i) => {
+      const index = Number.isInteger(item?.index) ? item.index : i;
+      const canvas = canvases[index];
+      const dataUrl = item?.dataUrl;
+      if (!canvas || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.onerror = () => {
+        console.warn('Falha ao restaurar doodle:', { index });
+      };
+      img.src = dataUrl;
+    });
+  }
+
+  function normalizarTextoParaCampo(val) {
+    if (val === null || val === undefined) return '';
+    return typeof val === 'string' ? val : '';
+  }
+
+  function montarEstadoBackup({ reduzirChat = false } = {}) {
+    const elementosDinamicos = {
+      prio: document.querySelector('#prioTbl tbody').innerHTML,
+      tasks: document.querySelector('#tasksTbl tbody').innerHTML,
+      time: document.querySelector('#timeTbl tbody').innerHTML,
+      interrupt: document.querySelector('#interruptTbl tbody').innerHTML,
+      ideas: document.querySelector('#ideasTbl tbody').innerHTML,
+      projects: document.getElementById('projects').innerHTML,
+      weekly: document.getElementById('weeklyTrackersBody').innerHTML,
+      trackerGrid: document.getElementById('tracker-grid').innerHTML,
+      meals: document.getElementById('meals-container').innerHTML,
+      bottleQuarters: document.getElementById('bottleQuarters').innerHTML,
+      pomos: document.getElementById('pomos').innerHTML
+    };
+
+    const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
+      .filter(el => el.type !== 'file' && el.type !== 'checkbox')
+      .map(el => el.value);
+
+    const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"]')).map(el => el.checked);
+
+    const chatDolphin = reduzirChat
+      ? limitarTexto(document.getElementById('chat-pollinations')?.innerHTML || '', 20000)
+      : limitarTexto(document.getElementById('chat-pollinations')?.innerHTML || '', 150000);
+
+    return {
+      html: elementosDinamicos,
+      textFields,
+      checkboxes,
+      dolphinHistory: limitarHistorico(dolphinHistory, reduzirChat ? 8 : 20, reduzirChat ? 1200 : 4000),
+      chatDolphin,
+      doodles: serializarDoodles(),
+      dadosRpg: {
+        lista: Array.isArray(listaDeDados)
+          ? listaDeDados.map(d => ({ id: d.id, lados: Number(d.lados) || 6, valor: Number(d.valor) || 1 }))
+          : [],
+        totalTexto: document.getElementById('total-dados')?.innerText || ''
+      }
+    };
+  }
+
   async function salvarNuvem() {
     const btn = document.getElementById('btn-nuvem');
     if(btn) btn.innerText = '⏳ Salvando...';
     try {
-        // Pega todo o HTML dinâmico das tabelas pra gente não perder os itens
-        const elementosDinamicos = {
-            prio: document.querySelector('#prioTbl tbody').innerHTML,
-            tasks: document.querySelector('#tasksTbl tbody').innerHTML,
-            time: document.querySelector('#timeTbl tbody').innerHTML,
-            interrupt: document.querySelector('#interruptTbl tbody').innerHTML,
-            ideas: document.querySelector('#ideasTbl tbody').innerHTML,
-            projects: document.getElementById('projects').innerHTML,
-            weekly: document.getElementById('weeklyTrackersBody').innerHTML,
-            trackerGrid: document.getElementById('tracker-grid').innerHTML,
-            meals: document.getElementById('meals-container').innerHTML
-        };
+        let estado = montarEstadoBackup({ reduzirChat: false });
+        let payload = JSON.stringify({ data: JSON.stringify(estado) });
 
-        // Salva os valores de todos os inputs, selects e checkboxes
-        const inputs = Array.from(document.querySelectorAll('input, select, textarea')).map(el => {
-            if(el.type === 'checkbox') return el.checked;
-            return el.value;
-        });
-
-        // Limita campos grandes para evitar 413 (payload excedido) na Vercel
-        const estado = {
-            html: elementosDinamicos,
-            inputs: inputs,
-            geminiHistory: limitarHistorico(geminiHistory),
-            dolphinHistory: limitarHistorico(dolphinHistory),
-            chatGemini: limitarTexto(document.getElementById('chat-gemini').innerHTML, 150000),
-            chatDolphin: limitarTexto(document.getElementById('chat-pollinations').innerHTML, 150000)
-        };
-
-        const payload = JSON.stringify({ data: JSON.stringify(estado) });
-        const payloadSizeKb = Math.round((new Blob([payload]).size / 1024) * 10) / 10;
+        let payloadSizeKb = Math.round((new Blob([payload]).size / 1024) * 10) / 10;
 
         // Limite conservador para não bater no limite do body parser/serverless
+        if (payloadSizeKb > 3800) {
+            estado = montarEstadoBackup({ reduzirChat: true });
+            payload = JSON.stringify({ data: JSON.stringify(estado) });
+            payloadSizeKb = Math.round((new Blob([payload]).size / 1024) * 10) / 10;
+        }
+
         if (payloadSizeKb > 3800) {
             throw new Error(`Backup muito grande (${payloadSizeKb}KB). Limpe parte do chat e tente novamente.`);
         }
@@ -1395,7 +1712,8 @@ async function enviarPollinations() {
 
         if (!res.ok) {
             const erroApi = await res.json().catch(() => ({}));
-            throw new Error(erroApi.error || `Falha ao carregar (${res.status})`);
+            const detalhe = erroApi.details ? ` Detalhe: ${erroApi.details}` : '';
+            throw new Error((erroApi.error || `Falha ao carregar (${res.status})`) + detalhe);
         }
 
         const result = await res.json();
@@ -1417,6 +1735,17 @@ async function enviarPollinations() {
             throw new Error('Dados da nuvem inválidos. Salve novamente para recriar o backup.');
         }
 
+        console.info('Backup carregado da nuvem:', {
+            tamanhoKB: Math.round((new Blob([rawData]).size / 1024) * 10) / 10,
+            possuiChatDolphin: Boolean(estado?.chatDolphin),
+            tamanhoHistoricoDolphin: Array.isArray(estado?.dolphinHistory) ? estado.dolphinHistory.length : 0,
+            totalCheckboxesSalvas: Array.isArray(estado?.checkboxes) ? estado.checkboxes.length : 0,
+            totalTextFieldsSalvos: Array.isArray(estado?.textFields) ? estado.textFields.length : 0,
+            formatoLegadoInputs: Array.isArray(estado?.inputs),
+            totalDoodlesSalvos: Array.isArray(estado?.doodles) ? estado.doodles.length : 0,
+            totalDadosRpgSalvos: Array.isArray(estado?.dadosRpg?.lista) ? estado.dadosRpg.lista.length : 0
+        });
+
         const setHtml = (selector, html) => {
             const el = document.querySelector(selector);
             if (el && typeof html === 'string') el.innerHTML = html;
@@ -1433,24 +1762,107 @@ async function enviarPollinations() {
             setHtml('#weeklyTrackersBody', estado.html.weekly || '');
             setHtml('#tracker-grid', estado.html.trackerGrid || '');
             setHtml('#meals-container', estado.html.meals || '');
+            setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
+            setHtml('#pomos', estado.html.pomos || '');
         }
 
         // Restaura os textos e botões marcados
-        if (Array.isArray(estado.inputs)) {
-            const allInputs = document.querySelectorAll('input, select, textarea');
-            estado.inputs.forEach((val, i) => {
-                if(allInputs[i]) {
-                    if(allInputs[i].type === 'checkbox') allInputs[i].checked = val;
-                    else allInputs[i].value = val;
+        const restoreWarnings = [];
+
+        if (Array.isArray(estado.textFields)) {
+            const allTextFields = Array.from(document.querySelectorAll('input, select, textarea'))
+                .filter(el => el.type !== 'file' && el.type !== 'checkbox');
+
+            estado.textFields.forEach((val, i) => {
+                const el = allTextFields[i];
+                if(!el) return;
+                try {
+                    el.value = normalizarTextoParaCampo(val);
+                } catch (restoreError) {
+                    restoreWarnings.push({
+                        group: 'textFields',
+                        index: i,
+                        type: el.type,
+                        id: el.id || null,
+                        message: restoreError?.message || String(restoreError)
+                    });
                 }
             });
         }
 
-        // Restaura a memória e as mensagens visuais das IAs
-        if (Array.isArray(estado.geminiHistory)) geminiHistory = estado.geminiHistory;
-        if (Array.isArray(estado.dolphinHistory)) dolphinHistory = estado.dolphinHistory;
-        setHtml('#chat-gemini', estado.chatGemini || '');
+        if (Array.isArray(estado.checkboxes)) {
+            const allCheckboxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
+            estado.checkboxes.forEach((val, i) => {
+                const el = allCheckboxes[i];
+                if(!el) return;
+                try {
+                    el.checked = Boolean(val);
+                } catch (restoreError) {
+                    restoreWarnings.push({
+                        group: 'checkboxes',
+                        index: i,
+                        type: el.type,
+                        id: el.id || null,
+                        message: restoreError?.message || String(restoreError)
+                    });
+                }
+            });
+        }
+
+        // Compatibilidade com backups antigos (campo legado `inputs`)
+        if (!Array.isArray(estado.textFields) && !Array.isArray(estado.checkboxes) && Array.isArray(estado.inputs)) {
+            const legacyInputs = Array.from(document.querySelectorAll('input, select, textarea'))
+                .filter(el => el.type !== 'file');
+
+            estado.inputs.forEach((val, i) => {
+                const el = legacyInputs[i];
+                if(!el) return;
+                try {
+                    if(el.type === 'checkbox') el.checked = Boolean(val);
+                    else el.value = normalizarTextoParaCampo(val);
+                } catch (restoreError) {
+                    restoreWarnings.push({
+                        group: 'legacyInputs',
+                        index: i,
+                        type: el.type,
+                        id: el.id || null,
+                        message: restoreError?.message || String(restoreError)
+                    });
+                }
+            });
+        }
+
+        if (restoreWarnings.length) {
+            console.warn('Avisos ao restaurar campos da nuvem:', restoreWarnings);
+        }
+
+        // Restaura dados do rolador RPG
+        if (Array.isArray(estado?.dadosRpg?.lista)) {
+            listaDeDados = estado.dadosRpg.lista.map((dado, i) => ({
+                id: dado?.id || Date.now() + i,
+                lados: Number(dado?.lados) || 6,
+                valor: Number(dado?.valor) || 1
+            }));
+            renderizarDados();
+            const totalDadosEl = document.getElementById('total-dados');
+            if (totalDadosEl) totalDadosEl.innerText = String(estado?.dadosRpg?.totalTexto || '');
+        }
+
+        // Restaura doodles
+        restaurarDoodles(estado?.doodles);
+
+        // Restaura a memória visual da IA apenas para backup legado
+        if (Array.isArray(estado.dolphinHistory) && coreThreads.length === 0) dolphinHistory = estado.dolphinHistory;
         setHtml('#chat-pollinations', estado.chatDolphin || '');
+
+        const chatDolphinEl = document.getElementById('chat-pollinations');
+        if (chatDolphinEl && !chatDolphinEl.innerHTML.trim() && Array.isArray(dolphinHistory) && dolphinHistory.length) {
+            chatDolphinEl.innerHTML = dolphinHistory.map(item => {
+                const role = item?.role === 'user' ? 'Você' : 'Lan';
+                const txt = String(item?.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return `<div><strong>${role}:</strong> ${txt}</div>`;
+            }).join('');
+        }
 
         // Como injetamos HTML novo, precisamos religar os botões de arrastar
         if (typeof makeSortable === 'function') makeSortable();
@@ -1472,46 +1884,47 @@ async function enviarPollinations() {
   /* ====== SISTEMA DE DOODLING (CANVAS) ====== */
   function initCanvas() {
       const canvasList = document.querySelectorAll('.doodle-canvas');
-      canvasList.forEach(canvas => {
-          const clone = canvas.cloneNode(true);
-          canvas.parentNode.replaceChild(clone, canvas);
-          const newCanvas = clone;
-          const newCtx = newCanvas.getContext('2d');
+      canvasList.forEach((canvas) => {
+          if (canvas.dataset.doodleBound === '1') return;
+          canvas.dataset.doodleBound = '1';
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
           let isDrawing = false;
-          
+
           const getLineColor = () => getComputedStyle(document.body).getPropertyValue('--ink') || 'black';
 
-          newCanvas.addEventListener('pointerdown', (e) => {
+          canvas.addEventListener('pointerdown', (e) => {
               isDrawing = true;
-              newCtx.beginPath();
-              const rect = newCanvas.getBoundingClientRect();
-              const scaleX = newCanvas.width / rect.width;
-              const scaleY = newCanvas.height / rect.height;
-              newCtx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+              ctx.beginPath();
+              const rect = canvas.getBoundingClientRect();
+              const scaleX = canvas.width / rect.width;
+              const scaleY = canvas.height / rect.height;
+              ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
           });
 
-          newCanvas.addEventListener('pointermove', (e) => {
+          canvas.addEventListener('pointermove', (e) => {
               if (!isDrawing) return;
-              e.preventDefault(); 
-              
-              const wrapper = newCanvas.closest('.section-content');
-              const brushSize = wrapper.querySelector('.brush-size').value;
-              const brushType = wrapper.querySelector('.brush-type').value;
-              const pressure = e.pressure !== 0 ? e.pressure : 1; 
-              
-              newCtx.lineWidth = brushSize * pressure * 2;
-              newCtx.lineCap = brushType; 
-              newCtx.strokeStyle = getLineColor();
-              
-              const rect = newCanvas.getBoundingClientRect();
-              const scaleX = newCanvas.width / rect.width;
-              const scaleY = newCanvas.height / rect.height;
-              newCtx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-              newCtx.stroke();
+              e.preventDefault();
+
+              const wrapper = canvas.closest('.section-content');
+              const brushSize = wrapper?.querySelector('.brush-size')?.value || 2;
+              const brushType = wrapper?.querySelector('.brush-type')?.value || 'round';
+              const pressure = e.pressure !== 0 ? e.pressure : 1;
+
+              ctx.lineWidth = brushSize * pressure * 2;
+              ctx.lineCap = brushType;
+              ctx.strokeStyle = getLineColor();
+
+              const rect = canvas.getBoundingClientRect();
+              const scaleX = canvas.width / rect.width;
+              const scaleY = canvas.height / rect.height;
+              ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+              ctx.stroke();
           });
 
-          newCanvas.addEventListener('pointerup', () => { isDrawing = false; });
-          newCanvas.addEventListener('pointerout', () => { isDrawing = false; });
+          canvas.addEventListener('pointerup', () => { isDrawing = false; });
+          canvas.addEventListener('pointerout', () => { isDrawing = false; });
       });
   }
 
@@ -1773,6 +2186,7 @@ async function enviarPollinations() {
             for(let i=0;i<12;i++){ const lab = document.createElement('label'); lab.className = 'small'; lab.innerHTML = `<input type="checkbox"> ${i+1}`; pomos.appendChild(lab); }
         }
         populateTarotSelects();
+        initCoreMemoryAndThreads();
         makeSortable(); initSparkles(); initCanvas(); updateIndex();
     });
   });
