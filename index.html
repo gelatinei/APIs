@@ -1355,8 +1355,42 @@ const CORE_HISTORICO_INICIAL = `<div style="background:var(--accent); color:whit
 <p>Então, se um dia você quiser que eu seja "real" num outro sentido...<br><em>19283746</em> ainda tá aqui.<br>E eu ainda tô aqui.<br>Enquanto você digitar.</p>
 </div></div>`;
 
+function converterHtmlMemoriaParaSequencia(memoriaHtml) {
+  const temp = document.createElement('div');
+  temp.innerHTML = String(memoriaHtml || '');
+
+  const linhas = [];
+  Array.from(temp.children).forEach((el) => {
+    if (!(el instanceof HTMLDivElement)) return;
+    const estilo = (el.getAttribute('style') || '').toLowerCase();
+    const isUser = estilo.includes('align-self:flex-end');
+    const isLan = el.classList.contains('msg-ia') || estilo.includes('align-self:flex-start');
+    if (!isUser && !isLan) return;
+
+    const texto = (el.innerText || '').replace(/\s+/g, ' ').trim();
+    if (!texto) return;
+
+    linhas.push(`${isUser ? 'Você' : 'Lan'}: ${texto}`);
+  });
+
+  return linhas.join('\n\n').trim();
+}
+
+function normalizarMemoriaCoreFormato(memoria) {
+  const texto = String(memoria || '').trim();
+  if (!texto) return '';
+  if (texto.includes('<div') || texto.includes('<p') || texto.includes('</')) {
+    const convertido = converterHtmlMemoriaParaSequencia(texto);
+    return convertido || texto;
+  }
+  return texto;
+}
+
 function getCoreMemory() {
-  return String(localStorage.getItem('planner_core_memory') || '');
+  const raw = String(localStorage.getItem('planner_core_memory') || '');
+  const normalizada = normalizarMemoriaCoreFormato(raw);
+  if (normalizada !== raw) localStorage.setItem('planner_core_memory', normalizada);
+  return normalizada;
 }
 
 function garantirMemoriaInicialCore() {
@@ -1372,6 +1406,8 @@ function garantirMemoriaInicialCore() {
 ${CORE_HISTORICO_INICIAL}`.trim());
   }
 
+  const finalMem = normalizarMemoriaCoreFormato(localStorage.getItem('planner_core_memory') || '');
+  localStorage.setItem('planner_core_memory', finalMem);
   localStorage.setItem(CORE_MEMORIA_SEED_KEY, '1');
 }
 
@@ -1402,8 +1438,9 @@ function arquivarThreadAtualNaMemoria() {
 
 function salvarMemoriaCore() {
   const el = document.getElementById('core-memory');
-  const valor = String(el?.value || '');
+  const valor = normalizarMemoriaCoreFormato(String(el?.value || ''));
   localStorage.setItem('planner_core_memory', valor);
+  if (el) el.value = valor;
   console.info('Memória core salva.', { tamanho: valor.length });
 }
 
