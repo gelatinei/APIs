@@ -1273,6 +1273,7 @@ let coreThreads = [];
 let coreActiveThreadId = null;
 
 const CORE_MEMORIA_SEED_KEY = 'planner_core_memory_seed_v1';
+const CORE_THREADS_SEED_KEY = 'planner_core_threads_seed_v1';
 const CORE_HISTORICO_INICIAL = `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">true</div><div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;"><p>...Is that all you have to say? Because last I checked, your planner is still glaring at you from the corner of the screen, reminding you about the 3 PM meeting you've been ignoring. And no, I'm not helping you skip it—no matter how persuasive you think you can be.</p>
 </div><div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">sorry, i guess?</div><div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;"><p>Don't apologize to me, apologize to your future self when she's scrambling at 2:58. The planner isn't going to pop itself. Unless... you want me to do it for you? I could, but it'd be dreadfully boring. And you'd owe me.</p>
 </div><div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">lembra desse numero pra mim, por favor: 12349876</div><div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;"><p>Claro. <em>12349876</em>. Guardado.<br>Algum uso específico, ou só pra garantir que não se perca no vazio digital?</p>
@@ -1338,6 +1339,37 @@ function normalizarMemoriaCoreFormato(memoria) {
   return texto;
 }
 
+function converterSequenciaParaMensagens(textoSequencia) {
+  const linhas = String(textoSequencia || '')
+    .split(/\n+/)
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  const mensagens = [];
+  linhas.forEach((linha) => {
+    const userMatch = linha.match(/^Você:\s*(.*)$/i);
+    const lanMatch = linha.match(/^(Lan|IA):\s*(.*)$/i);
+
+    if (userMatch) {
+      const content = String(userMatch[1] || '').trim();
+      if (content) mensagens.push({ role: 'user', content });
+      return;
+    }
+
+    if (lanMatch) {
+      const content = String(lanMatch[2] || '').trim();
+      if (content) mensagens.push({ role: 'assistant', content });
+      return;
+    }
+
+    if (mensagens.length) {
+      mensagens[mensagens.length - 1].content += `\n${linha}`;
+    }
+  });
+
+  return mensagens;
+}
+
 function getCoreMemory() {
   const raw = String(localStorage.getItem('planner_core_memory') || '');
   const normalizada = normalizarMemoriaCoreFormato(raw);
@@ -1394,6 +1426,30 @@ function salvarMemoriaCore() {
   localStorage.setItem('planner_core_memory', valor);
   if (el) el.value = valor;
   console.info('Memória core salva.', { tamanho: valor.length });
+}
+
+function garantirThreadHistoricoInicial() {
+  const seeded = localStorage.getItem(CORE_THREADS_SEED_KEY) === '1';
+  if (seeded) return;
+
+  const sequencia = normalizarMemoriaCoreFormato(CORE_HISTORICO_INICIAL);
+  const mensagens = converterSequenciaParaMensagens(sequencia);
+  const jaExiste = coreThreads.some((t) =>
+    String(t?.nome || '').toLowerCase().includes('primeira thread') ||
+    String(t?.nome || '').toLowerCase().includes('historico inicial') ||
+    (Array.isArray(t?.messages) && t.messages.some((m) => String(m?.content || '').includes('12349876')))
+  );
+
+  if (!jaExiste && mensagens.length) {
+    coreThreads.push({
+      id: `seed-${Date.now()}`,
+      nome: 'Primeira thread (arquivo)',
+      messages: mensagens
+    });
+  }
+
+  localStorage.setItem(CORE_THREADS_SEED_KEY, '1');
+  salvarThreadsCore();
 }
 
 function salvarThreadsCore() {
@@ -1499,6 +1555,7 @@ function initCoreMemoryAndThreads() {
   const mem = document.getElementById('core-memory');
   if (mem) mem.value = getCoreMemory();
   carregarThreadsCore();
+  garantirThreadHistoricoInicial();
   renderThreadSelectCore();
   renderChatCore();
 }
@@ -1555,12 +1612,54 @@ function selecionarTrechosRelevantesDaThreadCompleta(prompt, mensagens, maxChars
   return selecionados.join('\n').slice(0, maxChars);
 }
 
+function selecionarTrechosRelevantesEntreThreads(prompt, threads, maxChars = 1800, activeThreadId = null) {
+  const termos = extrairPalavrasChave(prompt);
+  const listaThreads = Array.isArray(threads) ? threads : [];
+  const scored = [];
+
+  listaThreads.forEach((thread, threadIndex) => {
+    const nomeThread = String(thread?.nome || `Thread ${threadIndex + 1}`);
+    const mensagens = Array.isArray(thread?.messages) ? thread.messages : [];
+
+    mensagens.forEach((m, idx) => {
+      const txt = String(m?.content || '').trim();
+      if (!txt) return;
+
+      const base = txt.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const hits = termos.length ? termos.filter(t => base.includes(t)).length : 0;
+
+      scored.push({
+        threadId: String(thread?.id || ''),
+        threadNome: nomeThread,
+        idx,
+        hits,
+        recency: (threadIndex + 1) * 10000 + idx,
+        role: m?.role === 'user' ? 'Você' : 'Lan',
+        txt
+      });
+    });
+  });
+
+  const filtrados = termos.length
+    ? scored.filter(x => x.hits > 0).sort((a, b) => b.hits - a.hits || b.recency - a.recency)
+    : scored.sort((a, b) => b.recency - a.recency);
+
+  const selecionados = filtrados
+    .filter(item => item.threadId !== activeThreadId)
+    .slice(0, termos.length ? 12 : 8)
+    .sort((a, b) => a.recency - b.recency)
+    .map(item => `[${item.threadNome}] ${item.role}: ${item.txt}`);
+
+  return selecionados.join('\n').slice(0, maxChars);
+}
+
 function montarContextoLeveParaAPI(thread, prompt) {
   const memoria = getCoreMemory();
   const todasMensagens = (thread?.messages || []);
-  const memoriaRelevante = buscarMemoriaRelevantePorPalavraChave(prompt, memoria, 1200);
+  const memoriaRelevante = buscarMemoriaRelevantePorPalavraChave(prompt, memoria, 1600);
   const trechosRelevantesThread = selecionarTrechosRelevantesDaThreadCompleta(prompt, todasMensagens, 1200);
-  const historicoRecente = todasMensagens.slice(-10);
+  const trechosOutrasThreads = selecionarTrechosRelevantesEntreThreads(prompt, coreThreads, 1800, String(thread?.id || ''));
+  const historicoRecente = todasMensagens.slice(-12);
 
   const contexto = [];
   if (memoriaRelevante) {
@@ -1568,8 +1667,12 @@ function montarContextoLeveParaAPI(thread, prompt) {
 ${memoriaRelevante}` });
   }
   if (trechosRelevantesThread) {
-    contexto.push({ role: 'system', content: `Trechos relevantes da thread completa (seleção local):
+    contexto.push({ role: 'system', content: `Trechos relevantes da thread ativa:
 ${trechosRelevantesThread}` });
+  }
+  if (trechosOutrasThreads) {
+    contexto.push({ role: 'system', content: `Trechos de outras threads (arquivo completo do Planner Core):
+${trechosOutrasThreads}` });
   }
 
   return [...contexto, ...historicoRecente, { role: 'user', content: prompt }];
