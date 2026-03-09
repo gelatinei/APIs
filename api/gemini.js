@@ -5,6 +5,30 @@ function parseBody(body) {
   return body;
 }
 
+function normalizeGeminiHistory(history) {
+  if (!Array.isArray(history)) return [];
+
+  return history
+    .map((item) => {
+      const role = item?.role === 'model' ? 'model' : 'user';
+
+      if (Array.isArray(item?.parts)) {
+        const parts = item.parts
+          .map((p) => ({ text: String(p?.text ?? '') }))
+          .filter((p) => p.text.trim().length > 0);
+
+        if (parts.length > 0) return { role, parts };
+      }
+
+      if (typeof item?.content === 'string' && item.content.trim()) {
+        return { role, parts: [{ text: item.content.trim() }] };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
@@ -19,10 +43,10 @@ export default async function handler(req, res) {
 
   try {
     const parsedBody = parseBody(req.body);
-    const history = parsedBody?.history;
+    const normalizedHistory = normalizeGeminiHistory(parsedBody?.history);
 
-    if (!Array.isArray(history) || history.length === 0) {
-      return res.status(400).json({ error: 'Payload inválido: history deve ser um array com mensagens.' });
+    if (normalizedHistory.length === 0) {
+      return res.status(400).json({ error: 'Payload inválido: history não possui mensagens válidas para o Gemini.' });
     }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent?key=${API_KEY}`;
@@ -30,7 +54,7 @@ export default async function handler(req, res) {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: history })
+      body: JSON.stringify({ contents: normalizedHistory })
     });
 
     const raw = await response.text();
@@ -47,6 +71,7 @@ export default async function handler(req, res) {
         status: response.status,
         model: MODELO,
         apiMessage,
+        normalizedHistorySize: normalizedHistory.length,
       };
       console.error('Erro Gemini API:', details);
       return res.status(response.status || 500).json({ error: apiMessage, details });
