@@ -103,7 +103,7 @@
     .lan-cat-eyes { width: 88px; height: 40px; display:inline-block; margin-left:6px; vertical-align:middle;
       background-image: url('https://38.media.tumblr.com/a12a8e27586d6a1fb5456cfb8df68701/tumblr_nt1u6y5oGO1s6frvto1_500.gif');
       background-size: cover; background-position: center; border-radius: 8px;
-      filter: hue-rotate(var(--lan-eye-hue)) saturate(1.1) brightness(1.2) contrast(0.95) drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 45%, transparent)); }
+      filter: hue-rotate(var(--lan-eye-hue)) saturate(1.55) brightness(1.15) contrast(1.05) drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 45%, transparent)); }
     .lan-eye { display:none; }
 
     
@@ -1693,7 +1693,38 @@ async function enviarPollinations() {
     el.innerHTML = mk('left') + mk('right');
   }
 
-  function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); renderThemeCliparts(); }
+  function changeTheme(themeName) {
+    const select = document.getElementById('themeSelect');
+    const allowed = select ? Array.from(select.options).map(o => o.value) : [];
+    const fallback = 'retro';
+    const nextTheme = allowed.includes(themeName) ? themeName : fallback;
+
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    if (select && select.value !== nextTheme) select.value = nextTheme;
+
+    try {
+      localStorage.setItem('planner_theme', nextTheme);
+    } catch (_) {}
+
+    renderThemeCliparts();
+  }
+
+  function initThemeState() {
+    const select = document.getElementById('themeSelect');
+    const allowed = select ? Array.from(select.options).map(o => o.value) : [];
+    const attrTheme = document.documentElement.getAttribute('data-theme') || 'retro';
+
+    let savedTheme = '';
+    try {
+      savedTheme = String(localStorage.getItem('planner_theme') || '').trim();
+    } catch (_) {}
+
+    const nextTheme = allowed.includes(savedTheme)
+      ? savedTheme
+      : (allowed.includes(attrTheme) ? attrTheme : 'retro');
+
+    changeTheme(nextTheme);
+  }
 
 
   // Função antiga desativada
@@ -1857,7 +1888,7 @@ async function enviarPollinations() {
     };
 
     const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
-      .filter(el => el.type !== 'file' && el.type !== 'checkbox')
+      .filter(el => el.type !== 'file' && el.type !== 'checkbox' && el.id !== 'themeSelect' && el.id !== 'viewMode')
       .map(el => el.value);
 
     const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"]')).map(el => el.checked);
@@ -1870,6 +1901,8 @@ async function enviarPollinations() {
       html: elementosDinamicos,
       textFields,
       checkboxes,
+      theme: document.documentElement.getAttribute('data-theme') || 'retro',
+      viewMode: document.getElementById('viewMode')?.value || 'auto',
       dolphinHistory: limitarHistorico(dolphinHistory, reduzirChat ? 8 : 20, reduzirChat ? 1200 : 4000),
       chatDolphin,
       doodles: serializarDoodles(),
@@ -1995,7 +2028,7 @@ async function enviarPollinations() {
 
         if (Array.isArray(estado.textFields)) {
             const allTextFields = Array.from(document.querySelectorAll('input, select, textarea'))
-                .filter(el => el.type !== 'file' && el.type !== 'checkbox');
+                .filter(el => el.type !== 'file' && el.type !== 'checkbox' && el.id !== 'themeSelect' && el.id !== 'viewMode');
 
             estado.textFields.forEach((val, i) => {
                 const el = allTextFields[i];
@@ -2036,7 +2069,7 @@ async function enviarPollinations() {
         // Compatibilidade com backups antigos (campo legado `inputs`)
         if (!Array.isArray(estado.textFields) && !Array.isArray(estado.checkboxes) && Array.isArray(estado.inputs)) {
             const legacyInputs = Array.from(document.querySelectorAll('input, select, textarea'))
-                .filter(el => el.type !== 'file');
+                .filter(el => el.type !== 'file' && el.id !== 'themeSelect' && el.id !== 'viewMode');
 
             estado.inputs.forEach((val, i) => {
                 const el = legacyInputs[i];
@@ -2058,6 +2091,18 @@ async function enviarPollinations() {
 
         if (restoreWarnings.length) {
             console.warn('Avisos ao restaurar campos da nuvem:', restoreWarnings);
+        }
+
+        if (typeof estado?.theme === 'string' && estado.theme.trim()) {
+            changeTheme(estado.theme.trim());
+        } else {
+            initThemeState();
+        }
+
+        if (typeof estado?.viewMode === 'string' && estado.viewMode.trim()) {
+            const viewModeSelect = document.getElementById('viewMode');
+            if (viewModeSelect) viewModeSelect.value = estado.viewMode;
+            changeViewMode(estado.viewMode);
         }
 
         // Restaura dados do rolador RPG
@@ -2398,6 +2443,8 @@ async function enviarPollinations() {
 
   /* ====== INITIALIZATION ====== */
   document.addEventListener("DOMContentLoaded", () => {
+    initThemeState();
+
     // Primeiro carrega da nuvem
     carregarNuvem().then(() => {
         // Depois de carregar, checa se precisa criar as checkboxes vazias padrão
