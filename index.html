@@ -1449,6 +1449,59 @@ function initCoreMemoryAndThreads() {
   renderChatCore();
 }
 
+function extrairPalavrasChave(texto) {
+  const stop = new Set(['de','da','do','das','dos','a','o','as','os','e','ou','um','uma','pra','para','com','sem','por','que','na','no','em','eu','voce','você','meu','minha','seu','sua','isso','isto','esse','essa','agora','depois','mais','menos']);
+  return String(texto || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !stop.has(w))
+    .slice(0, 12);
+}
+
+function buscarMemoriaRelevantePorPalavraChave(prompt, memoriaTexto, maxChars = 1200) {
+  const termos = extrairPalavrasChave(prompt);
+  if (!termos.length || !String(memoriaTexto || '').trim()) return '';
+
+  const blocos = String(memoriaTexto)
+    .split(/\n\n+/)
+    .map(b => b.trim())
+    .filter(Boolean);
+
+  const scored = blocos
+    .map((bloco) => {
+      const base = bloco.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const hits = termos.filter(t => base.includes(t)).length;
+      return { bloco, hits };
+    })
+    .filter(item => item.hits > 0)
+    .sort((a, b) => b.hits - a.hits)
+    .slice(0, 4)
+    .map(item => item.bloco);
+
+  const resultado = scored.join('\n\n');
+  return resultado.slice(0, maxChars);
+}
+
+function montarContextoLeveParaAPI(thread, prompt) {
+  const memoria = getCoreMemory();
+  const memoriaRelevante = buscarMemoriaRelevantePorPalavraChave(prompt, memoria, 1200);
+  const historicoRecente = (thread?.messages || []).slice(-10);
+
+  const contexto = [];
+  if (memoriaRelevante) {
+    contexto.push({
+      role: 'system',
+      content: `Memória relevante recuperada por palavras-chave:
+${memoriaRelevante}`
+    });
+  }
+
+  return [...contexto, ...historicoRecente, { role: 'user', content: prompt }];
+}
+
 async function enviarPollinations() {
   const input = document.getElementById('input-pollinations');
   const chat = document.getElementById('chat-pollinations');
@@ -1462,17 +1515,17 @@ async function enviarPollinations() {
   const thread = getThreadAtivaCore();
   if (!thread) return;
 
-  const memoria = getCoreMemory();
-  const historyParaApi = [...(thread.messages || [])];
-  if (historyParaApi.length === 0 && memoria.trim()) {
-    historyParaApi.push({ role: "user", content: `Memória de longo prazo do planner:
-${memoria}` });
-  }
-  historyParaApi.push({ role: "user", content: prompt });
+  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
 
   thread.messages = [...(thread.messages || []), { role: "user", content: prompt }];
   dolphinHistory = thread.messages;
   salvarThreadsCore();
+
+  console.info('Contexto leve enviado para IA', {
+    totalMensagensThread: thread.messages.length,
+    totalMensagensEnviadas: historyParaApi.length,
+    possuiMemoriaRelevante: historyParaApi.some(m => m.role === 'system')
+  });
 
   const loadingId = 'load-dolphin-' + Date.now();
   chat.innerHTML += `<div id="${loadingId}" style="background:var(--drag-bg); padding:6px; border-radius:6px; align-self:flex-start; max-width:90%;">Lan está pensando...</div>`;
