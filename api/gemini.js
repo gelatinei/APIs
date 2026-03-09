@@ -1,91 +1,88 @@
-function parseBody(body) {
-  if (!body) return {};
-  if (typeof body === 'string') return JSON.parse(body);
-  if (Buffer.isBuffer(body)) return JSON.parse(body.toString('utf8'));
-  return body;
+import { list } from '@vercel/blob';
+
+const BLOB_FILE = 'planner-data.json';
+
+function getBlobToken() {
+  const raw = process.env.BLOB_READ_WRITE_TOKEN || '';
+  const trimmed = String(raw).trim();
+
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
 }
 
-function normalizeGeminiHistory(history) {
-  if (!Array.isArray(history)) return [];
+async function downloadBlobText(fileUrl, token) {
+  const attempts = [
+    { mode: 'public', headers: {} },
+    { mode: 'authorized', headers: { Authorization: `Bearer ${token}` } },
+  ];
 
-  return history
-    .map((item) => {
-      const role = item?.role === 'model' ? 'model' : 'user';
+  let lastError = null;
 
-      if (Array.isArray(item?.parts)) {
-        const parts = item.parts
-          .map((p) => ({ text: String(p?.text ?? '') }))
-          .filter((p) => p.text.trim().length > 0);
+  for (const attempt of attempts) {
+    try {
+      const response = await fetch(fileUrl, {
+        cache: 'no-store',
+        headers: attempt.headers,
+      });
 
-        if (parts.length > 0) return { role, parts };
+      if (response.ok) {
+        return await response.text();
       }
 
-      if (typeof item?.content === 'string' && item.content.trim()) {
-        return { role, parts: [{ text: item.content.trim() }] };
-      }
+      const responseBody = await response.text().catch(() => '');
+      lastError = `modo=${attempt.mode} status=${response.status} body=${responseBody.slice(0, 200)}`;
+    } catch (err) {
+      lastError = `modo=${attempt.mode} erro=${err?.message || String(err)}`;
+    }
+  }
 
-      return null;
-    })
-    .filter(Boolean);
+  throw new Error(lastError || 'Falha desconhecida ao baixar blob');
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const API_KEY = String(process.env.GEMINI_API_KEY || '').trim();
-  const MODELO = String(process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest').trim();
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
-  if (!API_KEY) {
-    return res.status(500).json({ error: 'Chave não configurada na Vercel.' });
+  const token = getBlobToken();
+  if (!token) {
+    return res.status(500).json({
+      error: 'Configuração faltando: defina BLOB_READ_WRITE_TOKEN na Vercel para carregar da nuvem.'
+    });
   }
 
   try {
-    const parsedBody = parseBody(req.body);
-    const normalizedHistory = normalizeGeminiHistory(parsedBody?.history);
+    const { blobs } = await list({ token, prefix: BLOB_FILE, limit: 100 });
 
-    if (normalizedHistory.length === 0) {
-      return res.status(400).json({ error: 'Payload inválido: history não possui mensagens válidas para o Gemini.' });
-    }
-
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent?key=${API_KEY}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: normalizedHistory })
+    const sorted = [...(blobs || [])].sort((a, b) => {
+      const timeA = new Date(a.uploadedAt || 0).getTime();
+      const timeB = new Date(b.uploadedAt || 0).getTime();
+      return timeB - timeA;
     });
 
-    const raw = await response.text();
-    let data = {};
-    try {
-      data = raw ? JSON.parse(raw) : {};
-    } catch {
-      data = { raw };
+    const file = sorted.find((b) => b.pathname === BLOB_FILE) || sorted[0];
+
+    if (!file?.url) {
+      return res.status(200).json({ data: '{}' });
     }
 
-    if (!response.ok || data?.error) {
-      const apiMessage = data?.error?.message || `Gemini retornou HTTP ${response.status}.`;
-      const details = {
-        status: response.status,
-        model: MODELO,
-        apiMessage,
-        normalizedHistorySize: normalizedHistory.length,
-      };
-      console.error('Erro Gemini API:', details);
-      return res.status(response.status || 500).json({ error: apiMessage, details });
-    }
-
-    return res.status(200).json(data);
+    const data = await downloadBlobText(file.url, token);
+    return res.status(200).json({ data: data || '{}' });
   } catch (error) {
-    console.error('Erro ao conectar com o Gemini:', {
+    console.error('Erro ao carregar do Blob:', {
       message: error?.message,
       stack: error?.stack,
     });
 
     return res.status(500).json({
-      error: 'Erro ao conectar com o Gemini.',
+      error: 'Falha ao carregar do Vercel Blob.',
       details: error?.message || String(error),
     });
   }
