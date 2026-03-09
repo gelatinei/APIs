@@ -528,6 +528,7 @@
               <div class="field-group" style="margin-top:4px;">
                 <label class="tiny-lbl" style="display:flex; justify-content:space-between; align-items:center;">Memória de Longo Prazo (Planner's core)
                   <button class="ghost mini-add" onclick="salvarMemoriaCore()">Salvar Memória</button>
+                  <button class="ghost mini-add" onclick="arquivarThreadAtualNaMemoria()">Arquivar Thread</button>
                 </label>
                 <textarea id="core-memory" rows="3" placeholder="Informações permanentes do planner para você/IA..." style="margin-top:4px;"></textarea>
               </div>
@@ -1281,8 +1282,57 @@ function abrirBuscaGoogle() {
   try { window.open(url, '_blank', 'noopener'); } catch {}
 }
 
+const CORE_MEMORIA_SEED_KEY = 'planner_core_memory_seed_v1';
+const CORE_HISTORICO_INICIAL = `# Histórico permanente importado (Primeira Thread)
+- Primeira mensagem registrada: "true".
+- Números importantes mencionados: 12349876 e 19283746.
+- Contexto: conversa de teste sobre memória de curto/longo prazo da IA no planner.
+- Decisão da usuária: implementar memória de longo prazo persistente.
+`;
+
 function getCoreMemory() {
   return String(localStorage.getItem('planner_core_memory') || '');
+}
+
+function garantirMemoriaInicialCore() {
+  const seeded = localStorage.getItem(CORE_MEMORIA_SEED_KEY) === '1';
+  if (seeded) return;
+
+  const atual = getCoreMemory();
+  if (!atual.trim()) {
+    localStorage.setItem('planner_core_memory', CORE_HISTORICO_INICIAL);
+  } else if (!atual.includes('12349876') && !atual.includes('19283746')) {
+    localStorage.setItem('planner_core_memory', `${atual}
+
+${CORE_HISTORICO_INICIAL}`.trim());
+  }
+
+  localStorage.setItem(CORE_MEMORIA_SEED_KEY, '1');
+}
+
+function arquivarThreadAtualNaMemoria() {
+  const thread = getThreadAtivaCore();
+  if (!thread) return;
+
+  const bloco = (thread.messages || []).map((m) => {
+    const role = m?.role === 'user' ? 'Você' : 'IA';
+    return `${role}: ${String(m?.content || '').replace(/\n+/g, ' ').trim()}`;
+  }).filter(Boolean).join('\n');
+
+  if (!bloco.trim()) {
+    alert('A thread atual está vazia.');
+    return;
+  }
+
+  const memoriaAtual = getCoreMemory();
+  const cabecalho = `\n\n## Arquivo de thread: ${thread.nome} (${new Date().toLocaleString('pt-BR')})\n`;
+  const novaMemoria = `${memoriaAtual}${cabecalho}${bloco}`.trim();
+  localStorage.setItem('planner_core_memory', novaMemoria);
+
+  const mem = document.getElementById('core-memory');
+  if (mem) mem.value = novaMemoria;
+
+  console.info('Thread arquivada na memória permanente.', { threadId: thread.id, mensagens: thread.messages?.length || 0 });
 }
 
 function salvarMemoriaCore() {
@@ -1391,6 +1441,7 @@ function apagarThreadAtualCore() {
 }
 
 function initCoreMemoryAndThreads() {
+  garantirMemoriaInicialCore();
   const mem = document.getElementById('core-memory');
   if (mem) mem.value = getCoreMemory();
   carregarThreadsCore();
