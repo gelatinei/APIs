@@ -91,6 +91,21 @@
     h1 { font-size: 18px; margin: 0; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 10px;}
     .meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .theme-select { padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--ink); font-size: 12px; outline: none; cursor: pointer;}
+
+    /* Decor fofo por tema */
+    .theme-clipart-border { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .clipart-col { position: fixed; top: 12px; bottom: 12px; width: 26px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; opacity: .55; font-size: 16px; }
+    .clipart-col.left { left: 4px; }
+    .clipart-col.right { right: 4px; }
+    .clipart-item { filter: drop-shadow(0 0 2px rgba(0,0,0,.15)); }
+    .page { position: relative; z-index: 2; }
+
+    .lan-cat-eyes { display:inline-flex; align-items:center; gap:6px; margin-left:6px; vertical-align:middle; }
+    .lan-eye { width: 14px; height: 14px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--accent); position: relative; box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 55%, transparent); animation: blinkLan 7s infinite; }
+    .lan-eye::after { content:''; position:absolute; left: 5px; top: 2px; width: 2px; height: 7px; border-radius: 3px; background: var(--ink); }
+    .lan-eye:nth-child(2){ animation-delay: .15s; }
+    @keyframes blinkLan { 0%, 43%, 46%, 88%, 100% { transform: scaleY(1); } 44%, 45%, 89%, 90% { transform: scaleY(0.1); } }
+
     
     /* MODO FOCO E POMODORO */
     body.focus-mode .hide-in-focus { display: none !important; }
@@ -212,6 +227,7 @@
   </style>
 </head>
 <body class="view-auto">
+  <div id="theme-clipart-border" class="theme-clipart-border"></div>
   <div class="page" id="planner">
     <header>
       <h1>
@@ -496,7 +512,7 @@
         <div style="flex:1; min-width: 250px;" class="section">
             <div class="section-header">
                 <span class="drag-section-handle">✥</span>
-                <label>🔎 Busca Google (Embed)</label>
+                <label>🔎 Busca Google (Nativa)</label>
                 <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
             </div>
             <div class="section-content">
@@ -504,15 +520,19 @@
                     <input type="text" id="google-query" class="termo-ia" placeholder="Buscar no Google..." style="flex:1;" onkeypress="if(event.key === 'Enter') abrirBuscaGoogle()">
                     <button class="ghost mini-add" onclick="abrirBuscaGoogle()">Buscar</button>
                 </div>
-                <iframe id="google-embed" src="https://www.google.com/search?q=Planner+TDAH" style="width: 100%; height: 260px; border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; background: var(--bg);" referrerpolicy="no-referrer"></iframe>
-                <div class="tiny-lbl" style="margin-top: 6px;">Se o embed for bloqueado pelo navegador/rede, o botão abre em nova aba automaticamente.</div>
+                <form id="google-native-form" action="https://www.google.com/search" method="GET" target="_blank" style="margin-top:8px;">
+                  <input type="hidden" name="q" id="google-native-q" value="Planner TDAH" />
+                  <button type="submit" class="ghost mini-add" style="width:100%;">Abrir resultados no Google (nativo)</button>
+                </form>
+                <div id="google-native-links" class="field-group" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px;"></div>
+                <div class="tiny-lbl" style="margin-top: 6px;">Resultados em páginas nativas do Google (Web, Imagens, Notícias, Vídeos, Maps).</div>
             </div>
         </div>
 
         <div class="section hide-in-focus">
           <div class="section-header">
               <span class="drag-section-handle" title="Arraste a seção">✥</span>
-              <label>✨ Planner's core</label>
+              <label>✨ Planner's core <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
               <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
@@ -1272,14 +1292,29 @@ let dolphinHistory = [];
 let coreThreads = [];
 let coreActiveThreadId = null;
 
+function renderGoogleNativeLinks(query) {
+  const wrap = document.getElementById('google-native-links');
+  if (!wrap) return;
+  const q = encodeURIComponent(query || 'Planner TDAH');
+  const links = [
+    { label: '🔎 Web', href: `https://www.google.com/search?q=${q}` },
+    { label: '🖼️ Imagens', href: `https://www.google.com/search?tbm=isch&q=${q}` },
+    { label: '📰 Notícias', href: `https://www.google.com/search?tbm=nws&q=${q}` },
+    { label: '🎬 Vídeos', href: `https://www.google.com/search?tbm=vid&q=${q}` },
+    { label: '🗺️ Maps', href: `https://www.google.com/maps/search/${q}` },
+    { label: '🛍️ Shopping', href: `https://www.google.com/search?tbm=shop&q=${q}` }
+  ];
+
+  wrap.innerHTML = links.map(l => `<a href="${l.href}" target="_blank" rel="noopener" style="text-decoration:none; background:var(--card-bg); border:1px solid var(--border); border-radius:6px; padding:6px; color:var(--ink); text-align:center;">${l.label}</a>`).join('');
+}
+
 function abrirBuscaGoogle() {
   const input = document.getElementById('google-query');
-  const iframe = document.getElementById('google-embed');
+  const hiddenQ = document.getElementById('google-native-q');
   const query = (input?.value || '').trim() || 'Planner TDAH';
-  const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-
-  if (iframe) iframe.src = url;
-  try { window.open(url, '_blank', 'noopener'); } catch {}
+  if (hiddenQ) hiddenQ.value = query;
+  renderGoogleNativeLinks(query);
+  try { window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener'); } catch {}
 }
 
 const CORE_MEMORIA_SEED_KEY = 'planner_core_memory_seed_v1';
@@ -1574,7 +1609,28 @@ async function enviarPollinations() {
   function addGenericField(btn, placeholderText) { const container = btn.closest('.field-group').querySelector('.dynamic-fields'); const row = document.createElement('div'); row.style.display = 'flex'; row.style.gap = '4px'; row.style.marginTop = '4px'; row.innerHTML = `<input type="text" placeholder="${placeholderText}" /><button class="xbtn" onclick="this.parentElement.remove();">✕</button>`; container.appendChild(row); }
 
   /* ====== TEMAS ====== */
-  function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); }
+  function clipartsPorTema(themeName) {
+    const map = {
+      noite:['🌙','⭐','✨'], creme:['☕','🤎','🍪'], rosa:['🌸','💗','🩷'], mar:['🐚','🌊','🫧'], floresta:['🍃','🦋','🌿'],
+      cafe:['☕','🍫','🤎'], lavanda:['💜','🪻','✨'], oceano:['🐬','💧','🌊'], outono:['🍂','🧡','🎃'], hacker:['💚','🖥️','⚡'],
+      dracula:['🦇','🖤','🌙'], solarized:['🌞','📜','🟡'], nord:['❄️','🩵','🌫️'], retro:['🕹️','💿','🌈'], cyberpunk:['⚡','🤖','🌆'], ethereal:['🪽','☁️','🫧']
+    };
+    return map[themeName] || ['✨','🌸','⭐'];
+  }
+
+  function renderThemeCliparts() {
+    const root = document.documentElement;
+    const theme = root.getAttribute('data-theme') || 'retro';
+    const c = clipartsPorTema(theme);
+    const el = document.getElementById('theme-clipart-border');
+    if (!el) return;
+
+    const mk = (side) => `<div class="clipart-col ${side}">${Array.from({length: 16}).map((_,i)=>`<span class="clipart-item">${c[i % c.length]}</span>`).join('')}</div>`;
+    el.innerHTML = mk('left') + mk('right');
+  }
+
+  function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); renderThemeCliparts(); }
+
 
   // Função antiga desativada
   function autoSave() {}
@@ -2291,6 +2347,8 @@ async function enviarPollinations() {
         }
         populateTarotSelects();
         initCoreMemoryAndThreads();
+        renderGoogleNativeLinks((document.getElementById('google-query')?.value || 'Planner TDAH'));
+        renderThemeCliparts();
         makeSortable(); initSparkles(); initCanvas(); updateIndex();
     });
   });
