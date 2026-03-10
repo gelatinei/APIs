@@ -567,12 +567,7 @@
                 <textarea id="core-memory" rows="3" placeholder="Informações permanentes do planner para você/IA..." style="margin-top:4px;"></textarea>
               </div>
 
-              <div class="field-group" style="display:flex; gap:6px; margin-top: 8px; flex-wrap:wrap;">
-                <button class="ghost mini-add" id="core-tab-chat" onclick="mostrarPaginaCore('chat')">Página Chat</button>
-                <button class="ghost mini-add" id="core-tab-lousa" onclick="mostrarPaginaCore('lousa')">Página Lousa</button>
-              </div>
-
-              <div id="core-page-chat" style="display:block;">
+              <div id="core-page-chat" style="display:block; margin-top:8px;">
                 <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;"></div>
                 <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
                     <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
@@ -580,8 +575,8 @@
                 </div>
               </div>
 
-              <div id="core-page-lousa" style="display:none; margin-top:8px;">
-                <label class="tiny-lbl">Lousa Vetorial (na lousa: só escrita manual)</label>
+              <div class="tracker-box" id="core-lousa-box-v2" style="margin-top:12px;">
+                <h4 style="margin:0 0 8px 0;">✍️ Lousa do Core (nova)</h4>
                 <div class="lousa-core-wrap">
                   <canvas id="core-lousa-canvas" class="lousa-core-board"></canvas>
                 </div>
@@ -590,12 +585,13 @@
                   <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço</button>
                   <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar lousa</button>
                 </div>
-                <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa com caneta/dedo e envie direto.</div>
-                <div>
-                  <label class="tiny-lbl">Histórico textual da lousa (fora da lousa)</label>
+                <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa e envie direto.</div>
+                <div style="margin-top:8px;">
+                  <label class="tiny-lbl">Histórico textual da lousa</label>
                   <div id="core-lousa-historico" class="lousa-historico"></div>
                 </div>
               </div>
+</div>
           </div>
         </div>
 
@@ -1675,7 +1671,6 @@ function trocarThreadCore(threadId) {
   agendarSalvamentoNuvem();
   renderThreadSelectCore();
   renderChatCore();
-  mostrarPaginaCore('chat');
   initCoreLousa();
 }
 
@@ -1690,6 +1685,7 @@ function novaThreadCore() {
   agendarSalvamentoNuvem();
   renderThreadSelectCore();
   renderChatCore();
+  initCoreLousa();
 }
 
 function apagarThreadAtualCore() {
@@ -1862,230 +1858,31 @@ function garantirTrackersNovos() {
   });
 }
 
-function mostrarPaginaCore(pagina = 'chat') {
-  const pageChat = document.getElementById('core-page-chat');
-  const pageLousa = document.getElementById('core-page-lousa');
-  const tabChat = document.getElementById('core-tab-chat');
-  const tabLousa = document.getElementById('core-tab-lousa');
-
-  const isLousa = pagina === 'lousa';
-
-  if (pageChat) pageChat.style.display = isLousa ? 'none' : 'block';
-  if (pageLousa) pageLousa.style.display = isLousa ? 'block' : 'none';
-  if (tabChat) tabChat.style.opacity = isLousa ? '0.7' : '1';
-  if (tabLousa) tabLousa.style.opacity = isLousa ? '1' : '0.7';
-}
+function mostrarPaginaCore() {}
 
 const CORE_LOUSA_W = 1200;
 const CORE_LOUSA_H = 700;
 let coreLousaCanvas = null;
 let coreLousaCtx = null;
 let coreLousaOps = [];
-let coreLousaDrawing = null;
-let coreLousaCursorY = 90;
+let coreLousaStrokeAtual = null;
 let coreLousaHistorico = [];
-let coreLousaPendingStrokes = [];
+let coreLousaUserPendentes = [];
+let coreLousaCursorY = 90;
 
 function statusLousaCore(msg = '') {
   const el = document.getElementById('core-lousa-status');
-  if (!el) return;
-  el.textContent = msg || 'Escreva na lousa com caneta/dedo e envie direto.';
+  if (el) el.textContent = msg || 'Escreva na lousa e envie direto.';
 }
 
-function esperar(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+function esperar(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function ctxLousaConfigUser(ctx) {
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
-}
-
-function ctxLousaConfigCore(ctx) {
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
-  ctx.textBaseline = 'alphabetic';
-  ctx.font = "44px 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive";
-  ctx.shadowColor = 'rgba(0,0,0,.08)';
-  ctx.shadowBlur = 1.2;
-}
-
-function renderOperacaoLousa(op) {
-  if (!coreLousaCtx || !op) return;
-  if (op.type === 'stroke') {
-    ctxLousaConfigUser(coreLousaCtx);
-    coreLousaCtx.lineWidth = op.width || 3.2;
-    const pts = op.points || [];
-    if (!pts.length) return;
-    coreLousaCtx.beginPath();
-    coreLousaCtx.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length; i++) coreLousaCtx.lineTo(pts[i].x, pts[i].y);
-    coreLousaCtx.stroke();
-  } else if (op.type === 'coreText') {
-    ctxLousaConfigCore(coreLousaCtx);
-    coreLousaCtx.fillText(op.text || '', op.x || 50, op.y || 120);
-  }
-}
-
-function redrawLousaCore() {
-  if (!coreLousaCtx || !coreLousaCanvas) return;
-  coreLousaCtx.clearRect(0, 0, CORE_LOUSA_W, CORE_LOUSA_H);
-  coreLousaOps.forEach(renderOperacaoLousa);
-}
-
-function posLousa(evt) {
+function lousaPos(clientX, clientY) {
   const rect = coreLousaCanvas.getBoundingClientRect();
   return {
-    x: ((Number(evt?.clientX || 0) - rect.left) / Math.max(rect.width, 1)) * CORE_LOUSA_W,
-    y: ((Number(evt?.clientY || 0) - rect.top) / Math.max(rect.height, 1)) * CORE_LOUSA_H,
+    x: ((clientX - rect.left) / Math.max(rect.width, 1)) * CORE_LOUSA_W,
+    y: ((clientY - rect.top) / Math.max(rect.height, 1)) * CORE_LOUSA_H,
   };
-}
-
-function initCoreLousa() {
-  const canvas = document.getElementById('core-lousa-canvas');
-  if (!canvas || canvas.dataset.ready === '1') return;
-  canvas.dataset.ready = '1';
-  coreLousaCanvas = canvas;
-
-  const dpr = Math.max(window.devicePixelRatio || 1, 1);
-  canvas.width = Math.floor(CORE_LOUSA_W * dpr);
-  canvas.height = Math.floor(CORE_LOUSA_H * dpr);
-  coreLousaCtx = canvas.getContext('2d');
-  coreLousaCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  const beginStroke = (x, y, width = 3.4, pointerId = null) => {
-    coreLousaDrawing = { pointerId, points: [{ x, y }], width };
-    redrawLousaCore();
-    renderOperacaoLousa({ type: 'stroke', points: coreLousaDrawing.points, width: coreLousaDrawing.width });
-  };
-
-  const appendStroke = (x, y) => {
-    if (!coreLousaDrawing) return;
-    coreLousaDrawing.points.push({ x, y });
-    redrawLousaCore();
-    renderOperacaoLousa({ type: 'stroke', points: coreLousaDrawing.points, width: coreLousaDrawing.width });
-  };
-
-  const commitStroke = () => {
-    if (!coreLousaDrawing) return;
-    const strokeOp = { type: 'stroke', points: [...coreLousaDrawing.points], width: coreLousaDrawing.width };
-    coreLousaOps.push(strokeOp);
-    coreLousaPendingStrokes.push(strokeOp);
-    coreLousaDrawing = null;
-    redrawLousaCore();
-  };
-
-  const posFromRect = (clientX, clientY) => {
-    const rect = coreLousaCanvas.getBoundingClientRect();
-    return {
-      x: ((Number(clientX || 0) - rect.left) / Math.max(rect.width, 1)) * CORE_LOUSA_W,
-      y: ((Number(clientY || 0) - rect.top) / Math.max(rect.height, 1)) * CORE_LOUSA_H,
-    };
-  };
-
-  const onPointerDown = (evt) => {
-    evt.preventDefault();
-    const pt = posFromRect(evt.clientX, evt.clientY);
-    const w = evt.pointerType === 'pen' ? (2.2 + (Number(evt.pressure || 0.5) * 3.8)) : 3.4;
-    beginStroke(pt.x, pt.y, w, evt.pointerId);
-    try { canvas.setPointerCapture(evt.pointerId); } catch (_) {}
-  };
-
-  const onPointerMove = (evt) => {
-    if (!coreLousaDrawing) return;
-    if (coreLousaDrawing.pointerId !== null && evt.pointerId !== coreLousaDrawing.pointerId) return;
-    const canDraw = evt.pointerType === 'pen' || evt.pointerType === 'touch' || (evt.buttons & 1) === 1 || Number(evt.pressure || 0) > 0;
-    if (!canDraw) return;
-    evt.preventDefault();
-    const pt = posFromRect(evt.clientX, evt.clientY);
-    appendStroke(pt.x, pt.y);
-  };
-
-  const onPointerEnd = (evt) => {
-    if (!coreLousaDrawing) return;
-    if (coreLousaDrawing.pointerId !== null && evt.pointerId !== coreLousaDrawing.pointerId) return;
-    commitStroke();
-  };
-
-  let mouseDown = false;
-  const onMouseDown = (evt) => {
-    if (window.PointerEvent) return;
-    evt.preventDefault();
-    mouseDown = true;
-    const pt = posFromRect(evt.clientX, evt.clientY);
-    beginStroke(pt.x, pt.y, 3.4, 'mouse-fallback');
-  };
-  const onMouseMove = (evt) => {
-    if (window.PointerEvent || !mouseDown || !coreLousaDrawing) return;
-    evt.preventDefault();
-    const pt = posFromRect(evt.clientX, evt.clientY);
-    appendStroke(pt.x, pt.y);
-  };
-  const onMouseUp = () => {
-    if (window.PointerEvent || !mouseDown) return;
-    mouseDown = false;
-    commitStroke();
-  };
-
-  const onTouchStart = (evt) => {
-    if (window.PointerEvent) return;
-    const t = evt.touches?.[0];
-    if (!t) return;
-    evt.preventDefault();
-    const pt = posFromRect(t.clientX, t.clientY);
-    beginStroke(pt.x, pt.y, 3.6, 'touch-fallback');
-  };
-  const onTouchMove = (evt) => {
-    if (window.PointerEvent || !coreLousaDrawing) return;
-    const t = evt.touches?.[0];
-    if (!t) return;
-    evt.preventDefault();
-    const pt = posFromRect(t.clientX, t.clientY);
-    appendStroke(pt.x, pt.y);
-  };
-  const onTouchEnd = (evt) => {
-    if (window.PointerEvent) return;
-    evt.preventDefault();
-    commitStroke();
-  };
-
-  canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
-  canvas.addEventListener('pointermove', onPointerMove, { passive: false });
-  canvas.addEventListener('pointerup', onPointerEnd, { passive: false });
-  canvas.addEventListener('pointercancel', onPointerEnd, { passive: false });
-  canvas.addEventListener('pointerleave', onPointerEnd, { passive: false });
-
-  canvas.addEventListener('mousedown', onMouseDown, { passive: false });
-  window.addEventListener('mousemove', onMouseMove, { passive: false });
-  window.addEventListener('mouseup', onMouseUp, { passive: false });
-
-  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
-  canvas.addEventListener('touchmove', onTouchMove, { passive: false });
-  canvas.addEventListener('touchend', onTouchEnd, { passive: false });
-  canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
-
-  renderHistoricoLousaCore();
-  statusLousaCore();
-}
-
-
-function limparLousaCore() {
-  coreLousaOps = [];
-  coreLousaPendingStrokes = [];
-  coreLousaCursorY = 90;
-  redrawLousaCore();
-}
-
-function desfazerUltimoTracoLousa() {
-  for (let i = coreLousaOps.length - 1; i >= 0; i--) {
-    if (coreLousaOps[i].type === 'stroke') {
-      const [removed] = coreLousaOps.splice(i, 1);
-      const idx = coreLousaPendingStrokes.lastIndexOf(removed);
-      if (idx >= 0) coreLousaPendingStrokes.splice(idx, 1);
-      break;
-    }
-  }
-  redrawLousaCore();
 }
 
 function renderHistoricoLousaCore() {
@@ -2095,115 +1892,196 @@ function renderHistoricoLousaCore() {
     el.innerHTML = '<div style="opacity:.75;">Sem histórico de lousa ainda.</div>';
     return;
   }
-  el.innerHTML = coreLousaHistorico.map((item) =>
-    `<div><strong>${item.role === 'user' ? 'Você' : 'Lan'}:</strong> ${String(item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`
-  ).join('');
+  el.innerHTML = coreLousaHistorico.map(item => `<div><strong>${item.role === 'user' ? 'Você' : 'Lan'}:</strong> ${String(item.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`).join('');
   el.scrollTop = el.scrollHeight;
 }
 
-function primeiraFrase(texto) {
-  const limpo = String(texto || '').replace(/\s+/g, ' ').trim();
-  if (!limpo) return '';
-  const partes = limpo.match(/[^.!?]+[.!?]?/g) || [limpo];
-  return String(partes[0] || limpo).trim();
+function desenharOp(op) {
+  if (!coreLousaCtx || !op) return;
+  if (op.type === 'stroke') {
+    coreLousaCtx.lineCap = 'round';
+    coreLousaCtx.lineJoin = 'round';
+    coreLousaCtx.strokeStyle = op.color || '#8e44ad';
+    coreLousaCtx.lineWidth = op.width || 3.4;
+    const pts = op.points || [];
+    if (!pts.length) return;
+    coreLousaCtx.beginPath();
+    coreLousaCtx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) coreLousaCtx.lineTo(pts[i].x, pts[i].y);
+    coreLousaCtx.stroke();
+    return;
+  }
+  if (op.type === 'coreText') {
+    coreLousaCtx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
+    coreLousaCtx.font = "44px 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive";
+    coreLousaCtx.textBaseline = 'alphabetic';
+    coreLousaCtx.fillText(op.text || '', op.x || 50, op.y || 120);
+  }
+}
+
+function redrawLousaCore() {
+  if (!coreLousaCtx) return;
+  coreLousaCtx.clearRect(0, 0, CORE_LOUSA_W, CORE_LOUSA_H);
+  coreLousaOps.forEach(desenharOp);
+  if (coreLousaStrokeAtual) desenharOp(coreLousaStrokeAtual);
+}
+
+function iniciarTraco(x, y) {
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
+  coreLousaStrokeAtual = { type: 'stroke', points: [{ x, y }], width: 3.4, color: accent, source: 'user' };
+  redrawLousaCore();
+}
+
+function seguirTraco(x, y) {
+  if (!coreLousaStrokeAtual) return;
+  coreLousaStrokeAtual.points.push({ x, y });
+  redrawLousaCore();
+}
+
+function finalizarTraco() {
+  if (!coreLousaStrokeAtual) return;
+  coreLousaOps.push(coreLousaStrokeAtual);
+  coreLousaUserPendentes.push(coreLousaStrokeAtual);
+  coreLousaStrokeAtual = null;
+  redrawLousaCore();
+}
+
+function initCoreLousa() {
+  const canvas = document.getElementById('core-lousa-canvas');
+  if (!canvas || canvas.dataset.ready === '1') return;
+  canvas.dataset.ready = '1';
+  coreLousaCanvas = canvas;
+  const dpr = Math.max(window.devicePixelRatio || 1, 1);
+  canvas.width = Math.floor(CORE_LOUSA_W * dpr);
+  canvas.height = Math.floor(CORE_LOUSA_H * dpr);
+  coreLousaCtx = canvas.getContext('2d');
+  coreLousaCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  let drawing = false;
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    drawing = true;
+    const p = lousaPos(e.clientX, e.clientY);
+    iniciarTraco(p.x, p.y);
+  }, { passive: false });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = lousaPos(e.clientX, e.clientY);
+    seguirTraco(p.x, p.y);
+  }, { passive: false });
+  const stop = () => { drawing = false; finalizarTraco(); };
+  canvas.addEventListener('pointerup', stop, { passive: false });
+  canvas.addEventListener('pointercancel', stop, { passive: false });
+  canvas.addEventListener('pointerleave', stop, { passive: false });
+
+  canvas.addEventListener('touchstart', (e) => {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    e.preventDefault();
+    drawing = true;
+    const p = lousaPos(t.clientX, t.clientY);
+    iniciarTraco(p.x, p.y);
+  }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => {
+    if (!drawing) return;
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    e.preventDefault();
+    const p = lousaPos(t.clientX, t.clientY);
+    seguirTraco(p.x, p.y);
+  }, { passive: false });
+  canvas.addEventListener('touchend', () => { drawing = false; finalizarTraco(); }, { passive: false });
+
+  renderHistoricoLousaCore();
+  statusLousaCore();
+}
+
+function limparLousaCore() {
+  coreLousaOps = [];
+  coreLousaStrokeAtual = null;
+  coreLousaUserPendentes = [];
+  coreLousaCursorY = 90;
+  redrawLousaCore();
+}
+
+function desfazerUltimoTracoLousa() {
+  for (let i = coreLousaOps.length - 1; i >= 0; i--) {
+    if (coreLousaOps[i].type === 'stroke') { coreLousaOps.splice(i, 1); break; }
+  }
+  coreLousaUserPendentes = coreLousaOps.filter(op => op.type === 'stroke' && op.source === 'user');
+  redrawLousaCore();
 }
 
 async function reconhecerTextoLousa() {
-  if (!coreLousaPendingStrokes.length) return '';
-  if (!window.Tesseract) throw new Error('OCR indisponível no navegador.');
-
+  if (!coreLousaUserPendentes.length) return '';
+  if (!window.Tesseract) throw new Error('OCR indisponível.');
   const off = document.createElement('canvas');
-  off.width = CORE_LOUSA_W;
-  off.height = CORE_LOUSA_H;
+  off.width = CORE_LOUSA_W; off.height = CORE_LOUSA_H;
   const c = off.getContext('2d');
-  c.fillStyle = '#fff';
-  c.fillRect(0, 0, off.width, off.height);
-  c.lineCap = 'round';
-  c.lineJoin = 'round';
-  c.strokeStyle = '#111';
-
-  for (const op of coreLousaPendingStrokes) {
-    const pts = op.points || [];
-    if (!pts.length) continue;
-    c.lineWidth = Math.max(3, (op.width || 3) * 1.3);
-    c.beginPath();
-    c.moveTo(pts[0].x, pts[0].y);
+  c.fillStyle = '#fff'; c.fillRect(0, 0, off.width, off.height);
+  c.strokeStyle = '#111'; c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const op of coreLousaUserPendentes) {
+    const pts = op.points || []; if (!pts.length) continue;
+    c.lineWidth = 5;
+    c.beginPath(); c.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) c.lineTo(pts[i].x, pts[i].y);
     c.stroke();
   }
-
   const result = await window.Tesseract.recognize(off.toDataURL('image/png'), 'por+eng');
-  const txt = String(result?.data?.text || '').replace(/\s+/g, ' ').trim();
-  return txt;
+  return String(result?.data?.text || '').replace(/\s+/g, ' ').trim();
+}
+
+function primeiraFrase(t) {
+  const x = String(t || '').replace(/\s+/g, ' ').trim();
+  const p = x.match(/[^.!?]+[.!?]?/g) || [x];
+  return String(p[0] || x).trim();
 }
 
 async function desenharRespostaCoreCaligrafia(texto) {
-  if (!coreLousaCtx) return;
-  ctxLousaConfigCore(coreLousaCtx);
   const frase = String(texto || '').trim();
-  let x = 50;
-  let y = coreLousaCursorY;
-
-  if (y > 650) {
-    y = 120;
-    x = 50;
-    coreLousaOps.push({ type: 'coreText', text: '---', x: 50, y: 80 });
-    redrawLousaCore();
-  }
-
   let parcial = '';
+  const x = 50;
+  if (coreLousaCursorY > 660) coreLousaCursorY = 110;
+  const y = coreLousaCursorY;
   for (const ch of frase) {
     parcial += ch;
     redrawLousaCore();
-    ctxLousaConfigCore(coreLousaCtx);
-    coreLousaCtx.fillText(parcial, x, y);
-    await esperar(ch === ' ' ? 35 : 68);
+    desenharOp({ type: 'coreText', text: parcial, x, y });
+    await esperar(ch === ' ' ? 25 : 55);
   }
-
-  coreLousaOps.push({ type: 'coreText', text: frase, x, y });
+  coreLousaOps.push({ type: 'coreText', text: frase, x, y, source: 'core' });
   redrawLousaCore();
-  coreLousaCursorY = Math.min(y + 66, 690);
+  coreLousaCursorY += 62;
 }
 
 async function enviarLousaCore() {
   const thread = getThreadAtivaCore();
   if (!thread) return;
-
   try {
-    statusLousaCore('Reconhecendo sua escrita na lousa...');
+    statusLousaCore('Lendo sua escrita...');
     const textoAtual = await reconhecerTextoLousa();
     if (!textoAtual) {
-      statusLousaCore('Não consegui reconhecer texto suficiente. Escreva maior e com espaçamento.');
+      statusLousaCore('Não consegui ler. Escreva maior e envie de novo.');
       return;
     }
+    coreLousaHistorico.push({ role: 'user', text: textoAtual });
+    renderHistoricoLousaCore();
 
-    const prompt = `Mensagem reconhecida da lousa do usuário: ${textoAtual}`;
-    const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
-
+    const historyParaApi = montarContextoLeveParaAPI(thread, `Mensagem reconhecida da lousa do usuário: ${textoAtual}`);
     thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa OCR] ${textoAtual}` }];
     dolphinHistory = thread.messages;
     salvarThreadsCore();
 
-    coreLousaHistorico.push({ role: 'user', text: textoAtual });
-    renderHistoricoLousaCore();
-
-    statusLousaCore('Lan está respondendo na lousa...');
+    statusLousaCore('Lan está escrevendo...');
     const res = await fetch('/api/dolphin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ history: historyParaApi })
     });
-
     const data = await res.json();
-    if (!res.ok) {
-      coreLousaHistorico.push({ role: 'assistant', text: `Erro: ${data.error || 'falha ao responder.'}` });
-      renderHistoricoLousaCore();
-      statusLousaCore('Erro ao consultar o Core.');
-      return;
-    }
+    if (!res.ok) throw new Error(data?.error || 'falha ao responder');
 
-    const textoCru = String(data?.choices?.[0]?.message?.content || '').trim();
-    const frase = primeiraFrase(textoCru) || 'Entendi.';
+    const frase = primeiraFrase(String(data?.choices?.[0]?.message?.content || '').trim()) || 'Entendi.';
     thread.messages.push({ role: 'assistant', content: `[Lousa] ${frase}` });
     dolphinHistory = thread.messages;
     salvarThreadsCore();
@@ -2211,15 +2089,12 @@ async function enviarLousaCore() {
 
     coreLousaHistorico.push({ role: 'assistant', text: frase });
     renderHistoricoLousaCore();
-
     await desenharRespostaCoreCaligrafia(frase);
-    coreLousaPendingStrokes = [];
+    coreLousaUserPendentes = [];
     statusLousaCore('Resposta escrita na lousa.');
   } catch (e) {
     console.error(e);
-    statusLousaCore('Falha no reconhecimento da lousa.');
-    coreLousaHistorico.push({ role: 'assistant', text: 'Erro de reconhecimento/conexão local.' });
-    renderHistoricoLousaCore();
+    statusLousaCore('Erro ao ler/enviar a lousa.');
   }
 }
 
