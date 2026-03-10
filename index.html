@@ -1500,8 +1500,59 @@ function salvarThreadsCore() {
   localStorage.setItem('planner_core_active_thread', coreActiveThreadId || '');
 }
 
-function carregarThreadsCore() {
+
+
+function carregarThreadsCoreRawDoStorage() {
   const raw = localStorage.getItem('planner_core_threads');
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((t, i) => ({
+      id: String(t?.id || (Date.now() + i)),
+      nome: String(t?.nome || `Thread ${i + 1}`),
+      messages: Array.isArray(t?.messages) ? t.messages : []
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function assinaturaThreadCore(thread) {
+  const nome = String(thread?.nome || '').trim().toLowerCase();
+  const primeira = String(thread?.messages?.[0]?.content || '').slice(0, 80).trim().toLowerCase();
+  const qtd = Array.isArray(thread?.messages) ? thread.messages.length : 0;
+  return `${nome}::${qtd}::${primeira}`;
+}
+
+function mesclarThreadsCore(localThreads, cloudThreads) {
+  const localLista = Array.isArray(localThreads) ? localThreads : [];
+  const cloudLista = Array.isArray(cloudThreads) ? cloudThreads : [];
+  const merged = [];
+  const seenId = new Set();
+  const seenSig = new Set();
+
+  const pushThread = (t, fallbackIndex) => {
+    if (!t) return;
+    const normalized = {
+      id: String(t?.id || `thread-${Date.now()}-${fallbackIndex}`),
+      nome: String(t?.nome || `Thread ${fallbackIndex + 1}`),
+      messages: Array.isArray(t?.messages) ? t.messages : []
+    };
+    const sig = assinaturaThreadCore(normalized);
+    if (seenId.has(normalized.id) || seenSig.has(sig)) return;
+    seenId.add(normalized.id);
+    seenSig.add(sig);
+    merged.push(normalized);
+  };
+
+  cloudLista.forEach(pushThread);
+  localLista.forEach(pushThread);
+
+  return merged.length ? merged : [{ id: String(Date.now()), nome: 'Thread principal', messages: [] }];
+}
+
+function carregarThreadsCore() {  const raw = localStorage.getItem('planner_core_threads');
   if (!raw) {
     coreThreads = [{ id: String(Date.now()), nome: 'Thread principal', messages: [] }];
     coreActiveThreadId = coreThreads[0].id;
@@ -2277,15 +2328,17 @@ async function enviarPollinations() {
             }
 
             if (Array.isArray(estado.core.threads) && estado.core.threads.length) {
-                coreThreads = estado.core.threads.map((t, i) => ({
-                    id: String(t?.id || (Date.now() + i)),
-                    nome: String(t?.nome || `Thread ${i + 1}`),
-                    messages: Array.isArray(t?.messages) ? t.messages : []
-                }));
+                const localThreadsAntesDoCloud = carregarThreadsCoreRawDoStorage();
+                const threadsMescladas = mesclarThreadsCore(localThreadsAntesDoCloud, estado.core.threads);
+                const houveMescla = threadsMescladas.length !== estado.core.threads.length;
+
+                coreThreads = threadsMescladas;
                 coreActiveThreadId = coreThreads.some(t => t.id === String(estado.core.activeThreadId || ''))
                     ? String(estado.core.activeThreadId || '')
                     : coreThreads[0].id;
                 salvarThreadsCore();
+
+                if (houveMescla) agendarSalvamentoNuvem(300);
             }
         }
 
