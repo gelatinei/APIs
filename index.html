@@ -1953,28 +1953,21 @@ function initCoreLousa() {
   coreLousaCtx = canvas.getContext('2d');
   coreLousaCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const start = (evt) => {
-    evt.preventDefault();
-    const pt = posLousa(evt);
-    const w = evt.pointerType === 'pen' ? (2.2 + (Number(evt.pressure || 0.5) * 3.8)) : 3.4;
-    coreLousaDrawing = { pointerId: evt.pointerId, points: [pt], width: w };
-    try { canvas.setPointerCapture(evt.pointerId); } catch (_) {}
-  };
-
-  const move = (evt) => {
-    if (!coreLousaDrawing) return;
-    if (evt.pointerId !== coreLousaDrawing.pointerId) return;
-    const canDraw = evt.pointerType === 'pen' || evt.pointerType === 'touch' || (evt.buttons & 1) === 1 || Number(evt.pressure || 0) > 0;
-    if (!canDraw) return;
-    evt.preventDefault();
-    const pt = posLousa(evt);
-    coreLousaDrawing.points.push(pt);
+  const beginStroke = (x, y, width = 3.4, pointerId = null) => {
+    coreLousaDrawing = { pointerId, points: [{ x, y }], width };
     redrawLousaCore();
     renderOperacaoLousa({ type: 'stroke', points: coreLousaDrawing.points, width: coreLousaDrawing.width });
   };
 
-  const end = (evt) => {
-    if (!coreLousaDrawing || evt.pointerId !== coreLousaDrawing.pointerId) return;
+  const appendStroke = (x, y) => {
+    if (!coreLousaDrawing) return;
+    coreLousaDrawing.points.push({ x, y });
+    redrawLousaCore();
+    renderOperacaoLousa({ type: 'stroke', points: coreLousaDrawing.points, width: coreLousaDrawing.width });
+  };
+
+  const commitStroke = () => {
+    if (!coreLousaDrawing) return;
     const strokeOp = { type: 'stroke', points: [...coreLousaDrawing.points], width: coreLousaDrawing.width };
     coreLousaOps.push(strokeOp);
     coreLousaPendingStrokes.push(strokeOp);
@@ -1982,15 +1975,99 @@ function initCoreLousa() {
     redrawLousaCore();
   };
 
-  canvas.addEventListener('pointerdown', start, { passive: false });
-  canvas.addEventListener('pointermove', move, { passive: false });
-  canvas.addEventListener('pointerup', end, { passive: false });
-  canvas.addEventListener('pointercancel', end, { passive: false });
-  canvas.addEventListener('pointerleave', end, { passive: false });
+  const posFromRect = (clientX, clientY) => {
+    const rect = coreLousaCanvas.getBoundingClientRect();
+    return {
+      x: ((Number(clientX || 0) - rect.left) / Math.max(rect.width, 1)) * CORE_LOUSA_W,
+      y: ((Number(clientY || 0) - rect.top) / Math.max(rect.height, 1)) * CORE_LOUSA_H,
+    };
+  };
+
+  const onPointerDown = (evt) => {
+    evt.preventDefault();
+    const pt = posFromRect(evt.clientX, evt.clientY);
+    const w = evt.pointerType === 'pen' ? (2.2 + (Number(evt.pressure || 0.5) * 3.8)) : 3.4;
+    beginStroke(pt.x, pt.y, w, evt.pointerId);
+    try { canvas.setPointerCapture(evt.pointerId); } catch (_) {}
+  };
+
+  const onPointerMove = (evt) => {
+    if (!coreLousaDrawing) return;
+    if (coreLousaDrawing.pointerId !== null && evt.pointerId !== coreLousaDrawing.pointerId) return;
+    const canDraw = evt.pointerType === 'pen' || evt.pointerType === 'touch' || (evt.buttons & 1) === 1 || Number(evt.pressure || 0) > 0;
+    if (!canDraw) return;
+    evt.preventDefault();
+    const pt = posFromRect(evt.clientX, evt.clientY);
+    appendStroke(pt.x, pt.y);
+  };
+
+  const onPointerEnd = (evt) => {
+    if (!coreLousaDrawing) return;
+    if (coreLousaDrawing.pointerId !== null && evt.pointerId !== coreLousaDrawing.pointerId) return;
+    commitStroke();
+  };
+
+  let mouseDown = false;
+  const onMouseDown = (evt) => {
+    if (window.PointerEvent) return;
+    evt.preventDefault();
+    mouseDown = true;
+    const pt = posFromRect(evt.clientX, evt.clientY);
+    beginStroke(pt.x, pt.y, 3.4, 'mouse-fallback');
+  };
+  const onMouseMove = (evt) => {
+    if (window.PointerEvent || !mouseDown || !coreLousaDrawing) return;
+    evt.preventDefault();
+    const pt = posFromRect(evt.clientX, evt.clientY);
+    appendStroke(pt.x, pt.y);
+  };
+  const onMouseUp = () => {
+    if (window.PointerEvent || !mouseDown) return;
+    mouseDown = false;
+    commitStroke();
+  };
+
+  const onTouchStart = (evt) => {
+    if (window.PointerEvent) return;
+    const t = evt.touches?.[0];
+    if (!t) return;
+    evt.preventDefault();
+    const pt = posFromRect(t.clientX, t.clientY);
+    beginStroke(pt.x, pt.y, 3.6, 'touch-fallback');
+  };
+  const onTouchMove = (evt) => {
+    if (window.PointerEvent || !coreLousaDrawing) return;
+    const t = evt.touches?.[0];
+    if (!t) return;
+    evt.preventDefault();
+    const pt = posFromRect(t.clientX, t.clientY);
+    appendStroke(pt.x, pt.y);
+  };
+  const onTouchEnd = (evt) => {
+    if (window.PointerEvent) return;
+    evt.preventDefault();
+    commitStroke();
+  };
+
+  canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
+  canvas.addEventListener('pointermove', onPointerMove, { passive: false });
+  canvas.addEventListener('pointerup', onPointerEnd, { passive: false });
+  canvas.addEventListener('pointercancel', onPointerEnd, { passive: false });
+  canvas.addEventListener('pointerleave', onPointerEnd, { passive: false });
+
+  canvas.addEventListener('mousedown', onMouseDown, { passive: false });
+  window.addEventListener('mousemove', onMouseMove, { passive: false });
+  window.addEventListener('mouseup', onMouseUp, { passive: false });
+
+  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+  canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+  canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
 
   renderHistoricoLousaCore();
   statusLousaCore();
 }
+
 
 function limparLousaCore() {
   coreLousaOps = [];
