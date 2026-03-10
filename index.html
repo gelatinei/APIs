@@ -1876,6 +1876,7 @@ let coreLousaInputCtx = null;
 let coreLousaOutputCtx = null;
 let coreLousaOps = [];
 let coreLousaOutputOps = [];
+let coreLousaOutputTemp = null;
 let coreLousaStrokeAtual = null;
 let coreLousaHistorico = [];
 let coreLousaUserPendentes = [];
@@ -1923,10 +1924,25 @@ function desenharStroke(ctx, op) {
 }
 
 function desenharCoreText(ctx, op) {
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
-  ctx.font = "44px 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive";
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText(op.text || '', op.x || 50, op.y || 120);
+  const pts = op?.points || [];
+  if (!pts.length) return;
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = op.width || 2.4;
+
+  let started = false;
+  for (const p of pts) {
+    if (!p) { started = false; continue; }
+    if (!started) {
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      started = true;
+    } else {
+      ctx.lineTo(p.x, p.y);
+    }
+  }
+  if (started) ctx.stroke();
 }
 
 function redrawInputLousa() {
@@ -1940,6 +1956,7 @@ function redrawOutputLousa() {
   if (!coreLousaOutputCtx) return;
   coreLousaOutputCtx.clearRect(0, 0, CORE_LOUSA_W, CORE_LOUSA_H);
   coreLousaOutputOps.forEach((op) => desenharCoreText(coreLousaOutputCtx, op));
+  if (coreLousaOutputTemp) desenharCoreText(coreLousaOutputCtx, coreLousaOutputTemp);
 }
 
 function iniciarTraco(x, y) {
@@ -2030,6 +2047,7 @@ function initCoreLousa() {
 function limparLousaCore() {
   coreLousaOps = [];
   coreLousaOutputOps = [];
+  coreLousaOutputTemp = null;
   coreLousaStrokeAtual = null;
   coreLousaUserPendentes = [];
   coreLousaCursorY = 90;
@@ -2077,21 +2095,62 @@ function primeiraFrase(t) {
   return String(p[0] || x).trim();
 }
 
+function trilhaCursivaParaTexto(texto, x, y) {
+  const txt = String(texto || '').trim();
+  const points = [];
+  let cx = x;
+
+  for (const ch of txt) {
+    if (ch === ' ') {
+      cx += 16;
+      points.push(null);
+      continue;
+    }
+
+    const lower = ch.toLowerCase();
+    const w = /[mw]/.test(lower) ? 28 : /[il\.,!]/.test(lower) ? 12 : 20;
+    const ampBase = /[gjpqy]/.test(lower) ? 10 : /[bdfhklt]/.test(lower) ? 12 : 8;
+    const steps = Math.max(12, Math.floor(w));
+    const phase = (lower.charCodeAt(0) % 7) * 0.4;
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const xx = cx + t * w;
+      const yy = y
+        + Math.sin((t * Math.PI * 1.15) + phase) * ampBase * 0.45
+        + Math.sin((t * Math.PI * 2.5) + phase * 0.6) * ampBase * 0.18
+        + (/[,\.]/.test(lower) ? 6 : 0)
+        + (/[gjpqy]/.test(lower) ? (Math.sin(t * Math.PI) * 7) : 0)
+        - (/[bdfhklt]/.test(lower) ? (Math.sin(t * Math.PI) * 4) : 0);
+      points.push({ x: xx, y: yy });
+    }
+
+    cx += w - 2;
+  }
+
+  return points;
+}
+
 async function desenharRespostaCoreCaligrafia(texto) {
   const frase = String(texto || '').trim();
-  let parcial = '';
+  if (!frase) return;
+
   const x = 50;
   if (coreLousaCursorY > 660) coreLousaCursorY = 110;
   const y = coreLousaCursorY;
 
-  for (const ch of frase) {
-    parcial += ch;
+  const trilha = trilhaCursivaParaTexto(frase, x, y);
+  const parcial = [];
+
+  for (const p of trilha) {
+    parcial.push(p);
+    coreLousaOutputTemp = { points: [...parcial], width: 2.4 };
     redrawOutputLousa();
-    desenharCoreText(coreLousaOutputCtx, { text: parcial, x, y });
-    await esperar(ch === ' ' ? 25 : 55);
+    await esperar(p ? 8 : 24);
   }
 
-  coreLousaOutputOps.push({ text: frase, x, y });
+  coreLousaOutputTemp = null;
+  coreLousaOutputOps.push({ points: trilha, width: 2.4 });
   redrawOutputLousa();
   coreLousaCursorY += 62;
 }
