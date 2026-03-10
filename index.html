@@ -2177,8 +2177,7 @@ async function enviarLousaCore() {
       return;
     }
 
-    const prompt = `Mensagem reconhecida da lousa do usuário: ${textoAtual}
-Responda SOMENTE com uma frase, no mesmo idioma da mensagem (português ou inglês), sem listas.`;
+    const prompt = `Mensagem reconhecida da lousa do usuário: ${textoAtual}`;
     const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
 
     thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa OCR] ${textoAtual}` }];
