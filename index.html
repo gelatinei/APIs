@@ -60,23 +60,36 @@
 .msg-ia table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
 .msg-ia th, .msg-ia td { border: 1px solid var(--border); padding: 4px; text-align: left; }
 .msg-ia th { background: var(--drag-bg); font-weight: bold; }
-    .lousa-core {
+    .lousa-core-wrap { margin-top: 8px; }
+    .lousa-core-board {
       width: 100%;
-      min-height: 220px;
+      height: 320px;
       border: 1px dashed var(--border);
       border-radius: 8px;
       background: repeating-linear-gradient(
         to bottom,
         var(--bg),
-        var(--bg) 26px,
-        color-mix(in srgb, var(--border) 35%, transparent) 27px
+        var(--bg) 30px,
+        color-mix(in srgb, var(--border) 35%, transparent) 31px
       );
-      color: var(--ink);
-      padding: 10px;
-      line-height: 1.8;
-      font-family: "Caveat", "Comic Sans MS", cursive;
-      font-size: 16px;
-      resize: vertical;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    .lousa-core-board path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .lousa-user-stroke { stroke: color-mix(in srgb, var(--accent) 65%, #ffffff 35%); stroke-width: 3.5; }
+    .lousa-lan-stroke { stroke: var(--ink); stroke-width: 2.3; }
+    .lousa-historico {
+      margin-top: 8px;
+      max-height: 140px;
+      overflow-y: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
     /* CSS Variables para Temas */
     :root { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; font-size: 13px; --maxw: 1000px; --lan-eye-hue: 0deg; }
@@ -566,13 +579,22 @@
               </div>
 
               <div id="core-page-lousa" style="display:none; margin-top:8px;">
-                <label class="tiny-lbl">Lousa do Planner's Core (entrada e resposta no mesmo campo)</label>
-                <textarea id="core-lousa" class="lousa-core" placeholder="Escreva aqui em português ou inglês.
-Exemplo:
-[Você] Pode me ajudar a montar as 3 prioridades de hoje?"></textarea>
-                <div class="field-group" style="display:flex; gap:6px; margin-top:8px;">
+                <label class="tiny-lbl">Lousa Vetorial (na lousa: só escrita manual)</label>
+                <div class="lousa-core-wrap">
+                  <svg id="core-lousa-svg" class="lousa-core-board" viewBox="0 0 1200 700" preserveAspectRatio="none"></svg>
+                </div>
+                <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
                   <button class="ghost mini-add" onclick="enviarLousaCore()">Lan responde na lousa</button>
-                  <button class="xbtn-sec" style="margin:0;" onclick="document.getElementById('core-lousa').value=''">Limpar lousa</button>
+                  <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço</button>
+                  <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar lousa</button>
+                </div>
+                <div class="field-group" style="margin-top:8px;">
+                  <label class="tiny-lbl">Transcrição do que você escreveu (fora da lousa, para a IA ler)</label>
+                  <input type="text" id="core-lousa-transcricao" placeholder="Ex.: Organize meu dia em 3 prioridades" onkeypress="if(event.key === 'Enter') enviarLousaCore()">
+                </div>
+                <div>
+                  <label class="tiny-lbl">Histórico textual da lousa (fora da lousa)</label>
+                  <div id="core-lousa-historico" class="lousa-historico"></div>
                 </div>
               </div>
           </div>
@@ -1655,7 +1677,9 @@ function trocarThreadCore(threadId) {
   renderThreadSelectCore();
   renderChatCore();
   mostrarPaginaCore('chat');
+  initCoreLousa();
 }
+
 
 function novaThreadCore() {
   const nome = prompt('Nome da nova thread:','Nova thread');
@@ -1853,27 +1877,164 @@ function mostrarPaginaCore(pagina = 'chat') {
   if (tabLousa) tabLousa.style.opacity = isLousa ? '1' : '0.7';
 }
 
-async function enviarLousaCore() {
-  const lousa = document.getElementById('core-lousa');
-  if (!lousa) return;
+const CORE_LOUSA_NS = 'http://www.w3.org/2000/svg';
+let coreLousaPaths = [];
+let coreLousaDrawing = null;
+let coreLousaCursorY = 80;
+let coreLousaHistorico = [];
 
-  const textoAtual = String(lousa.value || '').trim();
+function initCoreLousa() {
+  const svg = document.getElementById('core-lousa-svg');
+  if (!svg || svg.dataset.ready === '1') return;
+  svg.dataset.ready = '1';
+
+  const p = (evt) => {
+    const rect = svg.getBoundingClientRect();
+    const x = ((evt.clientX - rect.left) / Math.max(rect.width, 1)) * 1200;
+    const y = ((evt.clientY - rect.top) / Math.max(rect.height, 1)) * 700;
+    return { x, y };
+  };
+
+  svg.addEventListener('pointerdown', (evt) => {
+    evt.preventDefault();
+    const pt = p(evt);
+    const path = document.createElementNS(CORE_LOUSA_NS, 'path');
+    path.setAttribute('d', `M ${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`);
+    path.setAttribute('class', 'lousa-user-stroke');
+    svg.appendChild(path);
+    coreLousaDrawing = { path, points: [pt] };
+    coreLousaPaths.push(path);
+    svg.setPointerCapture(evt.pointerId);
+  });
+
+  svg.addEventListener('pointermove', (evt) => {
+    if (!coreLousaDrawing) return;
+    const pt = p(evt);
+    coreLousaDrawing.points.push(pt);
+    const d = coreLousaDrawing.points.map((q, i) => `${i ? 'L' : 'M'} ${q.x.toFixed(2)} ${q.y.toFixed(2)}`).join(' ');
+    coreLousaDrawing.path.setAttribute('d', d);
+  });
+
+  const finish = () => { coreLousaDrawing = null; };
+  svg.addEventListener('pointerup', finish);
+  svg.addEventListener('pointercancel', finish);
+  renderHistoricoLousaCore();
+}
+
+function limparLousaCore() {
+  const svg = document.getElementById('core-lousa-svg');
+  if (!svg) return;
+  svg.innerHTML = '';
+  coreLousaPaths = [];
+  coreLousaCursorY = 80;
+}
+
+function desfazerUltimoTracoLousa() {
+  const path = coreLousaPaths.pop();
+  if (path && path.parentNode) path.parentNode.removeChild(path);
+}
+
+function renderHistoricoLousaCore() {
+  const el = document.getElementById('core-lousa-historico');
+  if (!el) return;
+  if (!coreLousaHistorico.length) {
+    el.innerHTML = '<div style="opacity:.75;">Sem histórico de lousa ainda.</div>';
+    return;
+  }
+  el.innerHTML = coreLousaHistorico.map((item) =>
+    `<div><strong>${item.role === 'user' ? 'Você' : 'Lan'}:</strong> ${String(item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`
+  ).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function primeiraFrase(texto) {
+  const limpo = String(texto || '').replace(/\s+/g, ' ').trim();
+  if (!limpo) return '';
+  const partes = limpo.match(/[^.!?]+[.!?]?/g) || [limpo];
+  return String(partes[0] || limpo).trim();
+}
+
+function normalizarTextoVetorial(texto) {
+  return String(texto || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase();
+}
+
+function mapCharToSegments(ch) {
+  const M = {
+    A:[[0,6,2,0],[2,0,4,6],[1,3,3,3]], B:[[0,0,0,6],[0,0,3,0],[3,0,4,1],[4,1,4,2.5],[4,2.5,3,3],[0,3,3,3],[3,3,4,4],[4,4,4,5],[4,5,3,6],[0,6,3,6]],
+    C:[[4,0,1,0],[1,0,0,1],[0,1,0,5],[0,5,1,6],[1,6,4,6]], D:[[0,0,0,6],[0,0,3,0],[3,0,4,1],[4,1,4,5],[4,5,3,6],[0,6,3,6]], E:[[4,0,0,0],[0,0,0,6],[0,3,3,3],[0,6,4,6]],
+    F:[[0,0,0,6],[0,0,4,0],[0,3,3,3]], G:[[4,1,3,0],[3,0,1,0],[1,0,0,1],[0,1,0,5],[0,5,1,6],[1,6,4,6],[4,6,4,4],[4,4,2.4,4]],
+    H:[[0,0,0,6],[4,0,4,6],[0,3,4,3]], I:[[0,0,4,0],[2,0,2,6],[0,6,4,6]], J:[[4,0,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5]],
+    K:[[0,0,0,6],[4,0,0,3],[0,3,4,6]], L:[[0,0,0,6],[0,6,4,6]], M:[[0,6,0,0],[0,0,2,3],[2,3,4,0],[4,0,4,6]],
+    N:[[0,6,0,0],[0,0,4,6],[4,6,4,0]], O:[[1,0,3,0],[3,0,4,1],[4,1,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5],[0,5,0,1],[0,1,1,0]],
+    P:[[0,6,0,0],[0,0,3,0],[3,0,4,1],[4,1,4,2],[4,2,3,3],[3,3,0,3]], Q:[[1,0,3,0],[3,0,4,1],[4,1,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5],[0,5,0,1],[0,1,1,0],[2.3,4.3,4.2,6.2]],
+    R:[[0,6,0,0],[0,0,3,0],[3,0,4,1],[4,1,4,2],[4,2,3,3],[3,3,0,3],[0,3,4,6]], S:[[4,0,1,0],[1,0,0,1],[0,1,0,2],[0,2,1,3],[1,3,3,3],[3,3,4,4],[4,4,4,5],[4,5,3,6],[3,6,0,6]],
+    T:[[0,0,4,0],[2,0,2,6]], U:[[0,0,0,5],[0,5,1,6],[1,6,3,6],[3,6,4,5],[4,5,4,0]], V:[[0,0,2,6],[2,6,4,0]],
+    W:[[0,0,1,6],[1,6,2,3],[2,3,3,6],[3,6,4,0]], X:[[0,0,4,6],[4,0,0,6]], Y:[[0,0,2,3],[4,0,2,3],[2,3,2,6]], Z:[[0,0,4,0],[4,0,0,6],[0,6,4,6]],
+    '0':[[1,0,3,0],[3,0,4,1],[4,1,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5],[0,5,0,1],[0,1,1,0]],
+    '1':[[2,0,2,6],[1,1,2,0],[1,6,3,6]], '2':[[0,1,1,0],[1,0,3,0],[3,0,4,1],[4,1,4,2],[4,2,0,6],[0,6,4,6]],
+    '3':[[0,0,4,0],[4,0,4,6],[0,3,4,3],[0,6,4,6]], '4':[[0,0,0,3],[0,3,4,3],[4,0,4,6]],
+    '5':[[4,0,0,0],[0,0,0,3],[0,3,3,3],[3,3,4,4],[4,4,4,5],[4,5,3,6],[3,6,0,6]],
+    '6':[[4,0,1,0],[1,0,0,1],[0,1,0,5],[0,5,1,6],[1,6,3,6],[3,6,4,5],[4,5,4,4],[4,4,3,3],[3,3,0,3]],
+    '7':[[0,0,4,0],[4,0,1,6]], '8':[[1,0,3,0],[3,0,4,1],[4,1,4,2.5],[4,2.5,3,3],[3,3,1,3],[1,3,0,2.5],[0,2.5,0,1],[0,1,1,0],[1,3,3,3],[3,3,4,4],[4,4,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5],[0,5,0,4],[0,4,1,3]],
+    '9':[[4,3,1,3],[1,3,0,2],[0,2,0,1],[0,1,1,0],[1,0,3,0],[3,0,4,1],[4,1,4,6]],
+    '.':[[2,6,2.2,6.2]], ',':[[2,6,1.8,6.6]], '!':[[2,0,2,4.8],[2,6,2.2,6.2]], '?':[[0,1,1,0],[1,0,3,0],[3,0,4,1],[4,1,4,2],[4,2,2,3],[2,3,2,4],[2,6,2.2,6.2]],
+    ':':[[2,2,2.2,2.2],[2,5,2.2,5.2]], '-':[[1,3,3,3]]
+  };
+  return M[ch] || [];
+}
+
+function desenharTextoVetorialNaLousa(texto, classe = 'lousa-lan-stroke') {
+  const svg = document.getElementById('core-lousa-svg');
+  if (!svg) return;
+
+  const t = normalizarTextoVetorial(texto);
+  const scale = 9;
+  let x = 50;
+  let y = coreLousaCursorY;
+  const maxX = 1120;
+
+  for (const ch of t) {
+    if (ch === ' ') { x += scale * 3.2; continue; }
+    if (ch === '\n') { x = 50; y += scale * 9; continue; }
+    if (x > maxX) { x = 50; y += scale * 9; }
+
+    const segs = mapCharToSegments(ch);
+    segs.forEach(([x1,y1,x2,y2]) => {
+      const path = document.createElementNS(CORE_LOUSA_NS, 'path');
+      path.setAttribute('class', classe);
+      path.setAttribute('d', `M ${(x + x1*scale).toFixed(2)} ${(y + y1*scale).toFixed(2)} L ${(x + x2*scale).toFixed(2)} ${(y + y2*scale).toFixed(2)}`);
+      svg.appendChild(path);
+      coreLousaPaths.push(path);
+    });
+
+    x += scale * 5.8;
+  }
+
+  coreLousaCursorY = Math.min(y + scale * 10, 660);
+}
+
+async function enviarLousaCore() {
+  const input = document.getElementById('core-lousa-transcricao');
+  const textoAtual = String(input?.value || '').trim();
   if (!textoAtual) return;
 
   const thread = getThreadAtivaCore();
   if (!thread) return;
 
-  const prompt = `Mensagem da lousa do usuário (responda no mesmo idioma da mensagem: português ou inglês):
-${textoAtual}`;
+  const prompt = `Mensagem transcrita da lousa do usuário: ${textoAtual}
+Responda SOMENTE com uma frase, no mesmo idioma da mensagem (português ou inglês), sem listas.`;
   const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
 
   thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa] ${textoAtual}` }];
   dolphinHistory = thread.messages;
   salvarThreadsCore();
 
-  lousa.value = `${textoAtual}
-
-[Lan] Escrevendo na lousa...`;
+  coreLousaHistorico.push({ role: 'user', text: textoAtual });
+  renderHistoricoLousaCore();
+  input.value = '';
 
   try {
     const res = await fetch('/api/dolphin', {
@@ -1884,25 +2045,24 @@ ${textoAtual}`;
 
     const data = await res.json();
     if (!res.ok) {
-      lousa.value = `${textoAtual}
-
-[Lan] Erro: ${data.error || 'falha ao responder.'}`;
+      coreLousaHistorico.push({ role: 'assistant', text: `Erro: ${data.error || 'falha ao responder.'}` });
+      renderHistoricoLousaCore();
       return;
     }
 
     const textoCru = String(data?.choices?.[0]?.message?.content || '').trim();
-    thread.messages.push({ role: 'assistant', content: `[Lousa] ${textoCru}` });
+    const frase = primeiraFrase(textoCru) || 'Entendi.';
+    thread.messages.push({ role: 'assistant', content: `[Lousa] ${frase}` });
     dolphinHistory = thread.messages;
     salvarThreadsCore();
     salvarNuvem();
 
-    lousa.value = `${textoAtual}
-
-[Lan] ${textoCru}`;
+    coreLousaHistorico.push({ role: 'assistant', text: frase });
+    renderHistoricoLousaCore();
+    desenharTextoVetorialNaLousa(frase, 'lousa-lan-stroke');
   } catch (e) {
-    lousa.value = `${textoAtual}
-
-[Lan] Erro de conexão local.`;
+    coreLousaHistorico.push({ role: 'assistant', text: 'Erro de conexão local.' });
+    renderHistoricoLousaCore();
     console.error(e);
   }
 }
