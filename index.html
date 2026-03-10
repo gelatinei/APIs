@@ -3,6 +3,10 @@
 <head>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://js.puter.com/v2/"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#5D4037">
 <meta charset="utf-8" />
@@ -75,9 +79,7 @@
       touch-action: none;
       cursor: crosshair;
     }
-    .lousa-core-board path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .lousa-user-stroke { stroke: color-mix(in srgb, var(--accent) 65%, #ffffff 35%); stroke-width: 3.5; }
-    .lousa-lan-stroke { stroke: var(--ink); stroke-width: 2.3; }
+    .lousa-core-board { display:block; }
     .lousa-historico {
       margin-top: 8px;
       max-height: 140px;
@@ -581,17 +583,14 @@
               <div id="core-page-lousa" style="display:none; margin-top:8px;">
                 <label class="tiny-lbl">Lousa Vetorial (na lousa: só escrita manual)</label>
                 <div class="lousa-core-wrap">
-                  <svg id="core-lousa-svg" class="lousa-core-board" viewBox="0 0 1200 700" preserveAspectRatio="none"></svg>
+                  <canvas id="core-lousa-canvas" class="lousa-core-board"></canvas>
                 </div>
                 <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-                  <button class="ghost mini-add" onclick="enviarLousaCore()">Lan responde na lousa</button>
+                  <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa</button>
                   <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço</button>
                   <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar lousa</button>
                 </div>
-                <div class="field-group" style="margin-top:8px;">
-                  <label class="tiny-lbl">Transcrição do que você escreveu (fora da lousa, para a IA ler)</label>
-                  <input type="text" id="core-lousa-transcricao" placeholder="Ex.: Organize meu dia em 3 prioridades" onkeypress="if(event.key === 'Enter') enviarLousaCore()">
-                </div>
+                <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa com caneta/dedo e envie direto.</div>
                 <div>
                   <label class="tiny-lbl">Histórico textual da lousa (fora da lousa)</label>
                   <div id="core-lousa-historico" class="lousa-historico"></div>
@@ -1877,81 +1876,139 @@ function mostrarPaginaCore(pagina = 'chat') {
   if (tabLousa) tabLousa.style.opacity = isLousa ? '1' : '0.7';
 }
 
-const CORE_LOUSA_NS = 'http://www.w3.org/2000/svg';
-let coreLousaPaths = [];
+const CORE_LOUSA_W = 1200;
+const CORE_LOUSA_H = 700;
+let coreLousaCanvas = null;
+let coreLousaCtx = null;
+let coreLousaOps = [];
 let coreLousaDrawing = null;
-let coreLousaCursorY = 80;
+let coreLousaCursorY = 90;
 let coreLousaHistorico = [];
+let coreLousaPendingStrokes = [];
+
+function statusLousaCore(msg = '') {
+  const el = document.getElementById('core-lousa-status');
+  if (!el) return;
+  el.textContent = msg || 'Escreva na lousa com caneta/dedo e envie direto.';
+}
+
+function esperar(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function ctxLousaConfigUser(ctx) {
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
+}
+
+function ctxLousaConfigCore(ctx) {
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = "44px 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive";
+  ctx.shadowColor = 'rgba(0,0,0,.08)';
+  ctx.shadowBlur = 1.2;
+}
+
+function renderOperacaoLousa(op) {
+  if (!coreLousaCtx || !op) return;
+  if (op.type === 'stroke') {
+    ctxLousaConfigUser(coreLousaCtx);
+    coreLousaCtx.lineWidth = op.width || 3.2;
+    const pts = op.points || [];
+    if (!pts.length) return;
+    coreLousaCtx.beginPath();
+    coreLousaCtx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) coreLousaCtx.lineTo(pts[i].x, pts[i].y);
+    coreLousaCtx.stroke();
+  } else if (op.type === 'coreText') {
+    ctxLousaConfigCore(coreLousaCtx);
+    coreLousaCtx.fillText(op.text || '', op.x || 50, op.y || 120);
+  }
+}
+
+function redrawLousaCore() {
+  if (!coreLousaCtx || !coreLousaCanvas) return;
+  coreLousaCtx.clearRect(0, 0, CORE_LOUSA_W, CORE_LOUSA_H);
+  coreLousaOps.forEach(renderOperacaoLousa);
+}
+
+function posLousa(evt) {
+  const rect = coreLousaCanvas.getBoundingClientRect();
+  return {
+    x: ((Number(evt?.clientX || 0) - rect.left) / Math.max(rect.width, 1)) * CORE_LOUSA_W,
+    y: ((Number(evt?.clientY || 0) - rect.top) / Math.max(rect.height, 1)) * CORE_LOUSA_H,
+  };
+}
 
 function initCoreLousa() {
-  const svg = document.getElementById('core-lousa-svg');
-  if (!svg || svg.dataset.ready === '1') return;
-  svg.dataset.ready = '1';
+  const canvas = document.getElementById('core-lousa-canvas');
+  if (!canvas || canvas.dataset.ready === '1') return;
+  canvas.dataset.ready = '1';
+  coreLousaCanvas = canvas;
 
-  const p = (evt) => {
-    const rect = svg.getBoundingClientRect();
-    const clientX = Number(evt?.clientX || 0);
-    const clientY = Number(evt?.clientY || 0);
-    const x = ((clientX - rect.left) / Math.max(rect.width, 1)) * 1200;
-    const y = ((clientY - rect.top) / Math.max(rect.height, 1)) * 700;
-    return { x, y };
-  };
+  const dpr = Math.max(window.devicePixelRatio || 1, 1);
+  canvas.width = Math.floor(CORE_LOUSA_W * dpr);
+  canvas.height = Math.floor(CORE_LOUSA_H * dpr);
+  coreLousaCtx = canvas.getContext('2d');
+  coreLousaCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const startStroke = (evt) => {
+  const start = (evt) => {
     evt.preventDefault();
-    const pt = p(evt);
-    const path = document.createElementNS(CORE_LOUSA_NS, 'path');
-    path.setAttribute('d', `M ${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`);
-    path.setAttribute('class', 'lousa-user-stroke');
-    svg.appendChild(path);
-    coreLousaDrawing = { path, points: [pt], pointerId: evt.pointerId };
-    coreLousaPaths.push(path);
-    if (evt.pointerId !== undefined) {
-      try { svg.setPointerCapture(evt.pointerId); } catch (_) {}
-    }
+    const pt = posLousa(evt);
+    const w = evt.pointerType === 'pen' ? (2.2 + (Number(evt.pressure || 0.5) * 3.8)) : 3.4;
+    coreLousaDrawing = { pointerId: evt.pointerId, points: [pt], width: w };
+    try { canvas.setPointerCapture(evt.pointerId); } catch (_) {}
   };
 
-  const moveStroke = (evt) => {
+  const move = (evt) => {
     if (!coreLousaDrawing) return;
-    if (evt.pointerId !== undefined && coreLousaDrawing.pointerId !== undefined && evt.pointerId !== coreLousaDrawing.pointerId) return;
-    const isPen = evt.pointerType === 'pen';
-    const isTouch = evt.pointerType === 'touch';
-    const canDraw = isTouch || isPen || (evt.buttons & 1) === 1 || Number(evt.pressure || 0) > 0;
+    if (evt.pointerId !== coreLousaDrawing.pointerId) return;
+    const canDraw = evt.pointerType === 'pen' || evt.pointerType === 'touch' || (evt.buttons & 1) === 1 || Number(evt.pressure || 0) > 0;
     if (!canDraw) return;
-
     evt.preventDefault();
-    const pt = p(evt);
+    const pt = posLousa(evt);
     coreLousaDrawing.points.push(pt);
-    const d = coreLousaDrawing.points.map((q, i) => `${i ? 'L' : 'M'} ${q.x.toFixed(2)} ${q.y.toFixed(2)}`).join(' ');
-    coreLousaDrawing.path.setAttribute('d', d);
+    redrawLousaCore();
+    renderOperacaoLousa({ type: 'stroke', points: coreLousaDrawing.points, width: coreLousaDrawing.width });
   };
 
-  const finishStroke = (evt) => {
-    if (!coreLousaDrawing) return;
-    if (evt?.pointerId !== undefined && coreLousaDrawing.pointerId !== undefined && evt.pointerId !== coreLousaDrawing.pointerId) return;
+  const end = (evt) => {
+    if (!coreLousaDrawing || evt.pointerId !== coreLousaDrawing.pointerId) return;
+    const strokeOp = { type: 'stroke', points: [...coreLousaDrawing.points], width: coreLousaDrawing.width };
+    coreLousaOps.push(strokeOp);
+    coreLousaPendingStrokes.push(strokeOp);
     coreLousaDrawing = null;
+    redrawLousaCore();
   };
 
-  svg.addEventListener('pointerdown', startStroke, { passive: false });
-  svg.addEventListener('pointermove', moveStroke, { passive: false });
-  svg.addEventListener('pointerup', finishStroke, { passive: false });
-  svg.addEventListener('pointercancel', finishStroke, { passive: false });
-  svg.addEventListener('pointerleave', finishStroke, { passive: false });
+  canvas.addEventListener('pointerdown', start, { passive: false });
+  canvas.addEventListener('pointermove', move, { passive: false });
+  canvas.addEventListener('pointerup', end, { passive: false });
+  canvas.addEventListener('pointercancel', end, { passive: false });
+  canvas.addEventListener('pointerleave', end, { passive: false });
 
   renderHistoricoLousaCore();
+  statusLousaCore();
 }
 
 function limparLousaCore() {
-  const svg = document.getElementById('core-lousa-svg');
-  if (!svg) return;
-  svg.innerHTML = '';
-  coreLousaPaths = [];
-  coreLousaCursorY = 80;
+  coreLousaOps = [];
+  coreLousaPendingStrokes = [];
+  coreLousaCursorY = 90;
+  redrawLousaCore();
 }
 
 function desfazerUltimoTracoLousa() {
-  const path = coreLousaPaths.pop();
-  if (path && path.parentNode) path.parentNode.removeChild(path);
+  for (let i = coreLousaOps.length - 1; i >= 0; i--) {
+    if (coreLousaOps[i].type === 'stroke') {
+      const [removed] = coreLousaOps.splice(i, 1);
+      const idx = coreLousaPendingStrokes.lastIndexOf(removed);
+      if (idx >= 0) coreLousaPendingStrokes.splice(idx, 1);
+      break;
+    }
+  }
+  redrawLousaCore();
 }
 
 function renderHistoricoLousaCore() {
@@ -1974,95 +2031,87 @@ function primeiraFrase(texto) {
   return String(partes[0] || limpo).trim();
 }
 
-function normalizarTextoVetorial(texto) {
-  return String(texto || '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toUpperCase();
-}
+async function reconhecerTextoLousa() {
+  if (!coreLousaPendingStrokes.length) return '';
+  if (!window.Tesseract) throw new Error('OCR indisponível no navegador.');
 
-function mapCharToSegments(ch) {
-  const M = {
-    A:[[0,6,2,0],[2,0,4,6],[1,3,3,3]], B:[[0,0,0,6],[0,0,3,0],[3,0,4,1],[4,1,4,2.5],[4,2.5,3,3],[0,3,3,3],[3,3,4,4],[4,4,4,5],[4,5,3,6],[0,6,3,6]],
-    C:[[4,0,1,0],[1,0,0,1],[0,1,0,5],[0,5,1,6],[1,6,4,6]], D:[[0,0,0,6],[0,0,3,0],[3,0,4,1],[4,1,4,5],[4,5,3,6],[0,6,3,6]], E:[[4,0,0,0],[0,0,0,6],[0,3,3,3],[0,6,4,6]],
-    F:[[0,0,0,6],[0,0,4,0],[0,3,3,3]], G:[[4,1,3,0],[3,0,1,0],[1,0,0,1],[0,1,0,5],[0,5,1,6],[1,6,4,6],[4,6,4,4],[4,4,2.4,4]],
-    H:[[0,0,0,6],[4,0,4,6],[0,3,4,3]], I:[[0,0,4,0],[2,0,2,6],[0,6,4,6]], J:[[4,0,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5]],
-    K:[[0,0,0,6],[4,0,0,3],[0,3,4,6]], L:[[0,0,0,6],[0,6,4,6]], M:[[0,6,0,0],[0,0,2,3],[2,3,4,0],[4,0,4,6]],
-    N:[[0,6,0,0],[0,0,4,6],[4,6,4,0]], O:[[1,0,3,0],[3,0,4,1],[4,1,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5],[0,5,0,1],[0,1,1,0]],
-    P:[[0,6,0,0],[0,0,3,0],[3,0,4,1],[4,1,4,2],[4,2,3,3],[3,3,0,3]], Q:[[1,0,3,0],[3,0,4,1],[4,1,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5],[0,5,0,1],[0,1,1,0],[2.3,4.3,4.2,6.2]],
-    R:[[0,6,0,0],[0,0,3,0],[3,0,4,1],[4,1,4,2],[4,2,3,3],[3,3,0,3],[0,3,4,6]], S:[[4,0,1,0],[1,0,0,1],[0,1,0,2],[0,2,1,3],[1,3,3,3],[3,3,4,4],[4,4,4,5],[4,5,3,6],[3,6,0,6]],
-    T:[[0,0,4,0],[2,0,2,6]], U:[[0,0,0,5],[0,5,1,6],[1,6,3,6],[3,6,4,5],[4,5,4,0]], V:[[0,0,2,6],[2,6,4,0]],
-    W:[[0,0,1,6],[1,6,2,3],[2,3,3,6],[3,6,4,0]], X:[[0,0,4,6],[4,0,0,6]], Y:[[0,0,2,3],[4,0,2,3],[2,3,2,6]], Z:[[0,0,4,0],[4,0,0,6],[0,6,4,6]],
-    '0':[[1,0,3,0],[3,0,4,1],[4,1,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5],[0,5,0,1],[0,1,1,0]],
-    '1':[[2,0,2,6],[1,1,2,0],[1,6,3,6]], '2':[[0,1,1,0],[1,0,3,0],[3,0,4,1],[4,1,4,2],[4,2,0,6],[0,6,4,6]],
-    '3':[[0,0,4,0],[4,0,4,6],[0,3,4,3],[0,6,4,6]], '4':[[0,0,0,3],[0,3,4,3],[4,0,4,6]],
-    '5':[[4,0,0,0],[0,0,0,3],[0,3,3,3],[3,3,4,4],[4,4,4,5],[4,5,3,6],[3,6,0,6]],
-    '6':[[4,0,1,0],[1,0,0,1],[0,1,0,5],[0,5,1,6],[1,6,3,6],[3,6,4,5],[4,5,4,4],[4,4,3,3],[3,3,0,3]],
-    '7':[[0,0,4,0],[4,0,1,6]], '8':[[1,0,3,0],[3,0,4,1],[4,1,4,2.5],[4,2.5,3,3],[3,3,1,3],[1,3,0,2.5],[0,2.5,0,1],[0,1,1,0],[1,3,3,3],[3,3,4,4],[4,4,4,5],[4,5,3,6],[3,6,1,6],[1,6,0,5],[0,5,0,4],[0,4,1,3]],
-    '9':[[4,3,1,3],[1,3,0,2],[0,2,0,1],[0,1,1,0],[1,0,3,0],[3,0,4,1],[4,1,4,6]],
-    '.':[[2,6,2.2,6.2]], ',':[[2,6,1.8,6.6]], '!':[[2,0,2,4.8],[2,6,2.2,6.2]], '?':[[0,1,1,0],[1,0,3,0],[3,0,4,1],[4,1,4,2],[4,2,2,3],[2,3,2,4],[2,6,2.2,6.2]],
-    ':':[[2,2,2.2,2.2],[2,5,2.2,5.2]], '-':[[1,3,3,3]]
-  };
-  return M[ch] || [];
-}
+  const off = document.createElement('canvas');
+  off.width = CORE_LOUSA_W;
+  off.height = CORE_LOUSA_H;
+  const c = off.getContext('2d');
+  c.fillStyle = '#fff';
+  c.fillRect(0, 0, off.width, off.height);
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  c.strokeStyle = '#111';
 
-function esperar(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function desenharTextoVetorialNaLousa(texto, classe = 'lousa-lan-stroke', lento = true) {
-  const svg = document.getElementById('core-lousa-svg');
-  if (!svg) return;
-
-  const t = normalizarTextoVetorial(texto);
-  const scale = 9;
-  let x = 50;
-  let y = coreLousaCursorY;
-  const maxX = 1120;
-
-  for (const ch of t) {
-    if (ch === ' ') { x += scale * 3.2; if (lento) await esperar(30); continue; }
-    if (ch === '\n') { x = 50; y += scale * 9; if (lento) await esperar(40); continue; }
-    if (x > maxX) { x = 50; y += scale * 9; }
-
-    const segs = mapCharToSegments(ch);
-    for (const [x1,y1,x2,y2] of segs) {
-      const path = document.createElementNS(CORE_LOUSA_NS, 'path');
-      path.setAttribute('class', classe);
-      path.setAttribute('d', `M ${(x + x1*scale).toFixed(2)} ${(y + y1*scale).toFixed(2)} L ${(x + x2*scale).toFixed(2)} ${(y + y2*scale).toFixed(2)}`);
-      svg.appendChild(path);
-      coreLousaPaths.push(path);
-      if (lento) await esperar(18);
-    }
-
-    x += scale * 5.8;
-    if (lento) await esperar(22);
+  for (const op of coreLousaPendingStrokes) {
+    const pts = op.points || [];
+    if (!pts.length) continue;
+    c.lineWidth = Math.max(3, (op.width || 3) * 1.3);
+    c.beginPath();
+    c.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) c.lineTo(pts[i].x, pts[i].y);
+    c.stroke();
   }
 
-  coreLousaCursorY = Math.min(y + scale * 10, 660);
+  const result = await window.Tesseract.recognize(off.toDataURL('image/png'), 'por+eng');
+  const txt = String(result?.data?.text || '').replace(/\s+/g, ' ').trim();
+  return txt;
+}
+
+async function desenharRespostaCoreCaligrafia(texto) {
+  if (!coreLousaCtx) return;
+  ctxLousaConfigCore(coreLousaCtx);
+  const frase = String(texto || '').trim();
+  let x = 50;
+  let y = coreLousaCursorY;
+
+  if (y > 650) {
+    y = 120;
+    x = 50;
+    coreLousaOps.push({ type: 'coreText', text: '---', x: 50, y: 80 });
+    redrawLousaCore();
+  }
+
+  let parcial = '';
+  for (const ch of frase) {
+    parcial += ch;
+    redrawLousaCore();
+    ctxLousaConfigCore(coreLousaCtx);
+    coreLousaCtx.fillText(parcial, x, y);
+    await esperar(ch === ' ' ? 35 : 68);
+  }
+
+  coreLousaOps.push({ type: 'coreText', text: frase, x, y });
+  redrawLousaCore();
+  coreLousaCursorY = Math.min(y + 66, 690);
 }
 
 async function enviarLousaCore() {
-  const input = document.getElementById('core-lousa-transcricao');
-  const textoAtual = String(input?.value || '').trim();
-  if (!textoAtual) return;
-
   const thread = getThreadAtivaCore();
   if (!thread) return;
 
-  const prompt = `Mensagem transcrita da lousa do usuário: ${textoAtual}
-Responda SOMENTE com uma frase, no mesmo idioma da mensagem (português ou inglês), sem listas.`;
-  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
-
-  thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa] ${textoAtual}` }];
-  dolphinHistory = thread.messages;
-  salvarThreadsCore();
-
-  coreLousaHistorico.push({ role: 'user', text: textoAtual });
-  renderHistoricoLousaCore();
-  input.value = '';
-
   try {
+    statusLousaCore('Reconhecendo sua escrita na lousa...');
+    const textoAtual = await reconhecerTextoLousa();
+    if (!textoAtual) {
+      statusLousaCore('Não consegui reconhecer texto suficiente. Escreva maior e com espaçamento.');
+      return;
+    }
+
+    const prompt = `Mensagem reconhecida da lousa do usuário: ${textoAtual}
+Responda SOMENTE com uma frase, no mesmo idioma da mensagem (português ou inglês), sem listas.`;
+    const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
+
+    thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa OCR] ${textoAtual}` }];
+    dolphinHistory = thread.messages;
+    salvarThreadsCore();
+
+    coreLousaHistorico.push({ role: 'user', text: textoAtual });
+    renderHistoricoLousaCore();
+
+    statusLousaCore('Lan está respondendo na lousa...');
     const res = await fetch('/api/dolphin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2073,6 +2122,7 @@ Responda SOMENTE com uma frase, no mesmo idioma da mensagem (português ou ingl�
     if (!res.ok) {
       coreLousaHistorico.push({ role: 'assistant', text: `Erro: ${data.error || 'falha ao responder.'}` });
       renderHistoricoLousaCore();
+      statusLousaCore('Erro ao consultar o Core.');
       return;
     }
 
@@ -2085,11 +2135,15 @@ Responda SOMENTE com uma frase, no mesmo idioma da mensagem (português ou ingl�
 
     coreLousaHistorico.push({ role: 'assistant', text: frase });
     renderHistoricoLousaCore();
-    await desenharTextoVetorialNaLousa(frase, 'lousa-lan-stroke', true);
+
+    await desenharRespostaCoreCaligrafia(frase);
+    coreLousaPendingStrokes = [];
+    statusLousaCore('Resposta escrita na lousa.');
   } catch (e) {
-    coreLousaHistorico.push({ role: 'assistant', text: 'Erro de conexão local.' });
-    renderHistoricoLousaCore();
     console.error(e);
+    statusLousaCore('Falha no reconhecimento da lousa.');
+    coreLousaHistorico.push({ role: 'assistant', text: 'Erro de reconhecimento/conexão local.' });
+    renderHistoricoLousaCore();
   }
 }
 
