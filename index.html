@@ -60,6 +60,24 @@
 .msg-ia table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
 .msg-ia th, .msg-ia td { border: 1px solid var(--border); padding: 4px; text-align: left; }
 .msg-ia th { background: var(--drag-bg); font-weight: bold; }
+    .lousa-core {
+      width: 100%;
+      min-height: 220px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--bg),
+        var(--bg) 26px,
+        color-mix(in srgb, var(--border) 35%, transparent) 27px
+      );
+      color: var(--ink);
+      padding: 10px;
+      line-height: 1.8;
+      font-family: "Caveat", "Comic Sans MS", cursive;
+      font-size: 16px;
+      resize: vertical;
+    }
     /* CSS Variables para Temas */
     :root { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; font-size: 13px; --maxw: 1000px; --lan-eye-hue: 0deg; }
     
@@ -534,10 +552,28 @@
                 <textarea id="core-memory" rows="3" placeholder="Informações permanentes do planner para você/IA..." style="margin-top:4px;"></textarea>
               </div>
 
-              <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;"></div>
-              <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
-                  <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
-                  <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
+              <div class="field-group" style="display:flex; gap:6px; margin-top: 8px; flex-wrap:wrap;">
+                <button class="ghost mini-add" id="core-tab-chat" onclick="mostrarPaginaCore('chat')">Página Chat</button>
+                <button class="ghost mini-add" id="core-tab-lousa" onclick="mostrarPaginaCore('lousa')">Página Lousa</button>
+              </div>
+
+              <div id="core-page-chat" style="display:block;">
+                <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;"></div>
+                <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
+                    <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
+                    <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
+                </div>
+              </div>
+
+              <div id="core-page-lousa" style="display:none; margin-top:8px;">
+                <label class="tiny-lbl">Lousa do Planner's Core (entrada e resposta no mesmo campo)</label>
+                <textarea id="core-lousa" class="lousa-core" placeholder="Escreva aqui em português ou inglês.
+Exemplo:
+[Você] Pode me ajudar a montar as 3 prioridades de hoje?"></textarea>
+                <div class="field-group" style="display:flex; gap:6px; margin-top:8px;">
+                  <button class="ghost mini-add" onclick="enviarLousaCore()">Lan responde na lousa</button>
+                  <button class="xbtn-sec" style="margin:0;" onclick="document.getElementById('core-lousa').value=''">Limpar lousa</button>
+                </div>
               </div>
           </div>
         </div>
@@ -1618,6 +1654,7 @@ function trocarThreadCore(threadId) {
   agendarSalvamentoNuvem();
   renderThreadSelectCore();
   renderChatCore();
+  mostrarPaginaCore('chat');
 }
 
 function novaThreadCore() {
@@ -1800,6 +1837,74 @@ function garantirTrackersNovos() {
       grid.insertAdjacentHTML('beforeend', b.html);
     }
   });
+}
+
+function mostrarPaginaCore(pagina = 'chat') {
+  const pageChat = document.getElementById('core-page-chat');
+  const pageLousa = document.getElementById('core-page-lousa');
+  const tabChat = document.getElementById('core-tab-chat');
+  const tabLousa = document.getElementById('core-tab-lousa');
+
+  const isLousa = pagina === 'lousa';
+
+  if (pageChat) pageChat.style.display = isLousa ? 'none' : 'block';
+  if (pageLousa) pageLousa.style.display = isLousa ? 'block' : 'none';
+  if (tabChat) tabChat.style.opacity = isLousa ? '0.7' : '1';
+  if (tabLousa) tabLousa.style.opacity = isLousa ? '1' : '0.7';
+}
+
+async function enviarLousaCore() {
+  const lousa = document.getElementById('core-lousa');
+  if (!lousa) return;
+
+  const textoAtual = String(lousa.value || '').trim();
+  if (!textoAtual) return;
+
+  const thread = getThreadAtivaCore();
+  if (!thread) return;
+
+  const prompt = `Mensagem da lousa do usuário (responda no mesmo idioma da mensagem: português ou inglês):
+${textoAtual}`;
+  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
+
+  thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa] ${textoAtual}` }];
+  dolphinHistory = thread.messages;
+  salvarThreadsCore();
+
+  lousa.value = `${textoAtual}
+
+[Lan] Escrevendo na lousa...`;
+
+  try {
+    const res = await fetch('/api/dolphin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ history: historyParaApi })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      lousa.value = `${textoAtual}
+
+[Lan] Erro: ${data.error || 'falha ao responder.'}`;
+      return;
+    }
+
+    const textoCru = String(data?.choices?.[0]?.message?.content || '').trim();
+    thread.messages.push({ role: 'assistant', content: `[Lousa] ${textoCru}` });
+    dolphinHistory = thread.messages;
+    salvarThreadsCore();
+    salvarNuvem();
+
+    lousa.value = `${textoAtual}
+
+[Lan] ${textoCru}`;
+  } catch (e) {
+    lousa.value = `${textoAtual}
+
+[Lan] Erro de conexão local.`;
+    console.error(e);
+  }
 }
 
 async function enviarPollinations() {
