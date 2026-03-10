@@ -1890,34 +1890,54 @@ function initCoreLousa() {
 
   const p = (evt) => {
     const rect = svg.getBoundingClientRect();
-    const x = ((evt.clientX - rect.left) / Math.max(rect.width, 1)) * 1200;
-    const y = ((evt.clientY - rect.top) / Math.max(rect.height, 1)) * 700;
+    const clientX = Number(evt?.clientX || 0);
+    const clientY = Number(evt?.clientY || 0);
+    const x = ((clientX - rect.left) / Math.max(rect.width, 1)) * 1200;
+    const y = ((clientY - rect.top) / Math.max(rect.height, 1)) * 700;
     return { x, y };
   };
 
-  svg.addEventListener('pointerdown', (evt) => {
+  const startStroke = (evt) => {
     evt.preventDefault();
     const pt = p(evt);
     const path = document.createElementNS(CORE_LOUSA_NS, 'path');
     path.setAttribute('d', `M ${pt.x.toFixed(2)} ${pt.y.toFixed(2)}`);
     path.setAttribute('class', 'lousa-user-stroke');
     svg.appendChild(path);
-    coreLousaDrawing = { path, points: [pt] };
+    coreLousaDrawing = { path, points: [pt], pointerId: evt.pointerId };
     coreLousaPaths.push(path);
-    svg.setPointerCapture(evt.pointerId);
-  });
+    if (evt.pointerId !== undefined) {
+      try { svg.setPointerCapture(evt.pointerId); } catch (_) {}
+    }
+  };
 
-  svg.addEventListener('pointermove', (evt) => {
+  const moveStroke = (evt) => {
     if (!coreLousaDrawing) return;
+    if (evt.pointerId !== undefined && coreLousaDrawing.pointerId !== undefined && evt.pointerId !== coreLousaDrawing.pointerId) return;
+    const isPen = evt.pointerType === 'pen';
+    const isTouch = evt.pointerType === 'touch';
+    const canDraw = isTouch || isPen || (evt.buttons & 1) === 1 || Number(evt.pressure || 0) > 0;
+    if (!canDraw) return;
+
+    evt.preventDefault();
     const pt = p(evt);
     coreLousaDrawing.points.push(pt);
     const d = coreLousaDrawing.points.map((q, i) => `${i ? 'L' : 'M'} ${q.x.toFixed(2)} ${q.y.toFixed(2)}`).join(' ');
     coreLousaDrawing.path.setAttribute('d', d);
-  });
+  };
 
-  const finish = () => { coreLousaDrawing = null; };
-  svg.addEventListener('pointerup', finish);
-  svg.addEventListener('pointercancel', finish);
+  const finishStroke = (evt) => {
+    if (!coreLousaDrawing) return;
+    if (evt?.pointerId !== undefined && coreLousaDrawing.pointerId !== undefined && evt.pointerId !== coreLousaDrawing.pointerId) return;
+    coreLousaDrawing = null;
+  };
+
+  svg.addEventListener('pointerdown', startStroke, { passive: false });
+  svg.addEventListener('pointermove', moveStroke, { passive: false });
+  svg.addEventListener('pointerup', finishStroke, { passive: false });
+  svg.addEventListener('pointercancel', finishStroke, { passive: false });
+  svg.addEventListener('pointerleave', finishStroke, { passive: false });
+
   renderHistoricoLousaCore();
 }
 
@@ -1986,7 +2006,11 @@ function mapCharToSegments(ch) {
   return M[ch] || [];
 }
 
-function desenharTextoVetorialNaLousa(texto, classe = 'lousa-lan-stroke') {
+function esperar(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function desenharTextoVetorialNaLousa(texto, classe = 'lousa-lan-stroke', lento = true) {
   const svg = document.getElementById('core-lousa-svg');
   if (!svg) return;
 
@@ -1997,20 +2021,22 @@ function desenharTextoVetorialNaLousa(texto, classe = 'lousa-lan-stroke') {
   const maxX = 1120;
 
   for (const ch of t) {
-    if (ch === ' ') { x += scale * 3.2; continue; }
-    if (ch === '\n') { x = 50; y += scale * 9; continue; }
+    if (ch === ' ') { x += scale * 3.2; if (lento) await esperar(30); continue; }
+    if (ch === '\n') { x = 50; y += scale * 9; if (lento) await esperar(40); continue; }
     if (x > maxX) { x = 50; y += scale * 9; }
 
     const segs = mapCharToSegments(ch);
-    segs.forEach(([x1,y1,x2,y2]) => {
+    for (const [x1,y1,x2,y2] of segs) {
       const path = document.createElementNS(CORE_LOUSA_NS, 'path');
       path.setAttribute('class', classe);
       path.setAttribute('d', `M ${(x + x1*scale).toFixed(2)} ${(y + y1*scale).toFixed(2)} L ${(x + x2*scale).toFixed(2)} ${(y + y2*scale).toFixed(2)}`);
       svg.appendChild(path);
       coreLousaPaths.push(path);
-    });
+      if (lento) await esperar(18);
+    }
 
     x += scale * 5.8;
+    if (lento) await esperar(22);
   }
 
   coreLousaCursorY = Math.min(y + scale * 10, 660);
@@ -2059,7 +2085,7 @@ Responda SOMENTE com uma frase, no mesmo idioma da mensagem (português ou ingl�
 
     coreLousaHistorico.push({ role: 'assistant', text: frase });
     renderHistoricoLousaCore();
-    desenharTextoVetorialNaLousa(frase, 'lousa-lan-stroke');
+    await desenharTextoVetorialNaLousa(frase, 'lousa-lan-stroke', true);
   } catch (e) {
     coreLousaHistorico.push({ role: 'assistant', text: 'Erro de conexão local.' });
     renderHistoricoLousaCore();
