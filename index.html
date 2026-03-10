@@ -127,7 +127,8 @@
     
     input[type=text], input[type=number], input[type=date], input[type=time], select { width: 100%; padding: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); box-sizing: border-box; font-size: 14px; border-radius: 6px; transition: border 0.2s, background 0.3s, color 0.3s; margin-bottom: 4px;}
     input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus, input[type=time]:focus { outline: none; border-color: var(--accent); }
-    textarea { width: 100%; padding: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); box-sizing: border-box; font-size: 14px; border-radius: 6px; resize: vertical; transition: background 0.3s, color 0.3s; }
+    textarea { width: 100%; padding: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); box-sizing: border-box; font-size: 14px; border-radius: 6px; resize: both; transition: background 0.3s, color 0.3s; min-height: 64px; }
+    .campo-expandido { width: max(100%, min(90vw, 900px)) !important; min-width: min(90vw, 900px) !important; }
     
     input[type=range] { width: 100%; margin: 8px 0; accent-color: var(--accent); }
 
@@ -1428,6 +1429,7 @@ function arquivarThreadAtualNaMemoria() {
   if (mem) mem.value = novaMemoria;
 
   console.info('Thread arquivada na memória permanente.', { threadId: thread.id, mensagens: thread.messages?.length || 0 });
+  agendarSalvamentoNuvem();
 }
 
 function salvarMemoriaCore() {
@@ -1436,6 +1438,7 @@ function salvarMemoriaCore() {
   localStorage.setItem('planner_core_memory', valor);
   if (el) el.value = valor;
   console.info('Memória core salva.', { tamanho: valor.length });
+  agendarSalvamentoNuvem();
 }
 
 function garantirThreadHistoricoInicial() {
@@ -1497,8 +1500,59 @@ function salvarThreadsCore() {
   localStorage.setItem('planner_core_active_thread', coreActiveThreadId || '');
 }
 
-function carregarThreadsCore() {
+
+
+function carregarThreadsCoreRawDoStorage() {
   const raw = localStorage.getItem('planner_core_threads');
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((t, i) => ({
+      id: String(t?.id || (Date.now() + i)),
+      nome: String(t?.nome || `Thread ${i + 1}`),
+      messages: Array.isArray(t?.messages) ? t.messages : []
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function assinaturaThreadCore(thread) {
+  const nome = String(thread?.nome || '').trim().toLowerCase();
+  const primeira = String(thread?.messages?.[0]?.content || '').slice(0, 80).trim().toLowerCase();
+  const qtd = Array.isArray(thread?.messages) ? thread.messages.length : 0;
+  return `${nome}::${qtd}::${primeira}`;
+}
+
+function mesclarThreadsCore(localThreads, cloudThreads) {
+  const localLista = Array.isArray(localThreads) ? localThreads : [];
+  const cloudLista = Array.isArray(cloudThreads) ? cloudThreads : [];
+  const merged = [];
+  const seenId = new Set();
+  const seenSig = new Set();
+
+  const pushThread = (t, fallbackIndex) => {
+    if (!t) return;
+    const normalized = {
+      id: String(t?.id || `thread-${Date.now()}-${fallbackIndex}`),
+      nome: String(t?.nome || `Thread ${fallbackIndex + 1}`),
+      messages: Array.isArray(t?.messages) ? t.messages : []
+    };
+    const sig = assinaturaThreadCore(normalized);
+    if (seenId.has(normalized.id) || seenSig.has(sig)) return;
+    seenId.add(normalized.id);
+    seenSig.add(sig);
+    merged.push(normalized);
+  };
+
+  cloudLista.forEach(pushThread);
+  localLista.forEach(pushThread);
+
+  return merged.length ? merged : [{ id: String(Date.now()), nome: 'Thread principal', messages: [] }];
+}
+
+function carregarThreadsCore() {  const raw = localStorage.getItem('planner_core_threads');
   if (!raw) {
     coreThreads = [{ id: String(Date.now()), nome: 'Thread principal', messages: [] }];
     coreActiveThreadId = coreThreads[0].id;
@@ -1561,6 +1615,7 @@ function renderChatCore() {
 function trocarThreadCore(threadId) {
   coreActiveThreadId = threadId;
   salvarThreadsCore();
+  agendarSalvamentoNuvem();
   renderThreadSelectCore();
   renderChatCore();
 }
@@ -1572,6 +1627,7 @@ function novaThreadCore() {
   coreThreads.push(nova);
   coreActiveThreadId = nova.id;
   salvarThreadsCore();
+  agendarSalvamentoNuvem();
   renderThreadSelectCore();
   renderChatCore();
 }
@@ -1586,6 +1642,7 @@ function apagarThreadAtualCore() {
   coreThreads = coreThreads.filter(t => t.id !== coreActiveThreadId);
   coreActiveThreadId = coreThreads[0].id;
   salvarThreadsCore();
+  agendarSalvamentoNuvem();
   renderThreadSelectCore();
   renderChatCore();
 }
@@ -2016,6 +2073,96 @@ async function enviarPollinations() {
     return typeof val === 'string' ? val : '';
   }
 
+  let salvarNuvemTimer = null;
+  function agendarSalvamentoNuvem(ms = 900) {
+    if (salvarNuvemTimer) clearTimeout(salvarNuvemTimer);
+    salvarNuvemTimer = setTimeout(() => {
+      salvarNuvemTimer = null;
+      salvarNuvem();
+    }, ms);
+  }
+
+  function initCamposExpansiveis() {
+    if (document.body.dataset.expandFieldsBound === '1') return;
+    document.body.dataset.expandFieldsBound = '1';
+
+    document.addEventListener('dblclick', (event) => {
+      const el = event.target?.closest('input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea');
+      if (!el) return;
+      el.classList.toggle('campo-expandido');
+    });
+  }
+
+
+
+  function obterCaminhoLayoutSection(section) {
+    if (!section || !section.parentElement) return null;
+    const parent = section.parentElement;
+    const secIndex = Array.from(parent.children).indexOf(section);
+    if (secIndex < 0) return null;
+
+    const parentClasses = Array.from(parent.classList || []);
+    const parentId = parent.id || null;
+    const parentTag = String(parent.tagName || '').toLowerCase();
+    const parentDataRole = parent.getAttribute('data-layout-role') || null;
+
+    return { parentId, parentClasses, parentTag, parentDataRole, secIndex };
+  }
+
+  function capturarLayoutSecoes() {
+    return Array.from(document.querySelectorAll('.section')).map((section, index) => {
+      const uid = section.dataset.sectionUid || `section-${index}`;
+      section.dataset.sectionUid = uid;
+      return {
+        uid,
+        path: obterCaminhoLayoutSection(section)
+      };
+    }).filter(item => item.path && Number.isInteger(item.path.secIndex));
+  }
+
+  function encontrarPaiPorCaminho(path) {
+    if (!path || typeof path !== 'object') return null;
+    const classes = Array.isArray(path.parentClasses) ? path.parentClasses.filter(Boolean) : [];
+    const selectorById = path.parentId ? `#${CSS.escape(path.parentId)}` : null;
+
+    let candidates = [];
+    if (selectorById) {
+      const byId = document.querySelector(selectorById);
+      if (byId) candidates.push(byId);
+    }
+
+    const byTag = path.parentTag ? Array.from(document.querySelectorAll(path.parentTag)) : [];
+    candidates = candidates.concat(byTag);
+
+    return candidates.find((el) => {
+      if (!el) return false;
+      if (path.parentId && el.id !== path.parentId) return false;
+      if (path.parentDataRole && el.getAttribute('data-layout-role') !== path.parentDataRole) return false;
+      return classes.every((cls) => el.classList.contains(cls));
+    }) || null;
+  }
+
+  function restaurarLayoutSecoes(layout) {
+    if (!Array.isArray(layout) || !layout.length) return;
+
+    layout.forEach((item) => {
+      const uid = String(item?.uid || '').trim();
+      const path = item?.path;
+      if (!uid || !path) return;
+
+      const section = document.querySelector(`.section[data-section-uid="${CSS.escape(uid)}"]`);
+      if (!section) return;
+
+      const targetParent = encontrarPaiPorCaminho(path);
+      const secIndex = Number(path?.secIndex);
+
+      if (!targetParent || !Number.isInteger(secIndex) || secIndex < 0) return;
+
+      const existingChildren = Array.from(targetParent.children).filter((child) => child !== section);
+      const anchor = existingChildren[secIndex] || null;
+      targetParent.insertBefore(section, anchor);
+    });
+  }
   function montarEstadoBackup({ reduzirChat = false } = {}) {
     const elementosDinamicos = {
       prio: document.querySelector('#prioTbl tbody').innerHTML,
@@ -2050,6 +2197,12 @@ async function enviarPollinations() {
       dolphinHistory: limitarHistorico(dolphinHistory, reduzirChat ? 8 : 20, reduzirChat ? 1200 : 4000),
       chatDolphin,
       doodles: serializarDoodles(),
+      sectionLayout: capturarLayoutSecoes(),
+      core: {
+        threads: Array.isArray(coreThreads) ? coreThreads : [],
+        activeThreadId: coreActiveThreadId || '',
+        memory: getCoreMemory()
+      },
       dadosRpg: {
         lista: Array.isArray(listaDeDados)
           ? listaDeDados.map(d => ({ id: d.id, lados: Number(d.lados) || 6, valor: Number(d.valor) || 1 }))
@@ -2165,6 +2318,28 @@ async function enviarPollinations() {
             setHtml('#meals-container', estado.html.meals || '');
             setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
             setHtml('#pomos', estado.html.pomos || '');
+        }
+
+        restaurarLayoutSecoes(estado?.sectionLayout);
+
+        if (estado?.core && typeof estado.core === 'object') {
+            if (typeof estado.core.memory === 'string') {
+                localStorage.setItem('planner_core_memory', normalizarMemoriaCoreFormato(estado.core.memory));
+            }
+
+            if (Array.isArray(estado.core.threads) && estado.core.threads.length) {
+                const localThreadsAntesDoCloud = carregarThreadsCoreRawDoStorage();
+                const threadsMescladas = mesclarThreadsCore(localThreadsAntesDoCloud, estado.core.threads);
+                const houveMescla = threadsMescladas.length !== estado.core.threads.length;
+
+                coreThreads = threadsMescladas;
+                coreActiveThreadId = coreThreads.some(t => t.id === String(estado.core.activeThreadId || ''))
+                    ? String(estado.core.activeThreadId || '')
+                    : coreThreads[0].id;
+                salvarThreadsCore();
+
+                if (houveMescla) agendarSalvamentoNuvem(300);
+            }
         }
 
         // Restaura os textos e botões marcados
@@ -2464,6 +2639,7 @@ async function enviarPollinations() {
             } else {
                 targetCol.appendChild(draggedElement);
             }
+            salvarNuvem();
         }
     }
     return false;
@@ -2604,6 +2780,7 @@ async function enviarPollinations() {
         initCoreMemoryAndThreads();
         garantirTrackersNovos();
         renderThemeCliparts();
+        initCamposExpansiveis();
         makeSortable(); initSparkles(); initCanvas(); updateIndex();
     });
   });
