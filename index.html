@@ -2276,8 +2276,29 @@ function garantirThreadComentariosCore() {
   return th;
 }
 
-function registrarComentarioCore(msg) {
+const CORE_FALAS_REATIVAS = [
+  'Tô aqui com você.',
+  'Entendi — seguimos juntos.',
+  'Certo, continuo por perto.',
+  'Se quiser, eu respondo agora.',
+  'Perfeito. Pode continuar.',
+  'Eu te acompanho daqui.',
+  'Me chama que eu entro na conversa.'
+];
+
+function gerarFalaReativaCore() {
+  return CORE_FALAS_REATIVAS[Math.floor(Math.random() * CORE_FALAS_REATIVAS.length)];
+}
+
+function normalizarFalaBalaoCore(msg) {
   const txt = String(msg || '').trim();
+  if (!txt) return '';
+  if (/percebi altera|você acionou|interação física|senti\s+interação/i.test(txt)) return gerarFalaReativaCore();
+  return txt;
+}
+
+function registrarComentarioCore(msg) {
+  const txt = normalizarFalaBalaoCore(msg);
   if (!txt) return;
   coreUltimoComentarioTs = Date.now();
   pushFloatingCoreMsg(`Lan: ${txt}`);
@@ -2308,25 +2329,29 @@ function initFloatingCore() {
   window.addEventListener('pointerup', () => dragging = false);
 
   const planner = document.getElementById('planner');
+  let ultimaReacaoAutomaticaTs = 0;
+  const reagirSemNarrar = () => {
+    const agora = Date.now();
+    if (agora - ultimaReacaoAutomaticaTs < 15000) return;
+    ultimaReacaoAutomaticaTs = agora;
+    registrarComentarioCore(gerarFalaReativaCore());
+  };
+
   planner.addEventListener('change', (e) => {
     const t = e.target;
     if (t.classList.contains('doodle-canvas')) return;
-    const n = t.name || t.id || t.placeholder || t.type || t.tagName;
-    const v = t.type === 'checkbox' ? (t.checked ? 'marcado' : 'desmarcado') : (t.value || t.textContent || 'atualizado');
-    const sec = t.closest('.section')?.querySelector('.section-header label')?.textContent?.trim() || 'seção desconhecida';
-    registrarComentarioCore(`Percebi alteração em ${sec}: ${n} -> ${v}.`);
+    reagirSemNarrar();
   });
   planner.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
     if (/doodl|canvas/i.test(b.textContent || '')) return;
-    const sec = b.closest('.section')?.querySelector('.section-header label')?.textContent?.trim() || 'seção desconhecida';
-    registrarComentarioCore(`Você acionou "${(b.textContent || '').trim()}" em ${sec}.`);
+    reagirSemNarrar();
   });
 
   setInterval(() => {
     if (Date.now() - coreUltimoComentarioTs < 5 * 60 * 1000) return;
-    registrarComentarioCore(`Estou aqui acompanhando tudo em tempo real; se quiser, comento algum campo específico agora.`);
+    registrarComentarioCore('Tô aqui, quando quiser eu falo com você.');
   }, 60 * 1000);
 }
 
@@ -2351,7 +2376,7 @@ async function enviarDoodlingParaCore() {
     }
   } catch (_) {}
   const hint = letra ? `Possível letra identificada no doodling: ${letra}.` : 'Sem letra clara identificada.';
-  const prompt = `Reaja em 1-2 frases ao doodling enviado agora e ao estado do planner. Estado: ${coletarEstadoCorpoCore()}. Doodling: ${descr}. ${hint}`;
+  const prompt = `Reaja em 1-2 frases ao doodling e ao estado do planner, em fala direta, sem descrever o que o usuário fez. Estado: ${coletarEstadoCorpoCore()}. Doodling: ${descr}. ${hint}`;
   const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
   const historyParaApi = [
     { role: 'system', content: `Estado do corpo do Core: ${coletarEstadoCorpoCore()} | Últimos comentários da caixa: ${floatingTxt}` },
@@ -2434,8 +2459,8 @@ async function enviarInteracaoCore(tipo) {
   const side = document.getElementById('core-touch-side')?.value || 'frente';
   const point = document.getElementById('core-touch-point')?.value || 'corpo';
   const desc = tipo.startsWith('abracar') ? `Interação física: ${tipo.replace('_',' ')}.` : `Interação física: ${tipo} em ${point} (${side}).`;
-  registrarComentarioCore(`Senti ${desc}`);
-  const historyParaApi = montarContextoLeveParaAPI(thread, `${desc} Reaja em fala direta, curta e contextual.`);
+  registrarComentarioCore('Tô te ouvindo.');
+  const historyParaApi = montarContextoLeveParaAPI(thread, `${desc} Reaja em fala direta, curta e contextual, sem descrever a ação do usuário.`);
   try {
     const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
     const data = await res.json();
