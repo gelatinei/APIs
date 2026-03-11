@@ -565,14 +565,6 @@
                 <button class="xbtn-sec" style="margin:0;" onclick="apagarThreadAtualCore()">Apagar Thread</button>
               </div>
 
-              <div class="field-group" style="margin-top:4px;">
-                <label class="tiny-lbl" style="display:flex; justify-content:space-between; align-items:center;">Memória de Longo Prazo (Planner's core)
-                  <button class="ghost mini-add" onclick="salvarMemoriaCore()">Salvar Memória</button>
-                  <button class="ghost mini-add" onclick="arquivarThreadAtualNaMemoria()">Arquivar Thread</button>
-                </label>
-                <textarea id="core-memory" rows="3" placeholder="Informações permanentes do planner para você/IA..." style="margin-top:4px;"></textarea>
-              </div>
-
               <div id="core-page-chat" style="display:block; margin-top:8px;">
                 <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;"></div>
                 <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
@@ -1074,6 +1066,7 @@
                   </label>
                   <button class="ghost mini-add" onclick="limparCanvas(this)">Limpar Tela</button>
                   <button class="ghost mini-add" onclick="exportarCanvas(this)">Salvar (PNG)</button>
+                  <button class="ghost mini-add" onclick="enviarDoodlingParaCore()">Enviar doodling ao Core</button>
                 </div>
                 <canvas class="doodle-canvas" width="800" height="300" style="border: 2px dashed var(--border); border-radius: 8px; touch-action: none; background: transparent; width: 100%; max-width: 100%; display: block; cursor: crosshair;"></canvas>
             </div>
@@ -1195,6 +1188,8 @@ function rolarTodosOsDados() {
         });
         
         document.getElementById('total-dados').innerText = `Total: ${somaTotal}`;
+        const resumo = listaDeDados.map(d => `d${d.lados}:${d.valor}`).join(', ');
+        registrarComentarioCore(`Rolagem concluída (${resumo}) => total ${somaTotal}.`);
     }, 600);
 }
 
@@ -1901,6 +1896,8 @@ let coreLousaStrokeAtual = null;
 let coreLousaHistorico = [];
 let coreLousaUserPendentes = [];
 let coreLousaCursorY = 90;
+let coreUltimoComentarioTs = Date.now();
+const CORE_THREAD_COMENTARIOS_NOME = 'Comentários da Caixa Flutuante';
 
 function mostrarPaginaCore() {}
 
@@ -1943,20 +1940,56 @@ function desenharStroke(ctx, op) {
   ctx.stroke();
 }
 
+function mapaRomanoSegments(ch) {
+  const M = {
+    A:[[0,10,5,0],[5,0,10,10],[2,6,8,6]], B:[[0,0,0,10],[0,0,7,0],[7,0,9,2],[9,2,9,4],[9,4,7,5],[0,5,7,5],[7,5,9,7],[9,7,9,9],[9,9,7,10],[0,10,7,10]],
+    C:[[10,1,8,0],[8,0,2,0],[2,0,0,2],[0,2,0,8],[0,8,2,10],[2,10,8,10],[8,10,10,9]], D:[[0,0,0,10],[0,0,7,0],[7,0,10,3],[10,3,10,7],[10,7,7,10],[0,10,7,10]],
+    E:[[10,0,0,0],[0,0,0,10],[0,5,7,5],[0,10,10,10]], F:[[0,0,0,10],[0,0,10,0],[0,5,7,5]], G:[[10,2,8,0],[8,0,2,0],[2,0,0,2],[0,2,0,8],[0,8,2,10],[2,10,8,10],[8,10,10,8],[10,8,10,6],[10,6,6,6]],
+    H:[[0,0,0,10],[10,0,10,10],[0,5,10,5]], I:[[0,0,10,0],[5,0,5,10],[0,10,10,10]], J:[[10,0,10,8],[10,8,8,10],[8,10,2,10],[2,10,0,8]], K:[[0,0,0,10],[10,0,0,5],[0,5,10,10]],
+    L:[[0,0,0,10],[0,10,10,10]], M:[[0,10,0,0],[0,0,5,5],[5,5,10,0],[10,0,10,10]], N:[[0,10,0,0],[0,0,10,10],[10,10,10,0]], O:[[2,0,8,0],[8,0,10,2],[10,2,10,8],[10,8,8,10],[8,10,2,10],[2,10,0,8],[0,8,0,2],[0,2,2,0]],
+    P:[[0,10,0,0],[0,0,7,0],[7,0,9,2],[9,2,9,4],[9,4,7,6],[7,6,0,6]], Q:[[2,0,8,0],[8,0,10,2],[10,2,10,8],[10,8,8,10],[8,10,2,10],[2,10,0,8],[0,8,0,2],[0,2,2,0],[6,6,10,10]], R:[[0,10,0,0],[0,0,7,0],[7,0,9,2],[9,2,9,4],[9,4,7,6],[7,6,0,6],[0,6,10,10]],
+    S:[[10,1,8,0],[8,0,2,0],[2,0,0,2],[0,2,0,4],[0,4,2,5],[2,5,8,5],[8,5,10,6],[10,6,10,8],[10,8,8,10],[8,10,0,10]], T:[[0,0,10,0],[5,0,5,10]], U:[[0,0,0,8],[0,8,2,10],[2,10,8,10],[8,10,10,8],[10,8,10,0]], V:[[0,0,5,10],[5,10,10,0]],
+    W:[[0,0,2,10],[2,10,5,5],[5,5,8,10],[8,10,10,0]], X:[[0,0,10,10],[10,0,0,10]], Y:[[0,0,5,5],[10,0,5,5],[5,5,5,10]], Z:[[0,0,10,0],[10,0,0,10],[0,10,10,10]],
+    '0':[[2,0,8,0],[8,0,10,2],[10,2,10,8],[10,8,8,10],[8,10,2,10],[2,10,0,8],[0,8,0,2],[0,2,2,0]], '1':[[5,0,5,10],[3,2,5,0],[3,10,8,10]],
+    '2':[[0,2,2,0],[2,0,8,0],[8,0,10,2],[10,2,10,4],[10,4,0,10],[0,10,10,10]], '3':[[0,0,10,0],[10,0,6,5],[6,5,10,10],[0,10,10,10]],
+    '4':[[0,0,0,5],[0,5,10,5],[10,0,10,10]], '5':[[10,0,0,0],[0,0,0,5],[0,5,8,5],[8,5,10,7],[10,7,10,10],[10,10,0,10]],
+    '6':[[10,0,2,0],[2,0,0,2],[0,2,0,8],[0,8,2,10],[2,10,8,10],[8,10,10,8],[10,8,10,6],[10,6,8,5],[8,5,0,5]], '7':[[0,0,10,0],[10,0,3,10]],
+    '8':[[2,0,8,0],[8,0,10,2],[10,2,10,4],[10,4,8,5],[8,5,2,5],[2,5,0,4],[0,4,0,2],[0,2,2,0],[2,5,8,5],[8,5,10,6],[10,6,10,8],[10,8,8,10],[8,10,2,10],[2,10,0,8],[0,8,0,6],[0,6,2,5]], '9':[[10,5,2,5],[2,5,0,3],[0,3,0,2],[0,2,2,0],[2,0,8,0],[8,0,10,2],[10,2,10,10]],
+    '.':[[5,9,5.4,9.4]], ',':[[5,9,4.6,10.5]], '!':[[5,0,5,7],[5,9,5.4,9.4]], '?':[[0,2,2,0],[2,0,8,0],[8,0,10,2],[10,2,10,4],[10,4,5,6],[5,6,5,7],[5,9,5.4,9.4]], '-':[[2,5,8,5]], ':':[[5,3,5.4,3.4],[5,8,5.4,8.4]]
+  };
+  return M[ch] || [];
+}
+
 function desenharCoreText(ctx, op) {
-  const texto = String(op?.text || '');
-  if (!texto) return;
+  const texto = String(op?.text || '').toUpperCase();
+  const maxChars = Number.isFinite(op?.visibleChars) ? Math.max(0, Math.floor(op.visibleChars)) : texto.length;
+  const vis = texto.slice(0, maxChars);
+  let x = Number(op?.x || 50);
+  let y = Number(op?.y || 120);
+  const scale = Number(op?.scale || 4.4);
+  const lineGap = scale * 15;
 
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
-  ctx.textBaseline = 'alphabetic';
-  ctx.font = "52px 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive";
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = Number(op?.width || 2.8);
 
-  const x = Number(op?.x || 50);
-  const y = Number(op?.y || 120);
-  const limite = Number.isFinite(op?.visibleChars) ? Math.max(0, Math.floor(op.visibleChars)) : texto.length;
-  const parcial = texto.slice(0, limite);
+  for (const ch of vis) {
+    if (ch === '\n') { x = 50; y += lineGap; continue; }
+    if (ch === ' ') { x += scale * 6; continue; }
+    if (x > CORE_LOUSA_W - 90) { x = 50; y += lineGap; }
+    if (y > CORE_LOUSA_H - 20) break;
 
-  ctx.fillText(parcial, x, y);
+    const segs = mapaRomanoSegments(ch);
+    for (const seg of segs) {
+      const [x1,y1,x2,y2] = seg;
+      ctx.beginPath();
+      ctx.moveTo(x + x1 * scale, y + y1 * scale);
+      ctx.lineTo(x + x2 * scale, y + y2 * scale);
+      ctx.stroke();
+    }
+    x += scale * 12;
+  }
 }
 
 function redrawInputLousa() {
@@ -1975,7 +2008,7 @@ function redrawOutputLousa() {
 
 function iniciarTraco(x, y) {
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
-  coreLousaStrokeAtual = { points: [{ x, y }], width: 17, color: accent, source: 'user' };
+  coreLousaStrokeAtual = { points: [{ x, y }], width: 8.5, color: accent, source: 'user' };
   redrawInputLousa();
 }
 
@@ -2088,7 +2121,7 @@ async function reconhecerTextoLousa() {
   c.strokeStyle = '#111';
   c.lineCap = 'round';
   c.lineJoin = 'round';
-  c.lineWidth = 26;
+  c.lineWidth = 13;
 
   coreLousaUserPendentes.forEach((op) => {
     const pts = op.points || [];
@@ -2148,7 +2181,7 @@ async function desenharRespostaCoreCaligrafia(texto) {
   coreLousaOutputTemp = null;
   coreLousaOutputOps.push({ text: frase, x, y });
   redrawOutputLousa();
-  coreLousaCursorY += 66;
+  coreLousaCursorY = Math.min(coreLousaCursorY + 78, CORE_LOUSA_H - 20);
 }
 
 async function enviarLousaCore() {
@@ -2168,7 +2201,7 @@ async function enviarLousaCore() {
 
     const historyParaApi = [
       { role: "system", content: `Estado do corpo do Core (aparência da página e interações): ${coletarEstadoCorpoCore()}` },
-      ...montarContextoLeveParaAPI(thread, `Mensagem reconhecida da lousa do usuário: ${textoAtual}. Responda em fala direta, sem descrição de ação, sem narrar gestos.`)
+      ...montarContextoLeveParaAPI(thread, `Mensagem reconhecida da lousa do usuário: ${textoAtual}. Responda em fala direta, sem descrição de ação, sem narrar gestos. Contexto da caixa flutuante: ${Array.from(document.querySelectorAll('#core-floating-output div')).slice(-8).map(d => d.textContent).join(' | ')}`)
     ];
     thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa OCR] ${textoAtual}` }];
     dolphinHistory = thread.messages;
@@ -2228,6 +2261,29 @@ function pushFloatingCoreMsg(txt) {
   out.appendChild(p);
   out.scrollTop = out.scrollHeight;
 }
+function garantirThreadComentariosCore() {
+  if (!Array.isArray(coreThreads)) return null;
+  let th = coreThreads.find(t => String(t?.nome || '').toLowerCase() === CORE_THREAD_COMENTARIOS_NOME.toLowerCase());
+  if (!th) {
+    th = { id: 'core-floating-comments', nome: CORE_THREAD_COMENTARIOS_NOME, messages: [] };
+    coreThreads.push(th);
+    salvarThreadsCore();
+  }
+  return th;
+}
+
+function registrarComentarioCore(msg) {
+  const txt = String(msg || '').trim();
+  if (!txt) return;
+  coreUltimoComentarioTs = Date.now();
+  pushFloatingCoreMsg(`Lan: ${txt}`);
+  const th = garantirThreadComentariosCore();
+  if (th) {
+    th.messages.push({ role: 'assistant', content: `[Caixa] ${txt}` });
+    salvarThreadsCore();
+  }
+}
+
 
 function initFloatingCore() {
   const box = document.getElementById('core-floating-box');
@@ -2253,15 +2309,23 @@ function initFloatingCore() {
     if (t.classList.contains('doodle-canvas')) return;
     const n = t.name || t.id || t.placeholder || t.type || t.tagName;
     const v = t.type === 'checkbox' ? (t.checked ? 'marcado' : 'desmarcado') : (t.value || t.textContent || 'atualizado');
-    pushFloatingCoreMsg(`Lan: Percebi alteração em ${n}: ${v}.`);
+    const sec = t.closest('.section')?.querySelector('.section-header label')?.textContent?.trim() || 'seção desconhecida';
+    registrarComentarioCore(`Percebi alteração em ${sec}: ${n} -> ${v}.`);
   });
   planner.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
     if (/doodl|canvas/i.test(b.textContent || '')) return;
-    pushFloatingCoreMsg(`Lan: Você clicou em "${(b.textContent || '').trim()}".`);
+    const sec = b.closest('.section')?.querySelector('.section-header label')?.textContent?.trim() || 'seção desconhecida';
+    registrarComentarioCore(`Você acionou "${(b.textContent || '').trim()}" em ${sec}.`);
   });
+
+  setInterval(() => {
+    if (Date.now() - coreUltimoComentarioTs < 5 * 60 * 1000) return;
+    registrarComentarioCore(`Estou aqui acompanhando tudo em tempo real; se quiser, comento algum campo específico agora.`);
+  }, 60 * 1000);
 }
+
 
 async function enviarDoodlingParaCore() {
   const canvases = Array.from(document.querySelectorAll('.doodle-canvas'));
@@ -2274,16 +2338,29 @@ async function enviarDoodlingParaCore() {
 
   const thread = getThreadAtivaCore();
   if (!thread) return;
-  const prompt = `Reaja em 1-2 frases ao doodling enviado agora e ao estado do planner. Estado: ${coletarEstadoCorpoCore()}. Doodling: ${descr}.`;
-  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
+  let letra = '';
+  try {
+    const c0 = canvases[0];
+    if (c0) {
+      const r = await window.Tesseract.recognize(c0.toDataURL('image/png'), 'por+eng', { tessedit_pageseg_mode: '10' });
+      letra = String(r?.data?.text || '').replace(/[^A-Za-z0-9]/g, '').slice(0,1).toUpperCase();
+    }
+  } catch (_) {}
+  const hint = letra ? `Possível letra identificada no doodling: ${letra}.` : 'Sem letra clara identificada.';
+  const prompt = `Reaja em 1-2 frases ao doodling enviado agora e ao estado do planner. Estado: ${coletarEstadoCorpoCore()}. Doodling: ${descr}. ${hint}`;
+  const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
+  const historyParaApi = [
+    { role: 'system', content: `Estado do corpo do Core: ${coletarEstadoCorpoCore()} | Últimos comentários da caixa: ${floatingTxt}` },
+    ...montarContextoLeveParaAPI(thread, prompt)
+  ];
 
   try {
     const res = await fetch('/api/dolphin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ history: historyParaApi }) });
     const data = await res.json();
     const txt = String(data?.choices?.[0]?.message?.content || 'Recebi seu doodling.').trim();
-    pushFloatingCoreMsg(`Lan: ${txt}`);
+registrarComentarioCore(txt);
   } catch {
-    pushFloatingCoreMsg('Lan: Recebi seu doodling, mas falhei ao reagir agora.');
+registrarComentarioCore('Recebi seu doodling, mas falhei ao reagir agora.');
   }
 }
 
@@ -2349,7 +2426,11 @@ async function enviarPollinations() {
   const thread = getThreadAtivaCore();
   if (!thread) return;
 
-  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
+  const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
+  const historyParaApi = [
+    { role: 'system', content: `Estado do corpo do Core: ${coletarEstadoCorpoCore()} | Últimos comentários da caixa: ${floatingTxt}` },
+    ...montarContextoLeveParaAPI(thread, prompt)
+  ];
 
   thread.messages = [...(thread.messages || []), { role: "user", content: prompt }];
   dolphinHistory = thread.messages;
