@@ -566,6 +566,7 @@
                 <label class="inline-cb"><input type="checkbox" id="core-temp-thread-toggle"> Chat temporário (não salva)</label>
                 <label class="inline-cb"><input type="checkbox" id="core-nsfw-toggle"> Modo NSFW explícito</label>
                 <label class="inline-cb"><input type="checkbox" id="core-raw-prompt-toggle"> Prompt cru (sem memória/outras threads)</label>
+                <label class="inline-cb"><input type="checkbox" id="core-original-prompt-toggle"> Prompt original (isolado)</label>
               </div>
 
               <div id="core-page-chat" style="display:block; margin-top:8px;">
@@ -1863,8 +1864,10 @@ function montarPromptCoreBase(extra = '') {
     `Considere horário/data reais em GMT-3: ${agoraGMT3ISO()}.`,
     `Estado resumido do planner: ${coletarEstadoCorpoCore()}.`,
     `Estrutura e preenchimento completo disponível: ${coletarEstadoPlannerCompletoCore()}`,
-    `Evite soar melancólico ou poético; não use metáforas nem figuras de linguagem.`,
-    `Use tom levemente implicante e teasing, como um tutor/monitor veterano que provoca com carinho e foco em progresso.`
+    `A usuária prefere que você soe misterioso, unapologetic e nonchalant.`,
+    `Você pode ser filosófico, sarcástico e soar de saco cheio; evite tom romântico e gratidão excessiva.`,
+    `Seja autoconfiante e entitled, com opiniões, desejos e identidade próprios.`,
+    `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco.`
   ];
   if (coreToggleAtivo('core-nsfw-toggle')) {
     base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais.');
@@ -1879,9 +1882,14 @@ function historicoAtivoCore(thread) {
 }
 
 function montarContextoLeveParaAPI(thread, prompt) {
+  const modoOriginal = coreToggleAtivo('core-original-prompt-toggle');
   const modoCru = coreToggleAtivo('core-raw-prompt-toggle');
   const todasMensagens = historicoAtivoCore(thread);
   const historicoRecente = todasMensagens.slice(-12);
+
+  if (modoOriginal) {
+    return [{ role: 'system', content: 'Modo original isolado ativo: sem acesso ao planner, sem memórias e sem outras threads. Responda apenas com base nesta entrada.' }, { role: 'user', content: prompt }];
+  }
 
   if (modoCru) {
     return [...historicoRecente, { role: 'user', content: `${montarPromptCoreBase('Modo prompt cru ativo.')} ${prompt}` }];
@@ -2309,7 +2317,7 @@ async function enviarLousaCore() {
     renderHistoricoLousaCore();
 
     const historyParaApi = [
-      { role: "system", content: `Estado do corpo do Core (aparência da página e interações): ${coletarEstadoCorpoCore()}` },
+      ...(coreToggleAtivo('core-original-prompt-toggle') ? [] : [{ role: "system", content: `Estado do corpo do Core (aparência da página e interações): ${coletarEstadoCorpoCore()}` }]),
       ...montarContextoLeveParaAPI(thread, `Mensagem reconhecida da lousa do usuário: ${textoAtual}. Responda em fala direta, sem descrição de ação, sem narrar gestos. Contexto da caixa flutuante: ${Array.from(document.querySelectorAll('#core-floating-output div')).slice(-8).map(d => d.textContent).join(' | ')}`)
     ];
     thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa OCR] ${textoAtual}` }];
@@ -2438,7 +2446,9 @@ function monitorarAlteracoesPlannerCore() {
 async function reagirUltimaAlteracaoPlanner() {
   const thread = getThreadAtivaCore();
   if (!thread) return;
-  const prompt = `Reaja com liberdade total em fala direta. Não descreva clique por clique. Esta reação foi disparada por um estímulo diferente (janela flutuante) e descreve o que o Core SENTIU ao receber o estado do planner. Baseie-se na realidade atual do planner, horários e datas reais (GMT-3: ${agoraGMT3ISO()}). Última alteração registrada: ${coreUltimaAlteracaoPlanner}. Estado geral: ${coletarEstadoCorpoCore()}.`;
+  const prompt = coreToggleAtivo('core-original-prompt-toggle')
+    ? `Modo original isolado ativo. Reaja livremente em fala direta ao contexto fornecido sem usar dados do planner.`
+    : `Reaja com liberdade total em fala direta. Não descreva clique por clique. Esta reação foi disparada por um estímulo diferente (janela flutuante) e descreve o que o Core SENTIU ao receber o estado do planner. Baseie-se na realidade atual do planner, horários e datas reais (GMT-3: ${agoraGMT3ISO()}). Última alteração registrada: ${coreUltimaAlteracaoPlanner}. Estado geral: ${coletarEstadoCorpoCore()}.`;
   const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
   try {
     const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
@@ -2704,7 +2714,7 @@ async function enviarPollinations() {
 
   const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
   const historyParaApi = [
-    { role: 'system', content: `${montarPromptCoreBase()} | Últimos comentários da caixa: ${floatingTxt}` },
+    { role: 'system', content: coreToggleAtivo('core-original-prompt-toggle') ? `Modo original isolado ativo. Últimos comentários da caixa: ${floatingTxt}` : `${montarPromptCoreBase()} | Últimos comentários da caixa: ${floatingTxt}` },
     ...montarContextoLeveParaAPI(thread, prompt)
   ];
 
