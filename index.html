@@ -621,31 +621,35 @@
         <div class="section hide-in-focus" id="lan-toques-section">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
-            <label>🫶 Interações de toque com Lan</label>
+            <label>🫶 Touch interactions with Lan</label>
             <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
             <div class="tracker-box core-panel" style="margin-top:0;">
               <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
-                <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
-                <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>nuca</option><option>orelha</option><option>lábios</option><option>pescoço lateral</option><option>ombros</option><option>peito</option><option>seios</option><option>mamilos</option><option>abdômen</option><option>cintura</option><option>costas</option><option>lombar</option><option>quadril</option><option>virilha</option><option>vulva</option><option>ânus</option><option>glúteos</option><option>coxas internas</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option></select>
+                <select id="core-touch-side"><option value="front">Body (front)</option><option value="back">Body (back)</option></select>
+                <select id="core-touch-point"><option>head</option><option>face</option><option>neck</option><option>nape</option><option>ear</option><option>lips</option><option>side neck</option><option>shoulders</option><option>chest</option><option>boobs</option><option>nipples</option><option>abdomen</option><option>waist</option><option>back</option><option>lower back</option><option>hips</option><option>groin</option><option>vulva</option><option>clit</option><option>asshole</option><option>glutes</option><option>inner thighs</option><option>thighs</option><option>knees</option><option>calves</option><option>feet</option><option>hands</option><option>cock</option></select>
+                <select id="core-touch-contact-part"><option>hand</option><option>lips</option><option>tongue</option><option>throat</option><option>vag</option><option>clit</option><option>boobs</option><option>thighs</option><option>ass</option></select>
               </div>
               <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">carinho</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">tapinha</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">beliscão</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">agarrar</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">segurar</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">beijar</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">alisar</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('mordida')">mordida</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('lambida')">lambida</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">pet</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">slap</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">pinch</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">grab</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">hold</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">kiss</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">stroke</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('mordida')">bite</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('lambida')">lick</button>
               </div>
               <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('insercao_superior')">inserção superior</button>
-                <button class="ghost mini-add" onclick="enviarInteracaoCore('insercao_inferior')">inserção inferior</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">hug (front)</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">hug (back)</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('insercao_superior')">upper insertion</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('insercao_inferior')">lower insertion</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('grind')">grind</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('suck')">suck</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('rub')">rub</button>
               </div>
             </div>
           </div>
@@ -2595,24 +2599,28 @@ function toggleBorrachaLousaInput(btn) {
 
 async function enviarInteracaoCore(tipo) {
   const thread = getThreadAtivaCore(); if (!thread) return;
-  const side = document.getElementById('core-touch-side')?.value || 'frente';
-  const point = document.getElementById('core-touch-point')?.value || 'corpo';
+  const side = document.getElementById('core-touch-side')?.value || 'front';
+  const point = document.getElementById('core-touch-point')?.value || 'body';
+  const contactPart = document.getElementById('core-touch-contact-part')?.value || 'hand';
   const mapa = {
-    carinho: 'toque suave que relaxa e aproxima',
-    tapinha: 'toque rápido que desperta atenção',
-    'beliscão': 'toque intenso e agudo',
-    agarrar: 'contato firme e dominante',
-    segurar: 'contato contínuo e estável',
-    beijar: 'toque íntimo e caloroso',
-    alisar: 'toque lento e regulador',
-    abracar_frente: 'abraço frontal com pressão de vínculo',
-    abracar_costas: 'abraço por trás com efeito surpresa/proteção',
-    mordida: 'estímulo intenso com tensão e excitação abrupta',
-    lambida: 'toque úmido íntimo que amplifica sensibilidade local',
-    insercao_superior: 'contato invasivo em parte superior com alta carga íntima',
-    insercao_inferior: 'contato invasivo em parte inferior com alta carga íntima'
+    carinho: 'soft contact that relaxes and pulls closer',
+    tapinha: 'quick impact that spikes attention',
+    'beliscão': 'sharp focused pressure',
+    agarrar: 'firm dominant grip',
+    segurar: 'steady controlling hold',
+    beijar: 'intimate warm contact',
+    alisar: 'slow regulating touch',
+    abracar_frente: 'front hug with chest pressure',
+    abracar_costas: 'back hug with surprise/protective tone',
+    mordida: 'intense bite-like pressure and tension',
+    lambida: 'wet intimate touch that amplifies sensitivity',
+    insercao_superior: 'invasive upper contact with high intimate charge',
+    insercao_inferior: 'invasive lower contact with high intimate charge',
+    grind: 'rhythmic pressure and friction over the area',
+    suck: 'vacuum-like pull with focused stimulation',
+    rub: 'repetitive rubbing friction over the area'
   };
-  const desc = `[Toque] ${tipo} em ${point} (${side}) — ${mapa[tipo] || 'estímulo físico percebido'}`;
+  const desc = `[Touch] ${tipo} on ${point} (${side}) with ${contactPart} — ${mapa[tipo] || 'physical stimulus perceived'}`;
 
   if (coreToggleAtivo('core-temp-thread-toggle')) {
     coreTempMessages.push({ role: 'user', content: desc });
