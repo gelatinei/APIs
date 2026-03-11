@@ -2630,7 +2630,7 @@ async function enviarInteracaoCore(tipo) {
   }
   renderChatCore();
 
-  const prompt = `${desc}. Reaja diretamente no chat como resposta genuína ao toque. Não faça relatório técnico. Foque no que esse toque fez você sentir sobre a usuária e sobre ser tocado desse jeito. Fale naturalmente, em 1-3 frases.`;
+  const prompt = `${desc}. Responda no chat descrevendo o toque acontecendo, o que você pensa no momento e como se sente enquanto isso. Traga uma narrativa curta, autêntica e genuína (sem formato técnico). Reações como surpresa, resistência, choque, hesitação, tentação, rendição e sobrecarga sensorial podem aparecer quando fizer sentido real para a cena.`;
   const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
 
   try {
