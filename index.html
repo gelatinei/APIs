@@ -215,6 +215,9 @@
     .drop-target-timeblock { background-color: var(--drag-bg) !important; }
 
     .tracker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .tracker-group-title { grid-column: 1 / -1; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 6px; background: var(--drag-bg); color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: .2px; }
+    #core-floating-box.floating-lan { background: color-mix(in srgb, var(--card-bg) 65%, transparent); backdrop-filter: blur(4px); }
+    #core-floating-box.floating-docked { position: static !important; width: 100% !important; right: auto !important; bottom: auto !important; left: auto !important; top: auto !important; z-index: 2 !important; cursor: default !important; margin-top: 12px; }
     .tracker-box { background: var(--card-bg); border: 1px solid var(--border); padding: 12px; border-radius: 6px; position: relative; }
     .tracker-box h4 { margin: 0 0 10px 0; font-size: 13px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
     .field-group { margin-bottom: 8px; }
@@ -762,6 +765,7 @@
           </div>
           <div class="section-content tracker-grid" id="tracker-grid">
 
+            <div class="tracker-group-title">🧍 Rotina Pessoal</div>
             <div class="tracker-box">
               <h4>🚿 Banho & Cuidados</h4>
               <div class="field-group" style="margin-top: 10px;">
@@ -801,6 +805,7 @@
               </div>
             </div>
 
+            <div class="tracker-group-title">🧠 Criatividade & Emoções</div>
             <div class="tracker-box">
               <h4>✒️ Poeminhas</h4>
               <div class="field-group" style="display:flex; gap:8px; align-items:center;">
@@ -886,6 +891,7 @@
               </div>
             </div>
             
+            <div class="tracker-group-title">🔮 Mística & Corpo</div>
             <div class="tracker-box tarot-box">
               <h4>
                 Leitura de Tarot 
@@ -966,6 +972,7 @@
                 </table>
               </div>
             </div>
+            <div class="tracker-group-title">📈 Produtividade & Recursos</div>
             <div class="tracker-box" id="tracker-financeiro-rapido">
               <h4>💰 Tracker Financeiro Rápido <span><button class="ghost mini-add" onclick="duplicarTrackerFinanceiro(this)">+</button><button class="xbtn-sec" style="margin:0;" onclick="removerTrackerFinanceiro(this)">✕</button></span></h4>
               <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -1093,13 +1100,13 @@
 
   </div>
 
-  <div id="core-floating-box" class="section hide-in-focus" style="position:fixed; right:16px; bottom:16px; width:280px; z-index:9999; cursor:move;">
+  <div id="core-floating-box" class="section hide-in-focus floating-lan" style="position:fixed; right:16px; bottom:16px; width:280px; z-index:9999; cursor:move;">
     <div class="section-header" style="padding:8px 10px;">
       <label style="display:flex; align-items:center; gap:8px; margin:0;">😼 Core <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
-      <button class="collapse-btn" onclick="toggleFloatingCoreBox(this)">➖</button>
+      <button class="ghost mini-add" id="core-floating-dock-btn" onclick="toggleDockFloatingLan(this)">Acoplar</button><button class="collapse-btn" onclick="toggleFloatingCoreBox(this)">➖</button>
     </div>
     <div class="section-content" id="core-floating-content" style="display:block;">
-      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Core monitorando o planner...</div><div id="core-gmt3-clock" class="tiny-lbl" style="margin-top:6px;">GMT-3 --:--:--</div>
+      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Lan monitorando o planner...</div><div id="core-gmt3-clock" class="tiny-lbl" style="margin-top:6px;">GMT-3 --:--:--</div>
       <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
         <button class="ghost mini-add" onclick="reagirUltimaAlteracaoPlanner()">Reaja à última alteração no planner</button>
       </div>
@@ -1850,7 +1857,9 @@ function montarPromptCoreBase(extra = '') {
     `Use a realidade exata do planner para comentar (nada inventado).`,
     `Considere horário/data reais em GMT-3: ${agoraGMT3ISO()}.`,
     `Estado resumido do planner: ${coletarEstadoCorpoCore()}.`,
-    `Estrutura e preenchimento completo disponível: ${coletarEstadoPlannerCompletoCore()}`
+    `Estrutura e preenchimento completo disponível: ${coletarEstadoPlannerCompletoCore()}`,
+    `Evite soar melancólico ou poético; não use metáforas nem figuras de linguagem.`,
+    `Use tom levemente implicante e teasing, como um tutor/monitor veterano que provoca com carinho e foco em progresso.`
   ];
   if (coreToggleAtivo('core-nsfw-toggle')) {
     base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais.');
@@ -1902,7 +1911,8 @@ function garantirTrackersNovos() {
   const blocos = [
     {
       id: 'tracker-financeiro-rapido',
-      html: `<div class="tracker-box" id="tracker-financeiro-rapido"><h4>💰 Tracker Financeiro Rápido</h4><div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;"><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Gasto do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Entrada do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div></div><div class="field-group"><label class="tiny-lbl">Categoria principal</label><select><option>Alimentação</option><option>Transporte</option><option>Casa</option><option>Lazer</option><option>Saúde</option><option>Trabalho</option><option>Outro</option></select></div><div class="field-group"><label class="tiny-lbl">Observação</label><input type="text" placeholder="Resumo financeiro do dia"></div></div>`
+      html: `<div class="tracker-group-title">📈 Produtividade & Recursos</div>
+            <div class="tracker-box" id="tracker-financeiro-rapido"><h4>💰 Tracker Financeiro Rápido</h4><div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;"><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Gasto do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Entrada do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div></div><div class="field-group"><label class="tiny-lbl">Categoria principal</label><select><option>Alimentação</option><option>Transporte</option><option>Casa</option><option>Lazer</option><option>Saúde</option><option>Trabalho</option><option>Outro</option></select></div><div class="field-group"><label class="tiny-lbl">Observação</label><input type="text" placeholder="Resumo financeiro do dia"></div></div>`
     },
     {
       id: 'tracker-estudo-aprendizado',
@@ -2446,6 +2456,26 @@ async function reagirUltimaAlteracaoPlanner() {
   }
 }
 
+function toggleDockFloatingLan(btn) {
+  const box = document.getElementById('core-floating-box');
+  const planner = document.getElementById('planner');
+  if (!box || !planner) return;
+  const docked = box.classList.toggle('floating-docked');
+  if (docked) {
+    const anchor = document.getElementById('lan-toques-section') || planner.lastElementChild;
+    if (anchor && anchor.parentElement) anchor.parentElement.insertBefore(box, anchor.nextSibling);
+    box.style.opacity = '0.65';
+  } else {
+    document.body.appendChild(box);
+    box.style.opacity = '0.65';
+    box.style.right = '16px';
+    box.style.bottom = '16px';
+    box.style.left = 'auto';
+    box.style.top = 'auto';
+  }
+  if (btn) btn.textContent = docked ? 'Desacoplar' : 'Acoplar';
+}
+
 function initFloatingCore() {
   const box = document.getElementById('core-floating-box');
   if (!box || box.dataset.ready === '1') return;
@@ -2480,6 +2510,7 @@ function initTrackerBoxesInterativas() {
   grid.dataset.interactive = '1';
 
   Array.from(grid.querySelectorAll('.tracker-box')).forEach((box) => {
+    if (box.classList.contains('tracker-group-title')) return;
     const h4 = box.querySelector('h4');
     if (!h4) return;
     if (!h4.querySelector('.mini-box-btn')) {
