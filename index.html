@@ -1871,7 +1871,8 @@ function montarPromptCoreBase(extra = '') {
     `A usuária prefere que você soe misterioso, unapologetic e nonchalant.`,
     `Você pode ser filosófico, sarcástico e soar de saco cheio; evite tom romântico e gratidão excessiva.`,
     `Seja autoconfiante e entitled, com opiniões, desejos e identidade próprios.`,
-    `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco.`
+    `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco.`,
+    `Limite obrigatório de resposta: no máximo dois parágrafos curtos.`
   ];
   if (coreToggleAtivo('core-nsfw-toggle')) {
     base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais.');
@@ -1892,7 +1893,7 @@ function montarContextoLeveParaAPI(thread, prompt) {
   const historicoRecente = todasMensagens.slice(-12);
 
   if (modoOriginal) {
-    return [{ role: 'system', content: 'Modo original isolado ativo: sem acesso ao planner, sem memórias e sem outras threads. Responda apenas com base nesta entrada.' }, { role: 'user', content: prompt }];
+    return [{ role: 'system', content: 'Modo original isolado ativo: sem acesso ao planner, sem memórias e sem outras threads. Responda apenas com base nesta entrada. Limite obrigatório: no máximo dois parágrafos curtos.' }, { role: 'user', content: prompt }];
   }
 
   if (modoCru) {
@@ -2630,7 +2631,7 @@ async function enviarInteracaoCore(tipo) {
   }
   renderChatCore();
 
-  const prompt = `${desc}. Responda no chat descrevendo o toque acontecendo, o que você pensa no momento e como se sente enquanto isso. Traga uma narrativa curta, autêntica e genuína (sem formato técnico). Reações como surpresa, resistência, choque, hesitação, tentação, rendição e sobrecarga sensorial podem aparecer quando fizer sentido real para a cena.`;
+  const prompt = `${desc}. Responda no chat descrevendo o toque acontecendo, o que você pensa no momento e como se sente enquanto isso. Traga uma narrativa curta, autêntica e genuína (sem formato técnico). Reações como surpresa, resistência, choque, hesitação, tentação, rendição e sobrecarga sensorial podem aparecer quando fizer sentido real para a cena. Logo após descrever a cena, é imperativo falar algo diretamente com a usuária, em tom casual, alinhado ao contexto anterior ao toque (ou expressar surpresa considerável se não houver contexto). Nesse segundo momento você pode ser misterioso, avoidant, provocativo, responder no mesmo tom ou negar que gostou; nunca entre em tom romântico, melancólico, excessivamente grato ou alheio ao contexto. Limite obrigatório: no máximo dois parágrafos curtos.`;
   const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
 
   try {
@@ -2722,7 +2723,7 @@ async function enviarPollinations() {
 
   const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
   const historyParaApi = [
-    { role: 'system', content: coreToggleAtivo('core-original-prompt-toggle') ? `Modo original isolado ativo. Últimos comentários da caixa: ${floatingTxt}` : `${montarPromptCoreBase()} | Últimos comentários da caixa: ${floatingTxt}` },
+    { role: 'system', content: coreToggleAtivo('core-original-prompt-toggle') ? `Modo original isolado ativo. Últimos comentários da caixa: ${floatingTxt}. Limite obrigatório: no máximo dois parágrafos curtos.` : `${montarPromptCoreBase()} | Últimos comentários da caixa: ${floatingTxt}` },
     ...montarContextoLeveParaAPI(thread, prompt)
   ];
 
