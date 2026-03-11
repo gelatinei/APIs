@@ -627,7 +627,7 @@
             <div class="tracker-box core-panel" style="margin-top:0;">
               <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
                 <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
-                <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>ombros</option><option>peito</option><option>abdômen</option><option>cintura</option><option>costas</option><option>quadril</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option><option>nuca</option><option>orelha</option><option>lábios</option><option>virilha</option><option>glúteos</option></select>
+                <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>nuca</option><option>orelha</option><option>lábios</option><option>pescoço lateral</option><option>ombros</option><option>peito</option><option>seios</option><option>mamilos</option><option>abdômen</option><option>cintura</option><option>costas</option><option>lombar</option><option>quadril</option><option>virilha</option><option>vulva</option><option>ânus</option><option>glúteos</option><option>coxas internas</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option></select>
               </div>
               <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
                 <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">carinho</button>
@@ -637,10 +637,14 @@
                 <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">segurar</button>
                 <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">beijar</button>
                 <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">alisar</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('mordida')">mordida</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('lambida')">lambida</button>
               </div>
               <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
                 <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
                 <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('insercao_superior')">inserção superior</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('insercao_inferior')">inserção inferior</button>
               </div>
             </div>
           </div>
@@ -2592,7 +2596,11 @@ async function enviarInteracaoCore(tipo) {
     beijar: 'toque íntimo e caloroso',
     alisar: 'toque lento e regulador',
     abracar_frente: 'abraço frontal com pressão de vínculo',
-    abracar_costas: 'abraço por trás com efeito surpresa/proteção'
+    abracar_costas: 'abraço por trás com efeito surpresa/proteção',
+    mordida: 'estímulo intenso com tensão e excitação abrupta',
+    lambida: 'toque úmido íntimo que amplifica sensibilidade local',
+    insercao_superior: 'contato invasivo em parte superior com alta carga íntima',
+    insercao_inferior: 'contato invasivo em parte inferior com alta carga íntima'
   };
   const desc = `[Toque] ${tipo} em ${point} (${side}) — ${mapa[tipo] || 'estímulo físico percebido'}`;
 
