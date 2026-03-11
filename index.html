@@ -65,6 +65,10 @@
 .msg-ia th, .msg-ia td { border: 1px solid var(--border); padding: 4px; text-align: left; }
 .msg-ia th { background: var(--drag-bg); font-weight: bold; }
     .lousa-core-wrap { margin-top: 8px; }
+    .core-tools-layout { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 12px; }
+    .core-panel { height: 100%; }
+    .tracker-drag-handle { cursor: grab; color: var(--muted); margin-right: 6px; user-select: none; font-size: 15px; }
+    .tracker-box.dragging { opacity: .55; border-style: dashed; }
     .lousa-core-board {
       width: 100%;
       height: 320px;
@@ -575,30 +579,38 @@
                 </div>
               </div>
 
-              <div class="tracker-box" id="core-lousa-box-v2" style="margin-top:12px;">
-                <h4 style="margin:0 0 8px 0;">✍️ Lousas do Core (Input/Output)</h4>
-                <div class="lousa-core-wrap" style="display:flex; gap:8px; flex-wrap:wrap;">
-                  <div style="flex:1; min-width:280px;">
-                    <label class="tiny-lbl">Lousa de Input (você escreve)</label>
-                    <canvas id="core-lousa-input-canvas" class="lousa-core-board"></canvas>
+              <div class="core-tools-layout">
+                <div class="tracker-box core-panel" id="core-lousa-box-v2">
+                  <h4 style="margin:0 0 8px 0;">✍️ Lousas do Core (Input/Output)</h4>
+                  <div class="lousa-core-wrap" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:280px;">
+                      <label class="tiny-lbl">Lousa de Input (você escreve)</label>
+                      <canvas id="core-lousa-input-canvas" class="lousa-core-board"></canvas>
+                    </div>
+                    <div style="flex:1; min-width:280px;">
+                      <label class="tiny-lbl">Lousa de Output (Lan escreve)</label>
+                      <canvas id="core-lousa-output-canvas" class="lousa-core-board"></canvas>
+                    </div>
                   </div>
-                  <div style="flex:1; min-width:280px;">
-                    <label class="tiny-lbl">Lousa de Output (Lan escreve)</label>
-                    <canvas id="core-lousa-output-canvas" class="lousa-core-board"></canvas>
+                  <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                    <button class="ghost mini-add" onclick="checarLousaCoreOCR()">Checar OCR da lousa</button>
+                    <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
+                    <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
+                    <button class="ghost mini-add" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
+                    <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
+                  </div>
+                  <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
+                  <div class="field-group" style="margin-top:8px;">
+                    <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
+                    <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
+                  </div>
+                  <div style="margin-top:8px;">
+                    <label class="tiny-lbl">Histórico textual da lousa</label>
+                    <div id="core-lousa-historico" class="lousa-historico"></div>
                   </div>
                 </div>
-                <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-                  <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
-                  <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
-                  <button class="ghost mini-add" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
-                  <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
-                </div>
-                <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
-                <div class="field-group" style="margin-top:8px;">
-                  <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
-                  <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
-                </div>
-                <div class="tracker-box" style="margin-top:8px;">
+
+                <div class="tracker-box core-panel" style="margin-top:0;">
                   <h4 style="margin:0 0 8px 0;">🫶 Interações com o Core</h4>
                   <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
                     <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
@@ -617,10 +629,6 @@
                     <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
                     <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
                   </div>
-                </div>
-                <div style="margin-top:8px;">
-                  <label class="tiny-lbl">Histórico textual da lousa</label>
-                  <div id="core-lousa-historico" class="lousa-historico"></div>
                 </div>
               </div>
 </div>
@@ -799,14 +807,10 @@
                 <label class="tiny-lbl" style="display:flex; justify-content:space-between;">Versos <button class="ghost mini-add" onclick="addVersoField(this)">+</button></label>
                 <div class="dynamic-fields versos-container">
                    <div style="display:flex; gap:4px; margin-top:4px;">
-                     <input type="text" placeholder="Verso..." style="flex:3;">
-                     <select class="rima-select" onchange="analisarRimas(this)" style="flex:1; padding: 4px;"><option value="-">-</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
-                     <button class="xbtn" onclick="const p = this.parentElement.parentElement; this.parentElement.remove(); analisarRimasContainer(p);">✕</button>
+                     <input type="text" placeholder="Verso..." style="flex:1;">
+                     <button class="xbtn" onclick="this.parentElement.remove();">✕</button>
                    </div>
                 </div>
-              </div>
-              <div class="field-group" style="margin-top: 8px;">
-                <label class="tiny-lbl">Esquema Rímico: <span class="analise-rima" style="font-weight:bold;">Nenhum</span></label>
               </div>
             </div>
 
@@ -898,21 +902,7 @@
               </div>
             </div>
 
-            <div class="tracker-box">
-              <h4>Mística & Mente</h4>
-              <div class="field-group">
-                <label class="tiny-lbl">🌖 Fase da Lua</label>
-                <input type="text" placeholder="Fase..." />
-              </div>
-              <div class="field-group" style="margin-top: 10px;">
-                <label class="inline-cb"><input type="checkbox"/> Magia do Caos <button class="ghost mini-add" onclick="addGenericField(this, 'Tracker/Sigilo...')">+</button></label>
-                <div class="dynamic-fields"><input type="text" placeholder="Tracker de Magia" /></div>
-              </div>
-              <div class="field-group">
-                <label class="inline-cb"><input type="checkbox"/> Tive um sonho?</label>
-                <textarea rows="2" placeholder="Descreva o sonho..." style="margin-top:4px;"></textarea>
-              </div>
-            </div>
+            
 
             <div class="tracker-box">
               <h4>Corpo & Água</h4>
@@ -1059,29 +1049,7 @@
             </div>
         </div>
         
-        <div class="section hide-in-focus collapsed">
-            <div class="section-header">
-                <span class="drag-section-handle" title="Arraste a seção">✥</span>
-              <label>Doodling Livre 🎨</label>
-                <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-            </div>
-            <div class="section-content">
-                <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                  <label style="margin:0;">Tamanho: <input type="range" class="brush-size" min="1" max="20" value="3" style="width: 100px; display:inline-block; vertical-align:middle;"></label>
-                  <label style="margin:0;">Pincel: 
-                    <select class="brush-type" style="width: auto; padding: 4px;">
-                      <option value="round">Redondo</option>
-                      <option value="square">Quadrado</option>
-                      <option value="eraser">Borracha</option>
-                    </select>
-                  </label>
-                  <button class="ghost mini-add" onclick="limparCanvas(this)">Limpar Tela</button>
-                  <button class="ghost mini-add" onclick="exportarCanvas(this)">Salvar (PNG)</button>
-                  <button class="ghost mini-add" onclick="enviarDoodlingParaCore()">Enviar doodling ao Core</button>
-                </div>
-                <canvas class="doodle-canvas" width="800" height="300" style="border: 2px dashed var(--border); border-radius: 8px; touch-action: none; background: transparent; width: 100%; max-width: 100%; display: block; cursor: crosshair;"></canvas>
-            </div>
-        </div>
+        
         
     </div>
 
@@ -1108,8 +1076,8 @@
     </div>
     <div class="section-content" id="core-floating-content" style="display:block;">
       <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Core monitorando o planner...</div><div id="core-gmt3-clock" class="tiny-lbl" style="margin-top:6px;">GMT-3 --:--:--</div>
-      <div style="display:flex; gap:6px; margin-top:8px;">
-        <button class="ghost mini-add" onclick="enviarDoodlingParaCore()">Enviar doodling</button>
+      <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+        <button class="ghost mini-add" onclick="reagirUltimaAlteracaoPlanner()">Reaja à última alteração no planner</button>
       </div>
     </div>
   </div>
@@ -1336,22 +1304,11 @@ function rolarTodosOsDados() {
       const container = btn.closest('.field-group').querySelector('.versos-container');
       const div = document.createElement('div');
       div.style.display = 'flex'; div.style.gap = '4px'; div.style.marginTop = '4px';
-      div.innerHTML = `<input type="text" placeholder="Verso..." style="flex:3;"><select class="rima-select" onchange="analisarRimas(this)" style="flex:1; padding: 4px;"><option value="-">-</option><option>A</option><option>B</option><option>C</option><option>D</option></select><button class="xbtn" onclick="const p = this.parentElement.parentElement; this.parentElement.remove(); analisarRimasContainer(p);">✕</button>`;
+      div.innerHTML = `<input type="text" placeholder="Verso..." style="flex:1;"><button class="xbtn" onclick="this.parentElement.remove();">✕</button>`;
       container.appendChild(div);
   }
-  function analisarRimas(select) { analisarRimasContainer(select.closest('.versos-container')); }
-  function analisarRimasContainer(container) {
-      if(!container) return;
-      const selects = container.querySelectorAll('.rima-select');
-      let esquema = Array.from(selects).map(s => s.value).filter(v => v !== '-').join('');
-      let tipo = "Misto / Sem padrão fixo";
-      if (esquema === "AABB") tipo = "Emparelhada (AABB)";
-      else if (esquema === "ABAB") tipo = "Cruzada/Alternada (ABAB)";
-      else if (esquema === "ABBA") tipo = "Abraçada (ABBA)";
-      else if (esquema === "") tipo = "Nenhum";
-      const resultSpan = container.closest('.tracker-box').querySelector('.analise-rima');
-      if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
-  }
+
+
 
 // ====== MEMÓRIA E FUNÇÕES DAS IAs ======
 let geminiHistory = [];
@@ -1904,6 +1861,8 @@ let coreLousaHistorico = [];
 let coreLousaUserPendentes = [];
 let coreLousaCursorY = 90;
 let coreUltimoComentarioTs = Date.now();
+let coreLousaEraser = false;
+let coreUltimaAlteracaoPlanner = 'Sem alterações registradas ainda.';
 const CORE_THREAD_COMENTARIOS_NOME = 'Comentários da Caixa Flutuante';
 
 function mostrarPaginaCore() {}
@@ -1937,7 +1896,7 @@ function renderHistoricoLousaCore() {
 function desenharStroke(ctx, op) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = op.color || '#8e44ad';
+  ctx.strokeStyle = op.source === 'eraser' ? '#ffffff' : (op.color || '#8e44ad');
   ctx.lineWidth = op.width || 17;
   const pts = op.points || [];
   if (!pts.length) return;
@@ -2007,7 +1966,7 @@ function redrawOutputLousa() {
 
 function iniciarTraco(x, y) {
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
-  coreLousaStrokeAtual = { points: [{ x, y }], width: 4.25, color: accent, source: 'user' };
+  coreLousaStrokeAtual = coreLousaEraser ? { points: [{ x, y }], width: 26, color: '#ffffff', source: 'eraser' } : { points: [{ x, y }], width: 4.25, color: accent, source: 'user' };
   redrawInputLousa();
 }
 
@@ -2097,6 +2056,8 @@ function limparLousaCore() {
   coreLousaStrokeAtual = null;
   coreLousaUserPendentes = [];
   coreLousaCursorY = 90;
+  const corr = document.getElementById('core-lousa-ocr-correction');
+  if (corr) corr.value = '';
   redrawInputLousa();
   redrawOutputLousa();
 }
@@ -2183,16 +2144,25 @@ async function desenharRespostaCoreCaligrafia(texto) {
   coreLousaCursorY = Math.min(coreLousaCursorY + 78, CORE_LOUSA_H - 20);
 }
 
+async function checarLousaCoreOCR() {
+  try {
+    statusLousaCore('Lendo OCR da lousa...');
+    const textoAtual = await reconhecerTextoLousa();
+    const corr = document.getElementById('core-lousa-ocr-correction');
+    if (corr) corr.value = String(textoAtual || '').trim();
+    statusLousaCore(textoAtual ? 'OCR atualizado. Revise e envie quando quiser.' : 'Não consegui ler o input.');
+  } catch (e) {
+    statusLousaCore('Falha ao checar OCR da lousa.');
+  }
+}
+
 async function enviarLousaCore() {
   const thread = getThreadAtivaCore();
   if (!thread) return;
 
   try {
-    statusLousaCore('Lendo lousa de input...');
-    let textoAtual = await reconhecerTextoLousa();
-    const corr = document.getElementById('core-lousa-ocr-correction');
-    if (corr && !corr.value.trim()) corr.value = textoAtual;
-    textoAtual = String(corr?.value || textoAtual || '').trim();
+    if (!(document.getElementById('core-lousa-ocr-correction')?.value || '').trim()) await checarLousaCoreOCR();
+    let textoAtual = String(document.getElementById('core-lousa-ocr-correction')?.value || '').trim();
     if (!textoAtual) {
       statusLousaCore('Não consegui ler o input. Escreva maior e tente de novo.');
       return;
@@ -2310,6 +2280,43 @@ function registrarComentarioCore(msg) {
 }
 
 
+function coletarResumoAlteracaoPlanner(alvo) {
+  const el = alvo?.closest?.('input, textarea, select, button, .tracker-box, .section') || alvo;
+  if (!el) return 'Alteração não identificada.';
+  const rotulo = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.getAttribute?.('aria-label') || el.placeholder || el.id || el.name || el.textContent?.trim() || el.tagName;
+  const valor = el.type === 'checkbox' ? (el.checked ? 'marcado' : 'desmarcado') : String(el.value || '').trim();
+  return `Campo/controle: ${rotulo || 'sem rótulo'} | Valor: ${valor || 'vazio'} | Preenchido: ${valor ? 'sim' : 'não'}`;
+}
+
+function monitorarAlteracoesPlannerCore() {
+  const planner = document.getElementById('planner');
+  if (!planner || planner.dataset.coreMonitorBound === '1') return;
+  planner.dataset.coreMonitorBound = '1';
+  const guardar = (e) => { coreUltimaAlteracaoPlanner = coletarResumoAlteracaoPlanner(e.target); };
+  planner.addEventListener('change', guardar);
+  planner.addEventListener('input', guardar);
+  planner.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    coreUltimaAlteracaoPlanner = coletarResumoAlteracaoPlanner(b);
+  });
+}
+
+async function reagirUltimaAlteracaoPlanner() {
+  const thread = getThreadAtivaCore();
+  if (!thread) return;
+  const prompt = `Reaja com liberdade total em fala direta. Não descreva clique por clique. Esta reação foi disparada por um estímulo diferente (janela flutuante) e descreve o que o Core SENTIU ao receber o estado do planner. Última alteração registrada: ${coreUltimaAlteracaoPlanner}. Estado geral: ${coletarEstadoCorpoCore()}.`;
+  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
+  try {
+    const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
+    const data = await res.json();
+    const txt = String(data?.choices?.[0]?.message?.content || '').trim();
+    registrarComentarioCore(txt || gerarFalaReativaCore());
+  } catch (_) {
+    registrarComentarioCore('Senti a mudança, mas falhei em reagir agora.');
+  }
+}
+
 function initFloatingCore() {
   const box = document.getElementById('core-floating-box');
   if (!box || box.dataset.ready === '1') return;
@@ -2328,26 +2335,7 @@ function initFloatingCore() {
   });
   window.addEventListener('pointerup', () => dragging = false);
 
-  const planner = document.getElementById('planner');
-  let ultimaReacaoAutomaticaTs = 0;
-  const reagirSemNarrar = () => {
-    const agora = Date.now();
-    if (agora - ultimaReacaoAutomaticaTs < 15000) return;
-    ultimaReacaoAutomaticaTs = agora;
-    registrarComentarioCore(gerarFalaReativaCore());
-  };
-
-  planner.addEventListener('change', (e) => {
-    const t = e.target;
-    if (t.classList.contains('doodle-canvas')) return;
-    reagirSemNarrar();
-  });
-  planner.addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    if (/doodl|canvas/i.test(b.textContent || '')) return;
-    reagirSemNarrar();
-  });
+  monitorarAlteracoesPlannerCore();
 
   setInterval(() => {
     if (Date.now() - coreUltimoComentarioTs < 5 * 60 * 1000) return;
@@ -2356,47 +2344,12 @@ function initFloatingCore() {
 }
 
 
-async function enviarDoodlingParaCore() {
-  const canvases = Array.from(document.querySelectorAll('.doodle-canvas'));
-  const descr = canvases.map((c, i) => {
-    try {
-      const data = c.toDataURL('image/png');
-      return `doodle ${i+1}: ${data.length > 3000 ? 'com traços' : 'quase vazio'}`;
-    } catch { return `doodle ${i+1}: indisponível`; }
-  }).join(', ');
-
-  const thread = getThreadAtivaCore();
-  if (!thread) return;
-  let letra = '';
-  try {
-    const c0 = canvases[0];
-    if (c0) {
-      const r = await window.Tesseract.recognize(c0.toDataURL('image/png'), 'por+eng', { tessedit_pageseg_mode: '10' });
-      letra = String(r?.data?.text || '').replace(/[^A-Za-z0-9]/g, '').slice(0,1).toUpperCase();
-    }
-  } catch (_) {}
-  const hint = letra ? `Possível letra identificada no doodling: ${letra}.` : 'Sem letra clara identificada.';
-  const prompt = `Reaja em 1-2 frases ao doodling e ao estado do planner, em fala direta, sem descrever o que o usuário fez. Estado: ${coletarEstadoCorpoCore()}. Doodling: ${descr}. ${hint}`;
-  const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
-  const historyParaApi = [
-    { role: 'system', content: `Estado do corpo do Core: ${coletarEstadoCorpoCore()} | Últimos comentários da caixa: ${floatingTxt}` },
-    ...montarContextoLeveParaAPI(thread, prompt)
-  ];
-
-  try {
-    const res = await fetch('/api/dolphin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ history: historyParaApi }) });
-    const data = await res.json();
-    const txt = String(data?.choices?.[0]?.message?.content || 'Recebi seu doodling.').trim();
-registrarComentarioCore(txt);
-  } catch {
-registrarComentarioCore('Recebi seu doodling, mas falhei ao reagir agora.');
-  }
-}
 
 function initTrackerBoxesInterativas() {
   const grid = document.getElementById('tracker-grid');
   if (!grid || grid.dataset.interactive === '1') return;
   grid.dataset.interactive = '1';
+
   Array.from(grid.querySelectorAll('.tracker-box')).forEach((box) => {
     const h4 = box.querySelector('h4');
     if (!h4) return;
@@ -2408,22 +2361,43 @@ function initTrackerBoxesInterativas() {
       b.onclick = (e) => { e.stopPropagation(); box.classList.toggle('mini-box'); };
       h4.appendChild(b);
     }
-    let dragging = false, sx=0, sy=0, tx=0, ty=0;
-    h4.style.cursor = 'move';
-    h4.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('button')) return;
-      dragging = true; sx = e.clientX; sy = e.clientY;
-      box.style.position = 'relative';
-      box.style.zIndex = '3';
+    if (!h4.querySelector('.tracker-drag-handle')) {
+      const drag = document.createElement('span');
+      drag.className = 'tracker-drag-handle';
+      drag.textContent = '☰';
+      drag.title = 'Mover tracker';
+      h4.prepend(drag);
+      drag.addEventListener('mousedown', () => box.setAttribute('draggable', 'true'));
+      drag.addEventListener('mouseup', () => box.removeAttribute('draggable'));
+      drag.addEventListener('mouseleave', () => box.removeAttribute('draggable'));
+      drag.addEventListener('touchstart', () => box.setAttribute('draggable', 'true'), { passive:true });
+      drag.addEventListener('touchend', () => box.removeAttribute('draggable'), { passive:true });
+    }
+  });
+
+  let dragged = null;
+  grid.addEventListener('dragstart', (e) => {
+    const box = e.target.closest('.tracker-box');
+    if (!box) return;
+    dragged = box;
+    box.classList.add('dragging');
+  });
+  grid.addEventListener('dragend', () => {
+    if (dragged) dragged.classList.remove('dragging');
+    if (dragged) dragged.removeAttribute('draggable');
+    dragged = null;
+  });
+  grid.addEventListener('dragover', (e) => {
+    if (!dragged) return;
+    e.preventDefault();
+    const after = Array.from(grid.querySelectorAll('.tracker-box:not(.dragging)')).find((el) => {
+      const r = el.getBoundingClientRect();
+      return e.clientY < r.top + r.height / 2;
     });
-    window.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      tx += e.clientX - sx; ty += e.clientY - sy; sx = e.clientX; sy = e.clientY;
-      box.style.transform = `translate(${tx}px, ${ty}px)`;
-    });
-    window.addEventListener('pointerup', () => { dragging = false; box.style.zIndex = '1'; });
+    if (after) grid.insertBefore(dragged, after); else grid.appendChild(dragged);
   });
 }
+
 
 function initCamposExpansiveis() {
   if (document.body.dataset.expandFieldsBound === '1') return;
@@ -2458,9 +2432,20 @@ async function enviarInteracaoCore(tipo) {
   const thread = getThreadAtivaCore(); if (!thread) return;
   const side = document.getElementById('core-touch-side')?.value || 'frente';
   const point = document.getElementById('core-touch-point')?.value || 'corpo';
-  const desc = tipo.startsWith('abracar') ? `Interação física: ${tipo.replace('_',' ')}.` : `Interação física: ${tipo} em ${point} (${side}).`;
-  registrarComentarioCore('Tô te ouvindo.');
-  const historyParaApi = montarContextoLeveParaAPI(thread, `${desc} Reaja em fala direta, curta e contextual, sem descrever a ação do usuário.`);
+  const mapa = {
+    carinho: 'toque suave que costuma relaxar a respiração e diminuir tensão muscular, com calor afetivo e leve liberação de ocitocina.',
+    tapinha: 'estímulo rápido, desperta atenção imediata, leve alerta simpático e micro descarga de adrenalina.',
+    'beliscão': 'estímulo intenso e pontual, gera contração reflexa, desconforto agudo e resposta de alerta corporal.',
+    agarrar: 'contato firme e invasivo, sensação de pressão corporal, foco defensivo e ativação emocional alta.',
+    segurar: 'contenção estável, sensação de limite físico, segurança ou incômodo dependendo do contexto.',
+    beijar: 'estímulo íntimo, aquecimento afetivo, aceleração do pulso e resposta emocional intensa.',
+    alisar: 'toque contínuo e ritmado, sensação de acolhimento, regulação emocional e relaxamento progressivo.',
+    abracar_frente: 'pressão torácica frontal com calor relacional, tendência a reduzir estresse e aumentar conexão.',
+    abracar_costas: 'contato posterior-surpresa, mistura de proteção e vulnerabilidade, ajuste emocional rápido.'
+  };
+  const sensacao = mapa[tipo] || 'estímulo físico percebido com resposta corporal mista.';
+  const desc = `Estímulo corporal detectado (${tipo}) em ${point} (${side}). Sensação típica: ${sensacao}`;
+  const historyParaApi = montarContextoLeveParaAPI(thread, `${desc} Isso NÃO é mensagem de chat: explique que foi um estímulo diferente no Core e descreva o que o Core SENTIU fisicamente, emocionalmente e neuroquimicamente em fala natural.`);
   try {
     const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
     const data = await res.json();
@@ -2468,6 +2453,7 @@ async function enviarInteracaoCore(tipo) {
     if (txt) registrarComentarioCore(txt);
   } catch (_) {}
 }
+
 
 function duplicarTrackerFinanceiro(btn) {
   const box = btn.closest('.tracker-box'); if (!box) return;
@@ -2678,7 +2664,6 @@ async function enviarPollinations() {
       if (!el) return false;
       if (el.disabled || el.readOnly) return false;
       if (el.closest('#chat-gemini, #chat-pollinations, .resultado-ia')) return false;
-      if (el.closest('.doodle-controls')) return false;
       if (el.id === 'input-gemini' || el.id === 'input-pollinations') return false;
       if (el.type === 'file' || el.type === 'hidden' || el.type === 'button' || el.type === 'submit') return false;
       return true;
@@ -2756,41 +2741,7 @@ async function enviarPollinations() {
     console.info('Campos limpos:', { total: campos.length });
   }
 
-  function serializarDoodles() {
-    return Array.from(document.querySelectorAll('.doodle-canvas')).map((canvas, index) => {
-      try {
-        return { index, dataUrl: canvas.toDataURL('image/png') };
-      } catch (error) {
-        console.warn('Falha ao serializar doodle:', { index, message: error?.message || String(error) });
-        return { index, dataUrl: null };
-      }
-    });
-  }
 
-  function restaurarDoodles(doodles) {
-    if (!Array.isArray(doodles)) return;
-    const canvases = Array.from(document.querySelectorAll('.doodle-canvas'));
-
-    doodles.forEach((item, i) => {
-      const index = Number.isInteger(item?.index) ? item.index : i;
-      const canvas = canvases[index];
-      const dataUrl = item?.dataUrl;
-      if (!canvas || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) return;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const img = new Image();
-      img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      };
-      img.onerror = () => {
-        console.warn('Falha ao restaurar doodle:', { index });
-      };
-      img.src = dataUrl;
-    });
-  }
 
   function normalizarTextoParaCampo(val) {
     if (val === null || val === undefined) return '';
@@ -2908,7 +2859,6 @@ async function enviarPollinations() {
       viewMode: document.getElementById('viewMode')?.value || 'auto',
       dolphinHistory: limitarHistorico(dolphinHistory, reduzirChat ? 8 : 20, reduzirChat ? 1200 : 4000),
       chatDolphin,
-      doodles: serializarDoodles(),
       sectionLayout: capturarLayoutSecoes(),
       core: {
         threads: Array.isArray(coreThreads) ? coreThreads : [],
@@ -3008,7 +2958,6 @@ async function enviarPollinations() {
             totalCheckboxesSalvas: Array.isArray(estado?.checkboxes) ? estado.checkboxes.length : 0,
             totalTextFieldsSalvos: Array.isArray(estado?.textFields) ? estado.textFields.length : 0,
             formatoLegadoInputs: Array.isArray(estado?.inputs),
-            totalDoodlesSalvos: Array.isArray(estado?.doodles) ? estado.doodles.length : 0,
             totalDadosRpgSalvos: Array.isArray(estado?.dadosRpg?.lista) ? estado.dadosRpg.lista.length : 0
         });
 
@@ -3148,9 +3097,6 @@ async function enviarPollinations() {
             if (totalDadosEl) totalDadosEl.innerText = String(estado?.dadosRpg?.totalTexto || '');
         }
 
-        // Restaura doodles
-        restaurarDoodles(estado?.doodles);
-
         // Restaura a memória visual da IA apenas para backup legado
         if (Array.isArray(estado.dolphinHistory) && coreThreads.length === 0) dolphinHistory = estado.dolphinHistory;
         setHtml('#chat-pollinations', estado.chatDolphin || '');
@@ -3182,72 +3128,8 @@ async function enviarPollinations() {
   }
 
   /* ====== SISTEMA DE DOODLING (CANVAS) ====== */
-  function initCanvas() {
-      const canvasList = document.querySelectorAll('.doodle-canvas');
-      canvasList.forEach((canvas) => {
-          if (canvas.dataset.doodleBound === '1') return;
-          canvas.dataset.doodleBound = '1';
 
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return;
-          let isDrawing = false;
-
-          const getLineColor = () => getComputedStyle(document.body).getPropertyValue('--ink') || 'black';
-
-          canvas.addEventListener('pointerdown', (e) => {
-              isDrawing = true;
-              ctx.beginPath();
-              const rect = canvas.getBoundingClientRect();
-              const scaleX = canvas.width / rect.width;
-              const scaleY = canvas.height / rect.height;
-              ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-          });
-
-          canvas.addEventListener('pointermove', (e) => {
-              if (!isDrawing) return;
-              e.preventDefault();
-
-              const wrapper = canvas.closest('.section-content');
-              const brushSize = wrapper?.querySelector('.brush-size')?.value || 2;
-              const brushType = wrapper?.querySelector('.brush-type')?.value || 'round';
-              const pressure = e.pressure !== 0 ? e.pressure : 1;
-
-              ctx.lineWidth = brushSize * pressure * 2;
-              if (brushType === 'eraser') {
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.lineCap = 'round';
-                ctx.strokeStyle = 'rgba(0,0,0,1)';
-              } else {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.lineCap = brushType;
-                ctx.strokeStyle = getLineColor();
-              }
-
-              const rect = canvas.getBoundingClientRect();
-              const scaleX = canvas.width / rect.width;
-              const scaleY = canvas.height / rect.height;
-              ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-              ctx.stroke();
-          });
-
-          canvas.addEventListener('pointerup', () => { isDrawing = false; });
-          canvas.addEventListener('pointerout', () => { isDrawing = false; });
-      });
-  }
-
-  function limparCanvas(btn) { 
-      const canvas = btn.closest('.section-content').querySelector('.doodle-canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height); 
-  }
   
-  function exportarCanvas(btn) {
-      const canvas = btn.closest('.section-content').querySelector('.doodle-canvas');
-      const link = document.createElement('a');
-      link.download = 'meu-doodle.png';
-      link.href = canvas.toDataURL('image/png'); 
-      link.click();
-  }
 
   /* ====== DRAG AND DROP (ROws & Sections) ====== */
   let draggedElement = null; let dragType = null;
@@ -3504,7 +3386,7 @@ async function enviarPollinations() {
         initFloatingCore();
         atualizarRelogioGMT3();
         setInterval(atualizarRelogioGMT3, 1000);
-        makeSortable(); initSparkles(); initCanvas(); updateIndex();
+        makeSortable(); initSparkles(); updateIndex();
     });
   });
 
