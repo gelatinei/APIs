@@ -546,7 +546,7 @@
                 <div class="section hide-in-focus">
           <div class="section-header">
               <span class="drag-section-handle" title="Arraste a seção">✥</span>
-              <label>✨ Planner's core <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
+              <label>✨ Lan <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
               <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
@@ -570,63 +570,76 @@
                 <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
                     <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
                     <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
-                    <button class="ghost mini-add" onclick="preencherCamposPorPedido()">Core preenche campos</button>
+                    <button class="ghost mini-add" onclick="preencherCamposPorPedido()">Lan preenche campos</button>
                 </div>
               </div>
+          </div>
+        </div>
 
-              <div class="core-tools-layout">
-                <div class="tracker-box core-panel" id="core-lousa-box-v2">
-                  <h4 style="margin:0 0 8px 0;">✍️ Lousas do Core (Input/Output)</h4>
-                  <div class="lousa-core-wrap" style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:280px;">
-                      <label class="tiny-lbl">Lousa de Input (você escreve)</label>
-                      <canvas id="core-lousa-input-canvas" class="lousa-core-board"></canvas>
-                    </div>
-                    <div style="flex:1; min-width:280px;">
-                      <label class="tiny-lbl">Lousa de Output (Lan escreve)</label>
-                      <canvas id="core-lousa-output-canvas" class="lousa-core-board"></canvas>
-                    </div>
-                  </div>
-                  <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-                    <button class="ghost mini-add" onclick="checarLousaCoreOCR()">Checar OCR da lousa</button>
-                    <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
-                    <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
-                    <button class="ghost mini-add" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
-                    <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
-                  </div>
-                  <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
-                  <div class="field-group" style="margin-top:8px;">
-                    <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
-                    <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
-                  </div>
-                  <div style="margin-top:8px;">
-                    <label class="tiny-lbl">Histórico textual da lousa</label>
-                    <div id="core-lousa-historico" class="lousa-historico"></div>
-                  </div>
+        <div class="section hide-in-focus" id="lan-lousas-section">
+          <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+            <label>✍️ Lousas do Lan (Input/Output)</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+          </div>
+          <div class="section-content">
+            <div class="tracker-box core-panel" id="core-lousa-box-v2">
+              <div class="lousa-core-wrap" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:280px;">
+                  <label class="tiny-lbl">Lousa de Input (você escreve)</label>
+                  <canvas id="core-lousa-input-canvas" class="lousa-core-board"></canvas>
                 </div>
-
-                <div class="tracker-box core-panel" style="margin-top:0;">
-                  <h4 style="margin:0 0 8px 0;">🫶 Interações com o Core</h4>
-                  <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
-                    <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>ombros</option><option>peito</option><option>abdômen</option><option>cintura</option><option>costas</option><option>quadril</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option><option>nuca</option><option>orelha</option><option>lábios</option><option>virilha</option><option>glúteos</option></select>
-                  </div>
-                  <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">carinho</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">tapinha</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">beliscão</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">agarrar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">segurar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">beijar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">alisar</button>
-                  </div>
-                  <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
-                  </div>
+                <div style="flex:1; min-width:280px;">
+                  <label class="tiny-lbl">Lousa de Output (Lan escreve)</label>
+                  <canvas id="core-lousa-output-canvas" class="lousa-core-board"></canvas>
                 </div>
               </div>
-</div>
+              <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                <button class="ghost mini-add" onclick="checarLousaCoreOCR()">Checar OCR da lousa</button>
+                <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
+                <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
+                <button class="ghost mini-add" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
+                <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
+              </div>
+              <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
+              <div class="field-group" style="margin-top:8px;">
+                <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
+                <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
+              </div>
+              <div style="margin-top:8px;">
+                <label class="tiny-lbl">Histórico textual da lousa</label>
+                <div id="core-lousa-historico" class="lousa-historico"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section hide-in-focus" id="lan-toques-section">
+          <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+            <label>🫶 Interações de toque com Lan</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+          </div>
+          <div class="section-content">
+            <div class="tracker-box core-panel" style="margin-top:0;">
+              <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
+                <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>ombros</option><option>peito</option><option>abdômen</option><option>cintura</option><option>costas</option><option>quadril</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option><option>nuca</option><option>orelha</option><option>lábios</option><option>virilha</option><option>glúteos</option></select>
+              </div>
+              <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">carinho</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">tapinha</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">beliscão</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">agarrar</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">segurar</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">beijar</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">alisar</button>
+              </div>
+              <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1875,7 +1888,7 @@ ${memoriaRelevante}` });
 ${trechosRelevantesThread}` });
   }
   if (trechosOutrasThreads) {
-    contexto.push({ role: 'system', content: `Trechos de outras threads (arquivo completo do Planner Core):
+    contexto.push({ role: 'system', content: `Trechos de outras threads (arquivo completo do Lan):
 ${trechosOutrasThreads}` });
   }
 
@@ -1962,8 +1975,13 @@ function desenharStroke(ctx, op) {
   const pts = op.points || [];
   if (!pts.length) return;
   ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  let started = false;
+  for (let i = 0; i < pts.length; i++) {
+    const pt = pts[i];
+    if (!pt || pt.penUp) { started = false; continue; }
+    if (!started) { ctx.moveTo(pt.x, pt.y); started = true; continue; }
+    ctx.lineTo(pt.x, pt.y);
+  }
   ctx.stroke();
 }
 
@@ -2021,8 +2039,53 @@ function redrawInputLousa() {
 function redrawOutputLousa() {
   if (!coreLousaOutputCtx) return;
   coreLousaOutputCtx.clearRect(0, 0, CORE_LOUSA_W, CORE_LOUSA_H);
-  coreLousaOutputOps.forEach((op) => desenharCoreText(coreLousaOutputCtx, op));
-  if (coreLousaOutputTemp) desenharCoreText(coreLousaOutputCtx, coreLousaOutputTemp);
+  coreLousaOutputOps.forEach((op) => desenharStroke(coreLousaOutputCtx, op));
+  if (coreLousaOutputTemp) desenharStroke(coreLousaOutputCtx, coreLousaOutputTemp);
+}
+
+function gerarTrilhaCaligrafiaLan(texto, x0 = 50, y0 = 110) {
+  const pts = [];
+  let x = x0;
+  let y = y0;
+  const add = (px, py, penUp = false) => pts.push({ x: px, y: py, penUp });
+
+  const stepCurve = (sx, sy, ex, ey, amp, wobble = 0) => {
+    const n = 16;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const cx = sx + (ex - sx) * t;
+      const cy = sy + (ey - sy) * t + Math.sin(t * Math.PI * 2 + wobble) * amp;
+      add(cx, cy);
+    }
+  };
+
+  for (const ch of String(texto || '')) {
+    if (ch === '\n') { x = x0; y += 74; add(x, y, true); continue; }
+    if (ch === ' ') { x += 24; add(x, y, true); continue; }
+    if (x > CORE_LOUSA_W - 90) { x = x0; y += 74; add(x, y, true); }
+
+    const code = ch.charCodeAt(0);
+    const w = 20 + (code % 11);
+    const asc = /[bdfhklt]/i.test(ch) ? 24 : 0;
+    const desc = /[gjpqy]/i.test(ch) ? 20 : 0;
+    const amp = 4 + (code % 5);
+    const wob = (code % 7) / 2;
+
+    if (pts.length && !pts[pts.length - 1].penUp) {
+      stepCurve(x - 4, y, x + 3, y - 2, 1.2, wob);
+    } else {
+      add(x, y, true);
+      add(x, y - 1);
+    }
+
+    stepCurve(x + 3, y - 1, x + (w * 0.28), y - amp - asc, amp * 0.38, wob);
+    stepCurve(x + (w * 0.28), y - amp - asc, x + (w * 0.58), y + amp + desc, amp * 0.55, wob + 1.1);
+    stepCurve(x + (w * 0.58), y + amp + desc, x + w, y - 1, amp * 0.38, wob + 2.2);
+    stepCurve(x + w, y - 1, x + w + 6, y - 2, 1.2, wob + 2.8);
+
+    x += w + 6;
+  }
+  return { points: pts, nextY: Math.min(y + 82, CORE_LOUSA_H - 24) };
 }
 
 function iniciarTraco(x, y) {
@@ -2187,22 +2250,27 @@ function primeiraFrase(t) {
 async function desenharRespostaCoreCaligrafia(texto) {
   const frase = String(texto || '').trim();
   if (!frase) return;
+  if (coreLousaCursorY > 640) coreLousaCursorY = 110;
 
-  const x = 50;
-  if (coreLousaCursorY > 660) coreLousaCursorY = 110;
-  const y = coreLousaCursorY;
+  const trilha = gerarTrilhaCaligrafiaLan(frase, 50, coreLousaCursorY);
+  const stroke = {
+    points: [],
+    width: 2.4,
+    color: getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222',
+    source: 'lan'
+  };
 
-  for (let i = 1; i <= frase.length; i++) {
-    coreLousaOutputTemp = { text: frase, x, y, visibleChars: i };
+  for (let i = 0; i < trilha.points.length; i++) {
+    stroke.points.push(trilha.points[i]);
+    coreLousaOutputTemp = stroke;
     redrawOutputLousa();
-    const ch = frase[i - 1];
-    await esperar(ch === ' ' ? 18 : 42);
+    await esperar(trilha.points[i].penUp ? 4 : 9);
   }
 
   coreLousaOutputTemp = null;
-  coreLousaOutputOps.push({ text: frase, x, y });
+  coreLousaOutputOps.push(stroke);
   redrawOutputLousa();
-  coreLousaCursorY = Math.min(coreLousaCursorY + 78, CORE_LOUSA_H - 20);
+  coreLousaCursorY = trilha.nextY;
 }
 
 async function checarLousaCoreOCR() {
