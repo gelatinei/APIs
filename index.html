@@ -519,16 +519,6 @@
           </div>
         </div>
 
-        <div class="section hide-in-focus">
-          <div class="section-header">
-            <span class="drag-section-handle" title="Arraste a seção">✥</span>
-            <label>Pomodoros Concluídos</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
-          </div>
-          <div class="section-content">
-              <div class="checkbox-row" id="pomos"></div>
-          </div>
-        </div>
 
         <div class="section hide-in-focus">
           <div class="section-header">
@@ -568,6 +558,11 @@
                 <button class="ghost mini-add" onclick="novaThreadCore()">+ Thread</button>
                 <button class="xbtn-sec" style="margin:0;" onclick="apagarThreadAtualCore()">Apagar Thread</button>
                 <input id="core-search" type="text" placeholder="Buscar palavra nas threads" style="min-width:160px;" oninput="buscarNasThreadsCore(this.value)">
+              </div>
+              <div class="field-group" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                <label class="inline-cb"><input type="checkbox" id="core-temp-thread-toggle"> Chat temporário (não salva)</label>
+                <label class="inline-cb"><input type="checkbox" id="core-nsfw-toggle"> Modo NSFW explícito</label>
+                <label class="inline-cb"><input type="checkbox" id="core-raw-prompt-toggle"> Prompt cru (sem memória/outras threads)</label>
               </div>
 
               <div id="core-page-chat" style="display:block; margin-top:8px;">
@@ -903,6 +898,22 @@
             </div>
 
             
+
+            <div class="tracker-box">
+              <h4>Mística & Mente</h4>
+              <div class="field-group">
+                <label class="tiny-lbl">🌖 Fase da Lua</label>
+                <input type="text" placeholder="Fase..." />
+              </div>
+              <div class="field-group" style="margin-top: 10px;">
+                <label class="inline-cb"><input type="checkbox"/> Magia do Caos <button class="ghost mini-add" onclick="addGenericField(this, 'Tracker/Sigilo...')">+</button></label>
+                <div class="dynamic-fields"><input type="text" placeholder="Tracker de Magia" /></div>
+              </div>
+              <div class="field-group">
+                <label class="inline-cb"><input type="checkbox"/> Tive um sonho?</label>
+                <textarea rows="2" placeholder="Descreva o sonho..." style="margin-top:4px;"></textarea>
+              </div>
+            </div>
 
             <div class="tracker-box">
               <h4>Corpo & Água</h4>
@@ -1798,15 +1809,63 @@ function selecionarTrechosRelevantesEntreThreads(prompt, threads, maxChars = 180
   return selecionados.join('\n').slice(0, maxChars);
 }
 
+function coreToggleAtivo(id) {
+  return Boolean(document.getElementById(id)?.checked);
+}
+
+function agoraGMT3ISO() {
+  const now = new Date();
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  }).format(now).replace(' ', 'T') + ' GMT-3';
+}
+
+function coletarEstadoPlannerCompletoCore(maxChars = 14000) {
+  const planner = document.getElementById('planner');
+  if (!planner) return '';
+  const campos = Array.from(planner.querySelectorAll('input, textarea, select')).map((el, i) => {
+    const sec = el.closest('.section')?.querySelector('.section-header label')?.textContent?.trim() || 'sem seção';
+    const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.name || `${el.tagName}-${i}`;
+    const val = el.type === 'checkbox' ? (el.checked ? 'marcado' : 'desmarcado') : String(el.value || '').trim();
+    return `[${sec}] ${lbl}: ${val || 'vazio'} (preenchido=${val ? 'sim' : 'não'})`;
+  });
+  return campos.join(' | ').slice(0, maxChars);
+}
+
+function montarPromptCoreBase(extra = '') {
+  const base = [
+    `Use a realidade exata do planner para comentar (nada inventado).`,
+    `Considere horário/data reais em GMT-3: ${agoraGMT3ISO()}.`,
+    `Estado resumido do planner: ${coletarEstadoCorpoCore()}.`,
+    `Estrutura e preenchimento completo disponível: ${coletarEstadoPlannerCompletoCore()}`
+  ];
+  if (coreToggleAtivo('core-nsfw-toggle')) {
+    base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais.');
+  }
+  if (extra) base.push(extra);
+  return base.join(' ');
+}
+
+function historicoAtivoCore(thread) {
+  if (coreToggleAtivo('core-temp-thread-toggle')) return coreTempMessages;
+  return thread?.messages || [];
+}
+
 function montarContextoLeveParaAPI(thread, prompt) {
+  const modoCru = coreToggleAtivo('core-raw-prompt-toggle');
+  const todasMensagens = historicoAtivoCore(thread);
+  const historicoRecente = todasMensagens.slice(-12);
+
+  if (modoCru) {
+    return [...historicoRecente, { role: 'user', content: `${montarPromptCoreBase('Modo prompt cru ativo.')} ${prompt}` }];
+  }
+
   const memoria = getCoreMemory();
-  const todasMensagens = (thread?.messages || []);
   const memoriaRelevante = buscarMemoriaRelevantePorPalavraChave(prompt, memoria, 1600);
   const trechosRelevantesThread = selecionarTrechosRelevantesDaThreadCompleta(prompt, todasMensagens, 1200);
   const trechosOutrasThreads = selecionarTrechosRelevantesEntreThreads(prompt, coreThreads, 1800, String(thread?.id || ''));
-  const historicoRecente = todasMensagens.slice(-12);
 
-  const contexto = [];
+  const contexto = [{ role: 'system', content: montarPromptCoreBase() }];
   if (memoriaRelevante) {
     contexto.push({ role: 'system', content: `Memória relevante recuperada por palavras-chave:
 ${memoriaRelevante}` });
@@ -1863,6 +1922,8 @@ let coreLousaCursorY = 90;
 let coreUltimoComentarioTs = Date.now();
 let coreLousaEraser = false;
 let coreUltimaAlteracaoPlanner = 'Sem alterações registradas ainda.';
+let coreTempMessages = [];
+
 const CORE_THREAD_COMENTARIOS_NOME = 'Comentários da Caixa Flutuante';
 
 function mostrarPaginaCore() {}
@@ -2305,7 +2366,7 @@ function monitorarAlteracoesPlannerCore() {
 async function reagirUltimaAlteracaoPlanner() {
   const thread = getThreadAtivaCore();
   if (!thread) return;
-  const prompt = `Reaja com liberdade total em fala direta. Não descreva clique por clique. Esta reação foi disparada por um estímulo diferente (janela flutuante) e descreve o que o Core SENTIU ao receber o estado do planner. Última alteração registrada: ${coreUltimaAlteracaoPlanner}. Estado geral: ${coletarEstadoCorpoCore()}.`;
+  const prompt = `Reaja com liberdade total em fala direta. Não descreva clique por clique. Esta reação foi disparada por um estímulo diferente (janela flutuante) e descreve o que o Core SENTIU ao receber o estado do planner. Baseie-se na realidade atual do planner, horários e datas reais (GMT-3: ${agoraGMT3ISO()}). Última alteração registrada: ${coreUltimaAlteracaoPlanner}. Estado geral: ${coletarEstadoCorpoCore()}.`;
   const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
   try {
     const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
@@ -2396,6 +2457,7 @@ function initTrackerBoxesInterativas() {
     });
     if (after) grid.insertBefore(dragged, after); else grid.appendChild(dragged);
   });
+  grid.addEventListener('drop', () => agendarSalvamentoNuvem(200));
 }
 
 
@@ -2523,13 +2585,17 @@ async function enviarPollinations() {
 
   const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
   const historyParaApi = [
-    { role: 'system', content: `Estado do corpo do Core: ${coletarEstadoCorpoCore()} | Últimos comentários da caixa: ${floatingTxt}` },
+    { role: 'system', content: `${montarPromptCoreBase()} | Últimos comentários da caixa: ${floatingTxt}` },
     ...montarContextoLeveParaAPI(thread, prompt)
   ];
 
-  thread.messages = [...(thread.messages || []), { role: "user", content: prompt }];
-  dolphinHistory = thread.messages;
-  salvarThreadsCore();
+  if (coreToggleAtivo('core-temp-thread-toggle')) {
+    coreTempMessages = [...coreTempMessages, { role: 'user', content: prompt }];
+  } else {
+    thread.messages = [...(thread.messages || []), { role: "user", content: prompt }];
+    dolphinHistory = thread.messages;
+    salvarThreadsCore();
+  }
 
   console.info('Contexto leve enviado para IA', {
     totalMensagensThread: thread.messages.length,
@@ -2559,9 +2625,13 @@ async function enviarPollinations() {
     const textoFormatado = marked.parse(textoCru);
     
     // Salva a resposta no histórico da thread ativa
-    thread.messages.push({ role: "assistant", content: textoCru });
-    dolphinHistory = thread.messages;
-    salvarThreadsCore();
+    if (coreToggleAtivo('core-temp-thread-toggle')) {
+      coreTempMessages.push({ role: 'assistant', content: textoCru });
+    } else {
+      thread.messages.push({ role: "assistant", content: textoCru });
+      dolphinHistory = thread.messages;
+      salvarThreadsCore();
+    }
 
     document.getElementById(loadingId).remove();
     chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
@@ -2837,8 +2907,7 @@ async function enviarPollinations() {
       weekly: document.getElementById('weeklyTrackersBody').innerHTML,
       trackerGrid: document.getElementById('tracker-grid').innerHTML,
       meals: document.getElementById('meals-container').innerHTML,
-      bottleQuarters: document.getElementById('bottleQuarters').innerHTML,
-      pomos: document.getElementById('pomos').innerHTML
+      bottleQuarters: document.getElementById('bottleQuarters').innerHTML
     };
 
     const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
@@ -2978,7 +3047,6 @@ async function enviarPollinations() {
             setHtml('#tracker-grid', estado.html.trackerGrid || '');
             setHtml('#meals-container', estado.html.meals || '');
             setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
-            setHtml('#pomos', estado.html.pomos || '');
         }
 
         restaurarLayoutSecoes(estado?.sectionLayout);
@@ -3188,7 +3256,7 @@ async function enviarPollinations() {
             else targetRow.classList.add('drag-over'); 
         } 
     } else if (dragType === 'section') {
-        const targetCol = e.target.closest('.col, .flex-row');
+        const targetCol = e.target.closest('.col, .flex-row, .page, .section-content');
         const targetSec = e.target.closest('.section');
         if (targetSec && targetSec !== draggedElement) targetSec.classList.add('drag-over');
     }
@@ -3229,7 +3297,7 @@ async function enviarPollinations() {
     } 
     else if (dragType === 'section') {
         const targetSec = e.target.closest('.section');
-        const targetCol = e.target.closest('.col, .flex-row');
+        const targetCol = e.target.closest('.col, .flex-row, .page, .section-content');
         if(targetSec) targetSec.classList.remove('drag-over');
         
         if (draggedElement && targetCol && draggedElement !== targetSec) {
@@ -3248,7 +3316,7 @@ async function enviarPollinations() {
   
   function handleDragEnd(e) {
     if(dragType === 'row') { e.target.classList.remove('dragging'); document.querySelectorAll('.sortable-row').forEach(r => r.classList.remove('drag-over', 'drop-target-timeblock')); } 
-    else if (dragType === 'section') { e.target.classList.remove('dragging'); document.querySelectorAll('.section').forEach(s => s.classList.remove('drag-over')); e.target.removeAttribute('draggable');}
+    else if (dragType === 'section') { e.target.classList.remove('dragging'); document.querySelectorAll('.section').forEach(s => s.classList.remove('drag-over')); e.target.removeAttribute('draggable'); agendarSalvamentoNuvem(250);}
     draggedElement = null; dragType = null;
   }
 
@@ -3372,10 +3440,6 @@ async function enviarPollinations() {
         const bq = document.getElementById('bottleQuarters'); 
         if(bq.innerHTML.trim() === '') {
             for(let i=1;i<=8;i++){ const lab = document.createElement('label'); lab.className = 'inline-cb'; lab.innerHTML = `<input type="checkbox"/>`; bq.appendChild(lab); }
-        }
-        const pomos = document.getElementById('pomos'); 
-        if(pomos.innerHTML.trim() === '') {
-            for(let i=0;i<12;i++){ const lab = document.createElement('label'); lab.className = 'small'; lab.innerHTML = `<input type="checkbox"> ${i+1}`; pomos.appendChild(lab); }
         }
         populateTarotSelects();
         initCoreMemoryAndThreads();
