@@ -563,6 +563,7 @@
                 </div>
                 <button class="ghost mini-add" onclick="novaThreadCore()">+ Thread</button>
                 <button class="xbtn-sec" style="margin:0;" onclick="apagarThreadAtualCore()">Apagar Thread</button>
+                <input id="core-search" type="text" placeholder="Buscar palavra nas threads" style="min-width:160px;" oninput="buscarNasThreadsCore(this.value)">
               </div>
 
               <div id="core-page-chat" style="display:block; margin-top:8px;">
@@ -570,6 +571,7 @@
                 <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
                     <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
                     <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
+                    <button class="ghost mini-add" onclick="preencherCamposPorPedido()">Core preenche campos</button>
                 </div>
               </div>
 
@@ -588,9 +590,34 @@
                 <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
                   <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
                   <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
+                  <button class="ghost mini-add" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
                   <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
                 </div>
                 <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
+                <div class="field-group" style="margin-top:8px;">
+                  <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
+                  <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
+                </div>
+                <div class="tracker-box" style="margin-top:8px;">
+                  <h4 style="margin:0 0 8px 0;">🫶 Interações com o Core</h4>
+                  <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
+                    <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>ombros</option><option>peito</option><option>abdômen</option><option>cintura</option><option>costas</option><option>quadril</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option><option>nuca</option><option>orelha</option><option>lábios</option><option>virilha</option><option>glúteos</option></select>
+                  </div>
+                  <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">carinho</button>
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">tapinha</button>
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">beliscão</button>
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">agarrar</button>
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">segurar</button>
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">beijar</button>
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">alisar</button>
+                  </div>
+                  <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
+                    <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
+                  </div>
+                </div>
                 <div style="margin-top:8px;">
                   <label class="tiny-lbl">Histórico textual da lousa</label>
                   <div id="core-lousa-historico" class="lousa-historico"></div>
@@ -925,25 +952,8 @@
                 </table>
               </div>
             </div>
-
-            <div class="tracker-box" id="tracker-energia-mental">
-              <h4>🧠 Energia Mental (0-10)</h4>
-              <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
-                <div style="flex:1; min-width:90px;"><label class="tiny-lbl">Foco</label><input type="number" min="0" max="10" placeholder="0-10"></div>
-                <div style="flex:1; min-width:90px;"><label class="tiny-lbl">Ansiedade</label><input type="number" min="0" max="10" placeholder="0-10"></div>
-                <div style="flex:1; min-width:90px;"><label class="tiny-lbl">Cansaço</label><input type="number" min="0" max="10" placeholder="0-10"></div>
-              </div>
-              <div class="field-group">
-                <label class="tiny-lbl">O que ajudou hoje?</label>
-                <textarea rows="2" placeholder="Ex: pausa, banho, música, respiração..."></textarea>
-              </div>
-              <div class="field-group">
-                <label class="inline-cb"><input type="checkbox"/> Fiz pausa consciente de 5 minutos</label>
-              </div>
-            </div>
-
             <div class="tracker-box" id="tracker-financeiro-rapido">
-              <h4>💰 Tracker Financeiro Rápido</h4>
+              <h4>💰 Tracker Financeiro Rápido <span><button class="ghost mini-add" onclick="duplicarTrackerFinanceiro(this)">+</button><button class="xbtn-sec" style="margin:0;" onclick="removerTrackerFinanceiro(this)">✕</button></span></h4>
               <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
                 <div style="flex:1; min-width:120px;"><label class="tiny-lbl">Gasto do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div>
                 <div style="flex:1; min-width:120px;"><label class="tiny-lbl">Entrada do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div>
@@ -1062,6 +1072,7 @@
                     <select class="brush-type" style="width: auto; padding: 4px;">
                       <option value="round">Redondo</option>
                       <option value="square">Quadrado</option>
+                      <option value="eraser">Borracha</option>
                     </select>
                   </label>
                   <button class="ghost mini-add" onclick="limparCanvas(this)">Limpar Tela</button>
@@ -1096,7 +1107,7 @@
       <button class="collapse-btn" onclick="toggleFloatingCoreBox(this)">➖</button>
     </div>
     <div class="section-content" id="core-floating-content" style="display:block;">
-      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Core monitorando o planner...</div>
+      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Core monitorando o planner...</div><div id="core-gmt3-clock" class="tiny-lbl" style="margin-top:6px;">GMT-3 --:--:--</div>
       <div style="display:flex; gap:6px; margin-top:8px;">
         <button class="ghost mini-add" onclick="enviarDoodlingParaCore()">Enviar doodling</button>
       </div>
@@ -1677,12 +1688,12 @@ function renderChatCore() {
     return;
   }
 
-  chat.innerHTML = dolphinHistory.map(item => {
+  chat.innerHTML = dolphinHistory.map((item, idx) => {
     const isUser = item?.role === 'user';
     const txt = String(item?.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return isUser
-      ? `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${txt}</div>`
-      : `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${marked.parse(txt)}</div>`;
+      ? `<div style="background:var(--accent); color:white; padding:6px; border-radius:6px; align-self:flex-end; max-width:90%; margin-left:auto;">${txt}<button class="xbtn" onclick="apagarMensagemCore(${idx})">✕</button></div>`
+      : `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${marked.parse(txt)}<button class="xbtn" onclick="apagarMensagemCore(${idx})">✕</button></div>`;
   }).join('');
   chat.scrollTop = chat.scrollHeight;
 }
@@ -1861,10 +1872,6 @@ function garantirTrackersNovos() {
 
   const blocos = [
     {
-      id: 'tracker-energia-mental',
-      html: `<div class="tracker-box" id="tracker-energia-mental"><h4>🧠 Energia Mental (0-10)</h4><div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;"><div style="flex:1; min-width:90px;"><label class="tiny-lbl">Foco</label><input type="number" min="0" max="10" placeholder="0-10"></div><div style="flex:1; min-width:90px;"><label class="tiny-lbl">Ansiedade</label><input type="number" min="0" max="10" placeholder="0-10"></div><div style="flex:1; min-width:90px;"><label class="tiny-lbl">Cansaço</label><input type="number" min="0" max="10" placeholder="0-10"></div></div><div class="field-group"><label class="tiny-lbl">O que ajudou hoje?</label><textarea rows="2" placeholder="Ex: pausa, banho, música, respiração..."></textarea></div><div class="field-group"><label class="inline-cb"><input type="checkbox"/> Fiz pausa consciente de 5 minutos</label></div></div>`
-    },
-    {
       id: 'tracker-financeiro-rapido',
       html: `<div class="tracker-box" id="tracker-financeiro-rapido"><h4>💰 Tracker Financeiro Rápido</h4><div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;"><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Gasto do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Entrada do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div></div><div class="field-group"><label class="tiny-lbl">Categoria principal</label><select><option>Alimentação</option><option>Transporte</option><option>Casa</option><option>Lazer</option><option>Saúde</option><option>Trabalho</option><option>Outro</option></select></div><div class="field-group"><label class="tiny-lbl">Observação</label><input type="text" placeholder="Resumo financeiro do dia"></div></div>`
     },
@@ -1961,34 +1968,26 @@ function mapaRomanoSegments(ch) {
 }
 
 function desenharCoreText(ctx, op) {
-  const texto = String(op?.text || '').toUpperCase();
+  const texto = String(op?.text || '');
+  if (!texto) return;
   const maxChars = Number.isFinite(op?.visibleChars) ? Math.max(0, Math.floor(op.visibleChars)) : texto.length;
   const vis = texto.slice(0, maxChars);
-  let x = Number(op?.x || 50);
+  const x0 = Number(op?.x || 50);
+  let x = x0;
   let y = Number(op?.y || 120);
-  const scale = Number(op?.scale || 4.4);
-  const lineGap = scale * 15;
+  const lineH = 60;
 
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = Number(op?.width || 2.8);
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = "50px 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive";
 
   for (const ch of vis) {
-    if (ch === '\n') { x = 50; y += lineGap; continue; }
-    if (ch === ' ') { x += scale * 6; continue; }
-    if (x > CORE_LOUSA_W - 90) { x = 50; y += lineGap; }
-    if (y > CORE_LOUSA_H - 20) break;
-
-    const segs = mapaRomanoSegments(ch);
-    for (const seg of segs) {
-      const [x1,y1,x2,y2] = seg;
-      ctx.beginPath();
-      ctx.moveTo(x + x1 * scale, y + y1 * scale);
-      ctx.lineTo(x + x2 * scale, y + y2 * scale);
-      ctx.stroke();
-    }
-    x += scale * 12;
+    if (ch === '\n') { x = x0; y += lineH; continue; }
+    const w = ctx.measureText(ch).width;
+    if (x + w > CORE_LOUSA_W - 40) { x = x0; y += lineH; }
+    if (y > CORE_LOUSA_H - 10) break;
+    ctx.fillText(ch, x, y);
+    x += w;
   }
 }
 
@@ -2008,7 +2007,7 @@ function redrawOutputLousa() {
 
 function iniciarTraco(x, y) {
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
-  coreLousaStrokeAtual = { points: [{ x, y }], width: 8.5, color: accent, source: 'user' };
+  coreLousaStrokeAtual = { points: [{ x, y }], width: 4.25, color: accent, source: 'user' };
   redrawInputLousa();
 }
 
@@ -2121,7 +2120,7 @@ async function reconhecerTextoLousa() {
   c.strokeStyle = '#111';
   c.lineCap = 'round';
   c.lineJoin = 'round';
-  c.lineWidth = 13;
+  c.lineWidth = 9;
 
   coreLousaUserPendentes.forEach((op) => {
     const pts = op.points || [];
@@ -2190,7 +2189,10 @@ async function enviarLousaCore() {
 
   try {
     statusLousaCore('Lendo lousa de input...');
-    const textoAtual = await reconhecerTextoLousa();
+    let textoAtual = await reconhecerTextoLousa();
+    const corr = document.getElementById('core-lousa-ocr-correction');
+    if (corr && !corr.value.trim()) corr.value = textoAtual;
+    textoAtual = String(corr?.value || textoAtual || '').trim();
     if (!textoAtual) {
       statusLousaCore('Não consegui ler o input. Escreva maior e tente de novo.');
       return;
@@ -2242,7 +2244,9 @@ function coletarEstadoCorpoCore() {
   const checks = planner.querySelectorAll('input[type="checkbox"]').length;
   const checksOn = planner.querySelectorAll('input[type="checkbox"]:checked').length;
   const dados = document.querySelectorAll('#mesa-dados .dado-wrapper').length;
-  return `Tema atual: ${theme}. Checkboxes: ${checksOn}/${checks}. Dados na mesa: ${dados}. Exemplos de textos atuais: ${texts.slice(0, 8).join(' | ') || 'nenhum'}.`;
+  const campos = Array.from(planner.querySelectorAll('input, textarea, select')).slice(0,120).map((el)=>{ const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.tagName; const val = el.type==='checkbox' ? (el.checked?'marcado':'desmarcado') : String(el.value || '').trim(); return `${lbl}: ${val || 'vazio'}`; });
+  const relogio = document.getElementById('core-gmt3-clock')?.textContent || '';
+  return `Tema atual: ${theme}. ${relogio}. Checkboxes: ${checksOn}/${checks}. Dados na mesa: ${dados}. Campos: ${campos.slice(0,30).join(' | ')}`;
 }
 
 function toggleFloatingCoreBox(btn) {
@@ -2411,6 +2415,86 @@ function initCamposExpansiveis() {
     if (!el) return;
     el.size = Math.min(120, Math.max(16, String(el.value || '').length + 2));
   });
+}
+
+function atualizarRelogioGMT3() {
+  const el = document.getElementById('core-gmt3-clock');
+  if (!el) return;
+  const fmt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+  el.textContent = `GMT-3 ${fmt.format(new Date())}`;
+}
+
+function toggleBorrachaLousaInput(btn) {
+  coreLousaEraser = !coreLousaEraser;
+  if (btn) btn.textContent = `Borracha input: ${coreLousaEraser ? 'on' : 'off'}`;
+}
+
+async function enviarInteracaoCore(tipo) {
+  const thread = getThreadAtivaCore(); if (!thread) return;
+  const side = document.getElementById('core-touch-side')?.value || 'frente';
+  const point = document.getElementById('core-touch-point')?.value || 'corpo';
+  const desc = tipo.startsWith('abracar') ? `Interação física: ${tipo.replace('_',' ')}.` : `Interação física: ${tipo} em ${point} (${side}).`;
+  registrarComentarioCore(`Senti ${desc}`);
+  const historyParaApi = montarContextoLeveParaAPI(thread, `${desc} Reaja em fala direta, curta e contextual.`);
+  try {
+    const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
+    const data = await res.json();
+    const txt = String(data?.choices?.[0]?.message?.content || '').trim();
+    if (txt) registrarComentarioCore(txt);
+  } catch (_) {}
+}
+
+function duplicarTrackerFinanceiro(btn) {
+  const box = btn.closest('.tracker-box'); if (!box) return;
+  const clone = box.cloneNode(true);
+  clone.querySelectorAll('input, textarea').forEach(el => el.value = '');
+  clone.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+  box.parentElement.insertBefore(clone, box.nextSibling);
+}
+
+function removerTrackerFinanceiro(btn) {
+  const boxes = Array.from(document.querySelectorAll('#tracker-grid .tracker-box')).filter(b => (b.querySelector('h4')?.textContent || '').includes('Tracker Financeiro Rápido'));
+  if (boxes.length <= 1) return;
+  btn.closest('.tracker-box')?.remove();
+}
+
+function buscarNasThreadsCore(q) {
+  const termo = String(q || '').trim().toLowerCase();
+  if (!termo) { renderChatCore(); return; }
+  const chat = document.getElementById('chat-pollinations');
+  const hits = [];
+  coreThreads.forEach(t => (t.messages || []).forEach(m => {
+    const c = String(m?.content || ''); if (c.toLowerCase().includes(termo)) hits.push(`[${t.nome}] ${m.role}: ${c}`);
+  }));
+  chat.innerHTML = hits.slice(-50).map(h => `<div style="background:var(--bg); padding:6px; border-radius:6px;">${h.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`).join('') || '<div>Nenhum resultado.</div>';
+}
+
+function apagarMensagemCore(idx) {
+  const th = getThreadAtivaCore(); if (!th || !Array.isArray(th.messages)) return;
+  if (idx < 0 || idx >= th.messages.length) return;
+  th.messages.splice(idx,1); salvarThreadsCore(); renderChatCore();
+}
+
+async function preencherCamposPorPedido() {
+  const req = prompt('Descreva campos=valores (ex: Foco Principal=Tarot; Perfume=Jasmim)');
+  if (!req) return;
+  const pares = req.split(';').map(x=>x.trim()).filter(Boolean);
+  const campos = Array.from(document.querySelectorAll('input[type="text"], textarea, input[type="number"], input[type="date"], input[type="time"], select'));
+  for (const p of pares) {
+    const [k,v] = p.split('=').map(x=>String(x||'').trim()); if (!k) continue;
+    const alvo = campos.find(el => {
+      const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.toLowerCase() || '';
+      const ph = (el.placeholder||'').toLowerCase();
+      return lbl.includes(k.toLowerCase()) || ph.includes(k.toLowerCase()) || (el.id||'').toLowerCase().includes(k.toLowerCase());
+    });
+    if (!alvo) continue;
+    if (alvo.tagName === 'SELECT') {
+      const opt = Array.from(alvo.options).find(o => (o.textContent||'').toLowerCase().includes((v||'').toLowerCase()));
+      if (opt) alvo.value = opt.value;
+    } else alvo.value = v || '';
+    alvo.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  registrarComentarioCore('Preenchi os campos que você pediu.');
 }
 
 async function enviarPollinations() {
@@ -3104,8 +3188,15 @@ async function enviarPollinations() {
               const pressure = e.pressure !== 0 ? e.pressure : 1;
 
               ctx.lineWidth = brushSize * pressure * 2;
-              ctx.lineCap = brushType;
-              ctx.strokeStyle = getLineColor();
+              if (brushType === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = 'rgba(0,0,0,1)';
+              } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.lineCap = brushType;
+                ctx.strokeStyle = getLineColor();
+              }
 
               const rect = canvas.getBoundingClientRect();
               const scaleX = canvas.width / rect.width;
@@ -3386,6 +3477,8 @@ async function enviarPollinations() {
         initCamposExpansiveis();
         initTrackerBoxesInterativas();
         initFloatingCore();
+        atualizarRelogioGMT3();
+        setInterval(atualizarRelogioGMT3, 1000);
         makeSortable(); initSparkles(); initCanvas(); updateIndex();
     });
   });
