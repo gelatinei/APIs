@@ -94,6 +94,15 @@
       gap: 6px;
     }
 
+    .core-balanced-grid { display:grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 10px; margin-top:12px; align-items:start; }
+    .core-card { margin-top:0 !important; height:100%; }
+    .core-card .card-body { display:flex; flex-direction:column; gap:8px; }
+    .core-interaction-log { max-height: 190px; overflow-y:auto; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:8px; }
+    .core-interaction-item { border:1px solid var(--border); border-radius:6px; padding:8px; background: color-mix(in srgb, var(--card-bg) 88%, transparent); }
+    .core-interaction-item h5 { margin:0 0 4px 0; font-size:12px; }
+    .core-interaction-item p { margin:2px 0; font-size:11px; }
+    @media (max-width: 920px) { .core-balanced-grid { grid-template-columns: 1fr; } }
+
     input[type="text"], textarea { width: 100%; max-width: 100%; }
     textarea { resize: vertical; min-height: 56px; }
     .tracker-box.mini-box > *:not(h4) { display: none !important; }
@@ -575,52 +584,60 @@
                 </div>
               </div>
 
-              <div class="tracker-box" id="core-lousa-box-v2" style="margin-top:12px;">
-                <h4 style="margin:0 0 8px 0;">✍️ Lousas do Core (Input/Output)</h4>
-                <div class="lousa-core-wrap" style="display:flex; gap:8px; flex-wrap:wrap;">
-                  <div style="flex:1; min-width:280px;">
-                    <label class="tiny-lbl">Lousa de Input (você escreve)</label>
-                    <canvas id="core-lousa-input-canvas" class="lousa-core-board"></canvas>
-                  </div>
-                  <div style="flex:1; min-width:280px;">
-                    <label class="tiny-lbl">Lousa de Output (Lan escreve)</label>
-                    <canvas id="core-lousa-output-canvas" class="lousa-core-board"></canvas>
-                  </div>
-                </div>
-                <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-                  <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
-                  <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
-                  <button class="ghost mini-add" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
-                  <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
-                </div>
-                <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
-                <div class="field-group" style="margin-top:8px;">
-                  <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
-                  <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
-                </div>
-                <div class="tracker-box" style="margin-top:8px;">
-                  <h4 style="margin:0 0 8px 0;">🫶 Interações com o Core</h4>
-                  <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
-                    <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>ombros</option><option>peito</option><option>abdômen</option><option>cintura</option><option>costas</option><option>quadril</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option><option>nuca</option><option>orelha</option><option>lábios</option><option>virilha</option><option>glúteos</option></select>
-                  </div>
-                  <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">carinho</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">tapinha</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">beliscão</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">agarrar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">segurar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">beijar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">alisar</button>
-                  </div>
-                  <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
+              <div class="core-balanced-grid">
+                <div class="tracker-box core-card" id="core-lousa-box-v2">
+                  <h4 style="margin:0 0 8px 0;">✍️ Lousas do Core (Input/Output)</h4>
+                  <div class="card-body">
+                    <div class="lousa-core-wrap" style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <div style="flex:1; min-width:280px;">
+                        <label class="tiny-lbl">Lousa de Input (você escreve)</label>
+                        <canvas id="core-lousa-input-canvas" class="lousa-core-board"></canvas>
+                      </div>
+                      <div style="flex:1; min-width:280px;">
+                        <label class="tiny-lbl">Lousa de Output (Lan escreve)</label>
+                        <canvas id="core-lousa-output-canvas" class="lousa-core-board"></canvas>
+                      </div>
+                    </div>
+                    <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                      <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
+                      <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
+                      <button class="ghost mini-add" id="core-lousa-eraser-btn" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
+                      <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
+                    </div>
+                    <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
+                    <div class="field-group" style="margin-top:8px;">
+                      <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
+                      <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
+                    </div>
+                    <div style="margin-top:8px;">
+                      <label class="tiny-lbl">Histórico textual da lousa</label>
+                      <div id="core-lousa-historico" class="lousa-historico"></div>
+                    </div>
                   </div>
                 </div>
-                <div style="margin-top:8px;">
-                  <label class="tiny-lbl">Histórico textual da lousa</label>
-                  <div id="core-lousa-historico" class="lousa-historico"></div>
+                <div class="tracker-box core-card" id="core-interacoes-box">
+                  <h4 style="margin:0 0 8px 0;">🫶 Interações Físicas com o Core</h4>
+                  <div class="card-body">
+                    <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
+                      <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>ombros</option><option>peito</option><option>abdômen</option><option>cintura</option><option>costas</option><option>quadril</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option><option>nuca</option><option>orelha</option><option>lábios</option><option>virilha</option><option>glúteos</option></select>
+                    </div>
+                    <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">carinho</button>
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">tapinha</button>
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">beliscão</button>
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">agarrar</button>
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">segurar</button>
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">beijar</button>
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">alisar</button>
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
+                      <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
+                    </div>
+                    <label class="tiny-lbl">Registro de interações físicas (seção própria)</label>
+                    <div id="core-interacao-historico" class="core-interaction-log">
+                      <div style="opacity:.75;">Sem interações físicas registradas ainda.</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 </div>
@@ -1903,6 +1920,7 @@ let coreLousaStrokeAtual = null;
 let coreLousaHistorico = [];
 let coreLousaUserPendentes = [];
 let coreLousaCursorY = 90;
+let coreLousaEraser = false;
 let coreUltimoComentarioTs = Date.now();
 const CORE_THREAD_COMENTARIOS_NOME = 'Comentários da Caixa Flutuante';
 
@@ -1935,16 +1953,24 @@ function renderHistoricoLousaCore() {
 }
 
 function desenharStroke(ctx, op) {
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = op.color || '#8e44ad';
-  ctx.lineWidth = op.width || 17;
   const pts = op.points || [];
   if (!pts.length) return;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = op.width || 17;
+  if (op.mode === 'erase') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = op.color || '#8e44ad';
+  }
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
   for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
   ctx.stroke();
+  ctx.restore();
 }
 
 function mapaRomanoSegments(ch) {
@@ -2007,7 +2033,13 @@ function redrawOutputLousa() {
 
 function iniciarTraco(x, y) {
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
-  coreLousaStrokeAtual = { points: [{ x, y }], width: 4.25, color: accent, source: 'user' };
+  coreLousaStrokeAtual = {
+    points: [{ x, y }],
+    width: coreLousaEraser ? 26 : 4.25,
+    color: accent,
+    source: 'user',
+    mode: coreLousaEraser ? 'erase' : 'draw'
+  };
   redrawInputLousa();
 }
 
@@ -2020,7 +2052,7 @@ function seguirTraco(x, y) {
 function finalizarTraco() {
   if (!coreLousaStrokeAtual) return;
   coreLousaOps.push(coreLousaStrokeAtual);
-  coreLousaUserPendentes.push(coreLousaStrokeAtual);
+  if (coreLousaStrokeAtual.mode !== 'erase') coreLousaUserPendentes.push(coreLousaStrokeAtual);
   coreLousaStrokeAtual = null;
   redrawInputLousa();
 }
@@ -2091,6 +2123,9 @@ function initCoreLousa() {
 }
 
 function limparLousaCore() {
+  coreLousaEraser = false;
+  const eraserBtn = document.getElementById('core-lousa-eraser-btn');
+  if (eraserBtn) eraserBtn.textContent = 'Borracha input: off';
   coreLousaOps = [];
   coreLousaOutputOps = [];
   coreLousaOutputTemp = null;
@@ -2454,19 +2489,84 @@ function toggleBorrachaLousaInput(btn) {
   if (btn) btn.textContent = `Borracha input: ${coreLousaEraser ? 'on' : 'off'}`;
 }
 
+
+function perfilInteracaoFisica(tipo, point, side) {
+  const perfis = {
+    carinho: {
+      sensacao: `Contato suave em ${point} (${side}), com redução de tensão muscular e sensação de aconchego.`,
+      emocional: 'Tende a gerar segurança, vínculo e sensação de cuidado.',
+      quimica: 'Comumente associado a aumento de ocitocina e serotonina, com queda gradual de cortisol.'
+    },
+    tapinha: {
+      sensacao: `Estímulo rápido e pontual em ${point} (${side}), com pico tátil breve.`,
+      emocional: 'Pode ser lúdico quando consentido, elevando alerta momentâneo.',
+      quimica: 'Tende a disparar leve noradrenalina/adrenalina de curta duração.'
+    },
+    beliscão: {
+      sensacao: `Pressão intensa e localizada em ${point} (${side}), com dor curta e marcada.`,
+      emocional: 'Costuma causar surpresa e reação defensiva imediata.',
+      quimica: 'Pode aumentar adrenalina e percepção dolorosa via resposta de estresse aguda.'
+    },
+    agarrar: {
+      sensacao: `Contato firme envolvendo ${point} (${side}), com compressão e contenção corporal.`,
+      emocional: 'Pode passar sensação de intensidade e dominância; depende muito do contexto.',
+      quimica: 'Frequentemente combina excitação fisiológica (adrenalina) e foco atencional elevado.'
+    },
+    segurar: {
+      sensacao: `Sustentação estável em ${point} (${side}), com pressão contínua moderada.`,
+      emocional: 'Tende a transmitir presença, estabilidade e proximidade.',
+      quimica: 'Pode favorecer regulação autonômica e redução gradual de cortisol.'
+    },
+    beijar: {
+      sensacao: `Contato quente e úmido em ${point} (${side}), com alta densidade sensorial.`,
+      emocional: 'Comumente desperta intimidade e afeto quando há reciprocidade.',
+      quimica: 'Frequentemente associado a dopamina, ocitocina e endorfinas.'
+    },
+    alisar: {
+      sensacao: `Deslizamento contínuo em ${point} (${side}), com estímulo tátil ritmado e calmante.`,
+      emocional: 'Geralmente promove conforto e tranquilização progressiva.',
+      quimica: 'Pode favorecer relaxamento com aumento de serotonina e queda de estresse percebido.'
+    },
+    abracar_frente: {
+      sensacao: 'Contato corporal amplo de frente, com pressão distribuída e calor compartilhado.',
+      emocional: 'Tende a ampliar conexão emocional e sensação de acolhimento mútuo.',
+      quimica: 'Comumente ligado à ocitocina e redução de marcadores de estresse.'
+    },
+    abracar_costas: {
+      sensacao: 'Enlace por trás com contenção estável, aumentando percepção de proteção.',
+      emocional: 'Pode reforçar confiança, surpresa positiva e sensação de suporte.',
+      quimica: 'Pode combinar relaxamento (ocitocina) com leve excitação de novidade (dopamina).'
+    }
+  };
+  return perfis[tipo] || {
+    sensacao: `Contato em ${point} (${side}) com resposta tátil variável.`,
+    emocional: 'Impacto emocional depende de contexto e consentimento.',
+    quimica: 'Resposta neuroquímica mista, geralmente envolvendo estresse e recompensa em níveis diferentes.'
+  };
+}
+
+function registrarInteracaoFisicaCore(tipo, point, side) {
+  const log = document.getElementById('core-interacao-historico');
+  if (!log) return;
+  const perfil = perfilInteracaoFisica(tipo, point, side);
+  const tituloTipo = String(tipo || '').replace('_', ' ');
+  const item = document.createElement('div');
+  item.className = 'core-interaction-item';
+  item.innerHTML = `<h5>Interação física especial: ${tituloTipo}</h5>
+    <p><strong>Região:</strong> ${point} (${side})</p>
+    <p><strong>Sensação física:</strong> ${perfil.sensacao}</p>
+    <p><strong>Efeito emocional:</strong> ${perfil.emocional}</p>
+    <p><strong>Química cerebral provável:</strong> ${perfil.quimica}</p>`;
+  const vazio = log.querySelector('div[style*="opacity"]');
+  if (vazio) vazio.remove();
+  log.prepend(item);
+}
+
 async function enviarInteracaoCore(tipo) {
-  const thread = getThreadAtivaCore(); if (!thread) return;
   const side = document.getElementById('core-touch-side')?.value || 'frente';
   const point = document.getElementById('core-touch-point')?.value || 'corpo';
-  const desc = tipo.startsWith('abracar') ? `Interação física: ${tipo.replace('_',' ')}.` : `Interação física: ${tipo} em ${point} (${side}).`;
-  registrarComentarioCore('Tô te ouvindo.');
-  const historyParaApi = montarContextoLeveParaAPI(thread, `${desc} Reaja em fala direta, curta e contextual, sem descrever a ação do usuário.`);
-  try {
-    const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
-    const data = await res.json();
-    const txt = String(data?.choices?.[0]?.message?.content || '').trim();
-    if (txt) registrarComentarioCore(txt);
-  } catch (_) {}
+  registrarInteracaoFisicaCore(tipo, point, side);
+  statusLousaCore('Interação física registrada na seção própria de interações.');
 }
 
 function duplicarTrackerFinanceiro(btn) {
