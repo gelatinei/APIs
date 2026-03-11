@@ -93,6 +93,12 @@
       flex-direction: column;
       gap: 6px;
     }
+
+    input[type="text"], textarea { width: 100%; max-width: 100%; }
+    textarea { resize: vertical; min-height: 56px; }
+    .tracker-box.mini-box > *:not(h4) { display: none !important; }
+    .tracker-box.mini-box h4 { margin-bottom: 0; }
+
     /* CSS Variables para Temas */
     :root { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; font-size: 13px; --maxw: 1000px; --lan-eye-hue: 0deg; }
     
@@ -1091,6 +1097,20 @@
 
   </div>
 
+  <div id="core-floating-box" class="section hide-in-focus" style="position:fixed; right:16px; bottom:16px; width:280px; z-index:9999; cursor:move;">
+    <div class="section-header" style="padding:8px 10px;">
+      <label style="display:flex; align-items:center; gap:8px; margin:0;">😼 Core <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
+      <button class="collapse-btn" onclick="toggleFloatingCoreBox(this)">➖</button>
+    </div>
+    <div class="section-content" id="core-floating-content" style="display:block;">
+      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Core monitorando o planner...</div>
+      <div style="display:flex; gap:6px; margin-top:8px;">
+        <button class="ghost mini-add" onclick="enviarDoodlingParaCore()">Enviar doodling</button>
+      </div>
+    </div>
+  </div>
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
   // ====== SISTEMA DE DADOS ======
@@ -1914,7 +1934,7 @@ function desenharStroke(ctx, op) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = op.color || '#8e44ad';
-  ctx.lineWidth = op.width || 3.4;
+  ctx.lineWidth = op.width || 17;
   const pts = op.points || [];
   if (!pts.length) return;
   ctx.beginPath();
@@ -1955,7 +1975,7 @@ function redrawOutputLousa() {
 
 function iniciarTraco(x, y) {
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
-  coreLousaStrokeAtual = { points: [{ x, y }], width: 3.4, color: accent, source: 'user' };
+  coreLousaStrokeAtual = { points: [{ x, y }], width: 17, color: accent, source: 'user' };
   redrawInputLousa();
 }
 
@@ -2068,7 +2088,7 @@ async function reconhecerTextoLousa() {
   c.strokeStyle = '#111';
   c.lineCap = 'round';
   c.lineJoin = 'round';
-  c.lineWidth = 5;
+  c.lineWidth = 26;
 
   coreLousaUserPendentes.forEach((op) => {
     const pts = op.points || [];
@@ -2079,7 +2099,28 @@ async function reconhecerTextoLousa() {
     c.stroke();
   });
 
-  const result = await window.Tesseract.recognize(off.toDataURL('image/png'), 'por+eng');
+  const scale = 2;
+  const prep = document.createElement('canvas');
+  prep.width = off.width * scale;
+  prep.height = off.height * scale;
+  const pc = prep.getContext('2d');
+  pc.fillStyle = '#fff';
+  pc.fillRect(0, 0, prep.width, prep.height);
+  pc.drawImage(off, 0, 0, prep.width, prep.height);
+
+  const img = pc.getImageData(0, 0, prep.width, prep.height);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const v = (d[i] + d[i+1] + d[i+2]) / 3;
+    const bw = v > 185 ? 255 : 0;
+    d[i] = d[i+1] = d[i+2] = bw;
+  }
+  pc.putImageData(img, 0, 0);
+
+  const result = await window.Tesseract.recognize(prep.toDataURL('image/png'), 'por+eng', {
+    tessedit_pageseg_mode: '6',
+    preserve_interword_spaces: '1'
+  });
   return String(result?.data?.text || '').replace(/\s+/g, ' ').trim();
 }
 
@@ -2125,7 +2166,10 @@ async function enviarLousaCore() {
     coreLousaHistorico.push({ role: 'user', text: textoAtual });
     renderHistoricoLousaCore();
 
-    const historyParaApi = montarContextoLeveParaAPI(thread, `Mensagem reconhecida da lousa do usuário: ${textoAtual}`);
+    const historyParaApi = [
+      { role: "system", content: `Estado do corpo do Core (aparência da página e interações): ${coletarEstadoCorpoCore()}` },
+      ...montarContextoLeveParaAPI(thread, `Mensagem reconhecida da lousa do usuário: ${textoAtual}. Responda em fala direta, sem descrição de ação, sem narrar gestos.`)
+    ];
     thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa OCR] ${textoAtual}` }];
     dolphinHistory = thread.messages;
     salvarThreadsCore();
@@ -2156,6 +2200,140 @@ async function enviarLousaCore() {
     console.error(e);
     statusLousaCore('Erro no fluxo da lousa.');
   }
+}
+
+function coletarEstadoCorpoCore() {
+  const theme = document.documentElement.getAttribute('data-theme') || 'retro';
+  const planner = document.getElementById('planner');
+  const texts = Array.from(planner.querySelectorAll('input[type="text"], textarea')).map(el => String(el.value || '').trim()).filter(Boolean);
+  const checks = planner.querySelectorAll('input[type="checkbox"]').length;
+  const checksOn = planner.querySelectorAll('input[type="checkbox"]:checked').length;
+  const dados = document.querySelectorAll('#mesa-dados .dado-wrapper').length;
+  return `Tema atual: ${theme}. Checkboxes: ${checksOn}/${checks}. Dados na mesa: ${dados}. Exemplos de textos atuais: ${texts.slice(0, 8).join(' | ') || 'nenhum'}.`;
+}
+
+function toggleFloatingCoreBox(btn) {
+  const c = document.getElementById('core-floating-content');
+  if (!c) return;
+  const hide = c.style.display !== 'none';
+  c.style.display = hide ? 'none' : 'block';
+  btn.textContent = hide ? '➕' : '➖';
+}
+
+function pushFloatingCoreMsg(txt) {
+  const out = document.getElementById('core-floating-output');
+  if (!out) return;
+  const p = document.createElement('div');
+  p.textContent = txt;
+  out.appendChild(p);
+  out.scrollTop = out.scrollHeight;
+}
+
+function initFloatingCore() {
+  const box = document.getElementById('core-floating-box');
+  if (!box || box.dataset.ready === '1') return;
+  box.dataset.ready = '1';
+
+  let dragging = false, ox = 0, oy = 0;
+  box.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button, input, textarea, select')) return;
+    dragging = true; ox = e.clientX - box.offsetLeft; oy = e.clientY - box.offsetTop;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    box.style.left = Math.max(0, e.clientX - ox) + 'px';
+    box.style.top = Math.max(0, e.clientY - oy) + 'px';
+    box.style.right = 'auto'; box.style.bottom = 'auto';
+  });
+  window.addEventListener('pointerup', () => dragging = false);
+
+  const planner = document.getElementById('planner');
+  planner.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.classList.contains('doodle-canvas')) return;
+    const n = t.name || t.id || t.placeholder || t.type || t.tagName;
+    const v = t.type === 'checkbox' ? (t.checked ? 'marcado' : 'desmarcado') : (t.value || t.textContent || 'atualizado');
+    pushFloatingCoreMsg(`Lan: Percebi alteração em ${n}: ${v}.`);
+  });
+  planner.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (/doodl|canvas/i.test(b.textContent || '')) return;
+    pushFloatingCoreMsg(`Lan: Você clicou em "${(b.textContent || '').trim()}".`);
+  });
+}
+
+async function enviarDoodlingParaCore() {
+  const canvases = Array.from(document.querySelectorAll('.doodle-canvas'));
+  const descr = canvases.map((c, i) => {
+    try {
+      const data = c.toDataURL('image/png');
+      return `doodle ${i+1}: ${data.length > 3000 ? 'com traços' : 'quase vazio'}`;
+    } catch { return `doodle ${i+1}: indisponível`; }
+  }).join(', ');
+
+  const thread = getThreadAtivaCore();
+  if (!thread) return;
+  const prompt = `Reaja em 1-2 frases ao doodling enviado agora e ao estado do planner. Estado: ${coletarEstadoCorpoCore()}. Doodling: ${descr}.`;
+  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
+
+  try {
+    const res = await fetch('/api/dolphin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ history: historyParaApi }) });
+    const data = await res.json();
+    const txt = String(data?.choices?.[0]?.message?.content || 'Recebi seu doodling.').trim();
+    pushFloatingCoreMsg(`Lan: ${txt}`);
+  } catch {
+    pushFloatingCoreMsg('Lan: Recebi seu doodling, mas falhei ao reagir agora.');
+  }
+}
+
+function initTrackerBoxesInterativas() {
+  const grid = document.getElementById('tracker-grid');
+  if (!grid || grid.dataset.interactive === '1') return;
+  grid.dataset.interactive = '1';
+  Array.from(grid.querySelectorAll('.tracker-box')).forEach((box) => {
+    const h4 = box.querySelector('h4');
+    if (!h4) return;
+    if (!h4.querySelector('.mini-box-btn')) {
+      const b = document.createElement('button');
+      b.className = 'ghost mini-add mini-box-btn';
+      b.style.marginLeft = '8px';
+      b.textContent = '▁';
+      b.onclick = (e) => { e.stopPropagation(); box.classList.toggle('mini-box'); };
+      h4.appendChild(b);
+    }
+    let dragging = false, sx=0, sy=0, tx=0, ty=0;
+    h4.style.cursor = 'move';
+    h4.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button')) return;
+      dragging = true; sx = e.clientX; sy = e.clientY;
+      box.style.position = 'relative';
+      box.style.zIndex = '3';
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      tx += e.clientX - sx; ty += e.clientY - sy; sx = e.clientX; sy = e.clientY;
+      box.style.transform = `translate(${tx}px, ${ty}px)`;
+    });
+    window.addEventListener('pointerup', () => { dragging = false; box.style.zIndex = '1'; });
+  });
+}
+
+function initCamposExpansiveis() {
+  if (document.body.dataset.expandFieldsBound === '1') return;
+  document.body.dataset.expandFieldsBound = '1';
+
+  document.querySelectorAll('textarea').forEach((t) => {
+    const resize = () => { t.style.height = 'auto'; t.style.height = Math.max(56, t.scrollHeight) + 'px'; };
+    t.addEventListener('input', resize);
+    resize();
+  });
+
+  document.addEventListener('input', (event) => {
+    const el = event.target?.closest('input[type="text"]');
+    if (!el) return;
+    el.size = Math.min(120, Math.max(16, String(el.value || '').length + 2));
+  });
 }
 
 async function enviarPollinations() {
@@ -2437,18 +2615,6 @@ async function enviarPollinations() {
       salvarNuvem();
     }, ms);
   }
-
-  function initCamposExpansiveis() {
-    if (document.body.dataset.expandFieldsBound === '1') return;
-    document.body.dataset.expandFieldsBound = '1';
-
-    document.addEventListener('dblclick', (event) => {
-      const el = event.target?.closest('input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea');
-      if (!el) return;
-      el.classList.toggle('campo-expandido');
-    });
-  }
-
 
 
   function obterCaminhoLayoutSection(section) {
@@ -3137,6 +3303,8 @@ async function enviarPollinations() {
         garantirTrackersNovos();
         renderThemeCliparts();
         initCamposExpansiveis();
+        initTrackerBoxesInterativas();
+        initFloatingCore();
         makeSortable(); initSparkles(); initCanvas(); updateIndex();
     });
   });
