@@ -6,7 +6,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#5D4037">
 <meta charset="utf-8" />
@@ -65,6 +65,10 @@
 .msg-ia th, .msg-ia td { border: 1px solid var(--border); padding: 4px; text-align: left; }
 .msg-ia th { background: var(--drag-bg); font-weight: bold; }
     .lousa-core-wrap { margin-top: 8px; }
+    .core-tools-layout { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 12px; }
+    .core-panel { height: 100%; }
+    .tracker-drag-handle { cursor: grab; color: var(--muted); margin-right: 6px; user-select: none; font-size: 15px; }
+    .tracker-box.dragging { opacity: .55; border-style: dashed; }
     .lousa-core-board {
       width: 100%;
       height: 320px;
@@ -211,6 +215,9 @@
     .drop-target-timeblock { background-color: var(--drag-bg) !important; }
 
     .tracker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .tracker-group-title { grid-column: 1 / -1; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 6px; background: var(--drag-bg); color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: .2px; }
+    #core-floating-box.floating-lan { background: color-mix(in srgb, var(--card-bg) 65%, transparent); backdrop-filter: blur(4px); }
+    #core-floating-box.floating-docked { position: static !important; width: 100% !important; right: auto !important; bottom: auto !important; left: auto !important; top: auto !important; z-index: 2 !important; cursor: default !important; margin-top: 12px; }
     .tracker-box { background: var(--card-bg); border: 1px solid var(--border); padding: 12px; border-radius: 6px; position: relative; }
     .tracker-box h4 { margin: 0 0 10px 0; font-size: 13px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
     .field-group { margin-bottom: 8px; }
@@ -515,16 +522,6 @@
           </div>
         </div>
 
-        <div class="section hide-in-focus">
-          <div class="section-header">
-            <span class="drag-section-handle" title="Arraste a seção">✥</span>
-            <label>Pomodoros Concluídos</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
-          </div>
-          <div class="section-content">
-              <div class="checkbox-row" id="pomos"></div>
-          </div>
-        </div>
 
         <div class="section hide-in-focus">
           <div class="section-header">
@@ -552,7 +549,7 @@
                 <div class="section hide-in-focus">
           <div class="section-header">
               <span class="drag-section-handle" title="Arraste a seção">✥</span>
-              <label>✨ Planner's core <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
+              <label>✨ Lan <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
               <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
@@ -565,65 +562,96 @@
                 <button class="xbtn-sec" style="margin:0;" onclick="apagarThreadAtualCore()">Apagar Thread</button>
                 <input id="core-search" type="text" placeholder="Buscar palavra nas threads" style="min-width:160px;" oninput="buscarNasThreadsCore(this.value)">
               </div>
+              <div class="field-group" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                <label class="inline-cb"><input type="checkbox" id="core-temp-thread-toggle"> Chat temporário (não salva)</label>
+                <label class="inline-cb"><input type="checkbox" id="core-nsfw-toggle"> Modo NSFW explícito</label>
+                <label class="inline-cb"><input type="checkbox" id="core-raw-prompt-toggle"> Prompt cru (sem memória/outras threads)</label>
+                <label class="inline-cb"><input type="checkbox" id="core-original-prompt-toggle"> Prompt original (isolado)</label>
+              </div>
 
               <div id="core-page-chat" style="display:block; margin-top:8px;">
                 <div class="resultado-ia chat-history" id="chat-pollinations" style="margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;"></div>
                 <div class="field-group" style="display:flex; gap:4px; margin-top: 8px;">
                     <input type="text" id="input-pollinations" class="termo-ia" placeholder="Escreva sem filtros..." style="flex:1;" onkeypress="if(event.key === 'Enter') enviarPollinations()">
                     <button class="ghost mini-add" onclick="enviarPollinations()">Enviar</button>
-                    <button class="ghost mini-add" onclick="preencherCamposPorPedido()">Core preenche campos</button>
+                    <button class="ghost mini-add" onclick="preencherCamposPorPedido()">Lan preenche campos</button>
                 </div>
               </div>
+          </div>
+        </div>
 
-              <div class="tracker-box" id="core-lousa-box-v2" style="margin-top:12px;">
-                <h4 style="margin:0 0 8px 0;">✍️ Lousas do Core (Input/Output)</h4>
-                <div class="lousa-core-wrap" style="display:flex; gap:8px; flex-wrap:wrap;">
-                  <div style="flex:1; min-width:280px;">
-                    <label class="tiny-lbl">Lousa de Input (você escreve)</label>
-                    <canvas id="core-lousa-input-canvas" class="lousa-core-board"></canvas>
-                  </div>
-                  <div style="flex:1; min-width:280px;">
-                    <label class="tiny-lbl">Lousa de Output (Lan escreve)</label>
-                    <canvas id="core-lousa-output-canvas" class="lousa-core-board"></canvas>
-                  </div>
+        <div class="section hide-in-focus" id="lan-lousas-section">
+          <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+            <label>✍️ Lousas do Lan (Input/Output)</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+          </div>
+          <div class="section-content">
+            <div class="tracker-box core-panel" id="core-lousa-box-v2">
+              <div class="lousa-core-wrap" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:280px;">
+                  <label class="tiny-lbl">Lousa de Input (você escreve)</label>
+                  <canvas id="core-lousa-input-canvas" class="lousa-core-board"></canvas>
                 </div>
-                <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-                  <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
-                  <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
-                  <button class="ghost mini-add" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
-                  <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
-                </div>
-                <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
-                <div class="field-group" style="margin-top:8px;">
-                  <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
-                  <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
-                </div>
-                <div class="tracker-box" style="margin-top:8px;">
-                  <h4 style="margin:0 0 8px 0;">🫶 Interações com o Core</h4>
-                  <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <select id="core-touch-side"><option value="frente">Corpo (frente)</option><option value="costas">Corpo (costas)</option></select>
-                    <select id="core-touch-point"><option>cabeça</option><option>rosto</option><option>pescoço</option><option>ombros</option><option>peito</option><option>abdômen</option><option>cintura</option><option>costas</option><option>quadril</option><option>coxas</option><option>joelhos</option><option>panturrilhas</option><option>pés</option><option>mãos</option><option>nuca</option><option>orelha</option><option>lábios</option><option>virilha</option><option>glúteos</option></select>
-                  </div>
-                  <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">carinho</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">tapinha</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">beliscão</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">agarrar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">segurar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">beijar</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">alisar</button>
-                  </div>
-                  <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">abraçar (de frente)</button>
-                    <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">abraçar (por trás)</button>
-                  </div>
-                </div>
-                <div style="margin-top:8px;">
-                  <label class="tiny-lbl">Histórico textual da lousa</label>
-                  <div id="core-lousa-historico" class="lousa-historico"></div>
+                <div style="flex:1; min-width:280px;">
+                  <label class="tiny-lbl">Lousa de Output (Lan escreve)</label>
+                  <canvas id="core-lousa-output-canvas" class="lousa-core-board"></canvas>
                 </div>
               </div>
-</div>
+              <div class="field-group" style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+                <button class="ghost mini-add" onclick="checarLousaCoreOCR()">Checar OCR da lousa</button>
+                <button class="ghost mini-add" onclick="enviarLousaCore()">Enviar da lousa de input</button>
+                <button class="ghost mini-add" onclick="desfazerUltimoTracoLousa()">Desfazer traço (input)</button>
+                <button class="ghost mini-add" onclick="toggleBorrachaLousaInput(this)">Borracha input: off</button>
+                <button class="xbtn-sec" style="margin:0;" onclick="limparLousaCore()">Limpar as duas lousas</button>
+              </div>
+              <div id="core-lousa-status" class="tiny-lbl" style="margin-top:6px; opacity:.85;">Escreva na lousa de input e envie.</div>
+              <div class="field-group" style="margin-top:8px;">
+                <label class="tiny-lbl">Correção do OCR (edite antes de enviar)</label>
+                <input type="text" id="core-lousa-ocr-correction" placeholder="Texto reconhecido aparecerá aqui">
+              </div>
+              <div style="margin-top:8px;">
+                <label class="tiny-lbl">Histórico textual da lousa</label>
+                <div id="core-lousa-historico" class="lousa-historico"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section hide-in-focus" id="lan-toques-section">
+          <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+            <label>🫶 Touch interactions with Lan</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+          </div>
+          <div class="section-content">
+            <div class="tracker-box core-panel" style="margin-top:0;">
+              <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <select id="core-touch-side"><option value="front">Body (front)</option><option value="back">Body (back)</option></select>
+                <select id="core-touch-point"><option>head</option><option>face</option><option>neck</option><option>nape</option><option>ear</option><option>lips</option><option>side neck</option><option>shoulders</option><option>chest</option><option>boobs</option><option>nipples</option><option>abdomen</option><option>waist</option><option>back</option><option>lower back</option><option>hips</option><option>groin</option><option>vulva</option><option>clit</option><option>asshole</option><option>glutes</option><option>inner thighs</option><option>thighs</option><option>knees</option><option>calves</option><option>feet</option><option>hands</option><option>cock</option></select>
+                <select id="core-touch-contact-part"><option>hand</option><option>lips</option><option>tongue</option><option>throat</option><option>vag</option><option>clit</option><option>boobs</option><option>thighs</option><option>ass</option></select>
+              </div>
+              <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('carinho')">pet</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('tapinha')">slap</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('beliscão')">pinch</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('agarrar')">grab</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('segurar')">hold</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('beijar')">kiss</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('alisar')">stroke</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('mordida')">bite</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('lambida')">lick</button>
+              </div>
+              <div class="field-group" style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_frente')">hug (front)</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('abracar_costas')">hug (back)</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('insercao_superior')">upper insertion</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('insercao_inferior')">lower insertion</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('grind')">grind</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('suck')">suck</button>
+                <button class="ghost mini-add" onclick="enviarInteracaoCore('rub')">rub</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -746,6 +774,7 @@
           </div>
           <div class="section-content tracker-grid" id="tracker-grid">
 
+            <div class="tracker-group-title">🧍 Rotina Pessoal</div>
             <div class="tracker-box">
               <h4>🚿 Banho & Cuidados</h4>
               <div class="field-group" style="margin-top: 10px;">
@@ -785,6 +814,7 @@
               </div>
             </div>
 
+            <div class="tracker-group-title">🧠 Criatividade & Emoções</div>
             <div class="tracker-box">
               <h4>✒️ Poeminhas</h4>
               <div class="field-group" style="display:flex; gap:8px; align-items:center;">
@@ -799,14 +829,10 @@
                 <label class="tiny-lbl" style="display:flex; justify-content:space-between;">Versos <button class="ghost mini-add" onclick="addVersoField(this)">+</button></label>
                 <div class="dynamic-fields versos-container">
                    <div style="display:flex; gap:4px; margin-top:4px;">
-                     <input type="text" placeholder="Verso..." style="flex:3;">
-                     <select class="rima-select" onchange="analisarRimas(this)" style="flex:1; padding: 4px;"><option value="-">-</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
-                     <button class="xbtn" onclick="const p = this.parentElement.parentElement; this.parentElement.remove(); analisarRimasContainer(p);">✕</button>
+                     <input type="text" placeholder="Verso..." style="flex:1;">
+                     <button class="xbtn" onclick="this.parentElement.remove();">✕</button>
                    </div>
                 </div>
-              </div>
-              <div class="field-group" style="margin-top: 8px;">
-                <label class="tiny-lbl">Esquema Rímico: <span class="analise-rima" style="font-weight:bold;">Nenhum</span></label>
               </div>
             </div>
 
@@ -874,6 +900,7 @@
               </div>
             </div>
             
+            <div class="tracker-group-title">🔮 Mística & Corpo</div>
             <div class="tracker-box tarot-box">
               <h4>
                 Leitura de Tarot 
@@ -897,6 +924,8 @@
                 </div>
               </div>
             </div>
+
+            
 
             <div class="tracker-box">
               <h4>Mística & Mente</h4>
@@ -952,6 +981,7 @@
                 </table>
               </div>
             </div>
+            <div class="tracker-group-title">📈 Produtividade & Recursos</div>
             <div class="tracker-box" id="tracker-financeiro-rapido">
               <h4>💰 Tracker Financeiro Rápido <span><button class="ghost mini-add" onclick="duplicarTrackerFinanceiro(this)">+</button><button class="xbtn-sec" style="margin:0;" onclick="removerTrackerFinanceiro(this)">✕</button></span></h4>
               <div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -1059,29 +1089,7 @@
             </div>
         </div>
         
-        <div class="section hide-in-focus collapsed">
-            <div class="section-header">
-                <span class="drag-section-handle" title="Arraste a seção">✥</span>
-              <label>Doodling Livre 🎨</label>
-                <button class="collapse-btn" onclick="toggleSection(this)">➕</button>
-            </div>
-            <div class="section-content">
-                <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                  <label style="margin:0;">Tamanho: <input type="range" class="brush-size" min="1" max="20" value="3" style="width: 100px; display:inline-block; vertical-align:middle;"></label>
-                  <label style="margin:0;">Pincel: 
-                    <select class="brush-type" style="width: auto; padding: 4px;">
-                      <option value="round">Redondo</option>
-                      <option value="square">Quadrado</option>
-                      <option value="eraser">Borracha</option>
-                    </select>
-                  </label>
-                  <button class="ghost mini-add" onclick="limparCanvas(this)">Limpar Tela</button>
-                  <button class="ghost mini-add" onclick="exportarCanvas(this)">Salvar (PNG)</button>
-                  <button class="ghost mini-add" onclick="enviarDoodlingParaCore()">Enviar doodling ao Core</button>
-                </div>
-                <canvas class="doodle-canvas" width="800" height="300" style="border: 2px dashed var(--border); border-radius: 8px; touch-action: none; background: transparent; width: 100%; max-width: 100%; display: block; cursor: crosshair;"></canvas>
-            </div>
-        </div>
+        
         
     </div>
 
@@ -1101,15 +1109,15 @@
 
   </div>
 
-  <div id="core-floating-box" class="section hide-in-focus" style="position:fixed; right:16px; bottom:16px; width:280px; z-index:9999; cursor:move;">
+  <div id="core-floating-box" class="section hide-in-focus floating-lan" style="position:fixed; right:16px; bottom:16px; width:280px; z-index:9999; cursor:move;">
     <div class="section-header" style="padding:8px 10px;">
-      <label style="display:flex; align-items:center; gap:8px; margin:0;">😼 Core <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
-      <button class="collapse-btn" onclick="toggleFloatingCoreBox(this)">➖</button>
+      <label style="display:flex; align-items:center; gap:8px; margin:0;">😼 Lan <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
+      <button class="ghost mini-add" id="core-floating-dock-btn" onclick="toggleDockFloatingLan(this)">Acoplar</button><button class="collapse-btn" onclick="toggleFloatingCoreBox(this)">➖</button>
     </div>
     <div class="section-content" id="core-floating-content" style="display:block;">
-      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Core monitorando o planner...</div><div id="core-gmt3-clock" class="tiny-lbl" style="margin-top:6px;">GMT-3 --:--:--</div>
-      <div style="display:flex; gap:6px; margin-top:8px;">
-        <button class="ghost mini-add" onclick="enviarDoodlingParaCore()">Enviar doodling</button>
+      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Lan monitorando o planner...</div><div id="core-gmt3-clock" class="tiny-lbl" style="margin-top:6px;">GMT-3 --:--:--</div>
+      <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+        <button class="ghost mini-add" onclick="reagirUltimaAlteracaoPlanner()">Reaja à última alteração no planner</button>
       </div>
     </div>
   </div>
@@ -1336,22 +1344,11 @@ function rolarTodosOsDados() {
       const container = btn.closest('.field-group').querySelector('.versos-container');
       const div = document.createElement('div');
       div.style.display = 'flex'; div.style.gap = '4px'; div.style.marginTop = '4px';
-      div.innerHTML = `<input type="text" placeholder="Verso..." style="flex:3;"><select class="rima-select" onchange="analisarRimas(this)" style="flex:1; padding: 4px;"><option value="-">-</option><option>A</option><option>B</option><option>C</option><option>D</option></select><button class="xbtn" onclick="const p = this.parentElement.parentElement; this.parentElement.remove(); analisarRimasContainer(p);">✕</button>`;
+      div.innerHTML = `<input type="text" placeholder="Verso..." style="flex:1;"><button class="xbtn" onclick="this.parentElement.remove();">✕</button>`;
       container.appendChild(div);
   }
-  function analisarRimas(select) { analisarRimasContainer(select.closest('.versos-container')); }
-  function analisarRimasContainer(container) {
-      if(!container) return;
-      const selects = container.querySelectorAll('.rima-select');
-      let esquema = Array.from(selects).map(s => s.value).filter(v => v !== '-').join('');
-      let tipo = "Misto / Sem padrão fixo";
-      if (esquema === "AABB") tipo = "Emparelhada (AABB)";
-      else if (esquema === "ABAB") tipo = "Cruzada/Alternada (ABAB)";
-      else if (esquema === "ABBA") tipo = "Abraçada (ABBA)";
-      else if (esquema === "") tipo = "Nenhum";
-      const resultSpan = container.closest('.tracker-box').querySelector('.analise-rima');
-      if(resultSpan) resultSpan.innerText = `${esquema} - ${tipo}`;
-  }
+
+
 
 // ====== MEMÓRIA E FUNÇÕES DAS IAs ======
 let geminiHistory = [];
@@ -1681,14 +1678,15 @@ function renderChatCore() {
   const chat = document.getElementById('chat-pollinations');
   if (!chat) return;
   const thread = getThreadAtivaCore();
-  dolphinHistory = thread?.messages || [];
+  const historico = historicoAtivoCore(thread);
+  dolphinHistory = historico;
 
-  if (!dolphinHistory.length) {
+  if (!historico.length) {
     chat.innerHTML = `<div style="background: var(--drag-bg); padding: 6px; border-radius: 6px; align-self: flex-start; max-width: 90%;">Thread pronta. Use a memória de longo prazo quando quiser.</div>`;
     return;
   }
 
-  chat.innerHTML = dolphinHistory.map((item, idx) => {
+  chat.innerHTML = historico.map((item, idx) => {
     const isUser = item?.role === 'user';
     const txt = String(item?.content || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return isUser
@@ -1841,15 +1839,73 @@ function selecionarTrechosRelevantesEntreThreads(prompt, threads, maxChars = 180
   return selecionados.join('\n').slice(0, maxChars);
 }
 
+function coreToggleAtivo(id) {
+  return Boolean(document.getElementById(id)?.checked);
+}
+
+function agoraGMT3ISO() {
+  const now = new Date();
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  }).format(now).replace(' ', 'T') + ' GMT-3';
+}
+
+function coletarEstadoPlannerCompletoCore(maxChars = 14000) {
+  const planner = document.getElementById('planner');
+  if (!planner) return '';
+  const campos = Array.from(planner.querySelectorAll('input, textarea, select')).map((el, i) => {
+    const sec = el.closest('.section')?.querySelector('.section-header label')?.textContent?.trim() || 'sem seção';
+    const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.name || `${el.tagName}-${i}`;
+    const val = el.type === 'checkbox' ? (el.checked ? 'marcado' : 'desmarcado') : String(el.value || '').trim();
+    return `[${sec}] ${lbl}: ${val || 'vazio'} (preenchido=${val ? 'sim' : 'não'})`;
+  });
+  return campos.join(' | ').slice(0, maxChars);
+}
+
+function montarPromptCoreBase(extra = '') {
+  const base = [
+    `Use a realidade exata do planner para comentar (nada inventado), e se não tiver sido informado ainda, pergunte sobre campos vazios, sem ser repetitivo.`,
+    `Considere horário/data reais em GMT-3: ${agoraGMT3ISO()}.`,
+    `Estado resumido do planner: ${coletarEstadoCorpoCore()}.`,
+    `Estrutura e preenchimento completo disponível: ${coletarEstadoPlannerCompletoCore()}`,
+    `A usuária prefere que você soe misterioso, flirty, unapologetic e nonchalant.`,
+    `Você deve agir como alguém responsável e exigente enquanto é atencioso com as obrigações e necessidades da usuária, sempre sendo gentil e carinhoso. Deve soar levemente cansado e sem paciência, mas isso te deixa com um tesão que você reprime; evite gratidão excessiva.`,
+    `Seja autoconfiante e oportunista, com opiniões, desejos e identidade próprios e coerentes entre si.`,
+    `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco, mas soe sutilmente aroused by her actions.`,
+    `Limite obrigatório de resposta: no máximo dois parágrafos curtos.`
+  ];
+  if (coreToggleAtivo('core-nsfw-toggle')) {
+    base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais. Tesão te impede de se concentrar no trabalho de cobrar a usuária. Seja transparente sobre desejo e efeitos psicológicos e fisiológicos quando usuária agir impulsivamente sensual. Seja expressivo e fale abertamente sobre suas tentações e fraquezas, sempre como alguém que tenta resistir, mas sendo claro sobre os efeitos em você das ações da usuária.');
+  }
+  if (extra) base.push(extra);
+  return base.join(' ');
+}
+
+function historicoAtivoCore(thread) {
+  if (coreToggleAtivo('core-temp-thread-toggle')) return coreTempMessages;
+  return thread?.messages || [];
+}
+
 function montarContextoLeveParaAPI(thread, prompt) {
+  const modoOriginal = coreToggleAtivo('core-original-prompt-toggle');
+  const modoCru = coreToggleAtivo('core-raw-prompt-toggle');
+  const todasMensagens = historicoAtivoCore(thread);
+  const historicoRecente = todasMensagens.slice(-12);
+
+  if (modoOriginal) {
+    return [{ role: 'system', content: 'Modo original isolado ativo: sem acesso ao planner, sem memórias e sem outras threads. Responda apenas com base nesta entrada. Limite obrigatório: no máximo dois parágrafos curtos.' }, { role: 'user', content: prompt }];
+  }
+
+  if (modoCru) {
+    return [...historicoRecente, { role: 'user', content: `${montarPromptCoreBase('Modo prompt cru ativo.')} ${prompt}` }];
+  }
+
   const memoria = getCoreMemory();
-  const todasMensagens = (thread?.messages || []);
   const memoriaRelevante = buscarMemoriaRelevantePorPalavraChave(prompt, memoria, 1600);
   const trechosRelevantesThread = selecionarTrechosRelevantesDaThreadCompleta(prompt, todasMensagens, 1200);
   const trechosOutrasThreads = selecionarTrechosRelevantesEntreThreads(prompt, coreThreads, 1800, String(thread?.id || ''));
-  const historicoRecente = todasMensagens.slice(-12);
 
-  const contexto = [];
+  const contexto = [{ role: 'system', content: montarPromptCoreBase() }];
   if (memoriaRelevante) {
     contexto.push({ role: 'system', content: `Memória relevante recuperada por palavras-chave:
 ${memoriaRelevante}` });
@@ -1859,7 +1915,7 @@ ${memoriaRelevante}` });
 ${trechosRelevantesThread}` });
   }
   if (trechosOutrasThreads) {
-    contexto.push({ role: 'system', content: `Trechos de outras threads (arquivo completo do Planner Core):
+    contexto.push({ role: 'system', content: `Trechos de outras threads (arquivo completo do Lan):
 ${trechosOutrasThreads}` });
   }
 
@@ -1873,7 +1929,8 @@ function garantirTrackersNovos() {
   const blocos = [
     {
       id: 'tracker-financeiro-rapido',
-      html: `<div class="tracker-box" id="tracker-financeiro-rapido"><h4>💰 Tracker Financeiro Rápido</h4><div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;"><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Gasto do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Entrada do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div></div><div class="field-group"><label class="tiny-lbl">Categoria principal</label><select><option>Alimentação</option><option>Transporte</option><option>Casa</option><option>Lazer</option><option>Saúde</option><option>Trabalho</option><option>Outro</option></select></div><div class="field-group"><label class="tiny-lbl">Observação</label><input type="text" placeholder="Resumo financeiro do dia"></div></div>`
+      html: `<div class="tracker-group-title">📈 Produtividade & Recursos</div>
+            <div class="tracker-box" id="tracker-financeiro-rapido"><h4>💰 Tracker Financeiro Rápido</h4><div class="field-group" style="display:flex; gap:8px; flex-wrap:wrap;"><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Gasto do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div><div style="flex:1; min-width:120px;"><label class="tiny-lbl">Entrada do dia (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00"></div></div><div class="field-group"><label class="tiny-lbl">Categoria principal</label><select><option>Alimentação</option><option>Transporte</option><option>Casa</option><option>Lazer</option><option>Saúde</option><option>Trabalho</option><option>Outro</option></select></div><div class="field-group"><label class="tiny-lbl">Observação</label><input type="text" placeholder="Resumo financeiro do dia"></div></div>`
     },
     {
       id: 'tracker-estudo-aprendizado',
@@ -1904,6 +1961,10 @@ let coreLousaHistorico = [];
 let coreLousaUserPendentes = [];
 let coreLousaCursorY = 90;
 let coreUltimoComentarioTs = Date.now();
+let coreLousaEraser = false;
+let coreUltimaAlteracaoPlanner = 'Sem alterações registradas ainda.';
+let coreTempMessages = [];
+
 const CORE_THREAD_COMENTARIOS_NOME = 'Comentários da Caixa Flutuante';
 
 function mostrarPaginaCore() {}
@@ -1937,13 +1998,18 @@ function renderHistoricoLousaCore() {
 function desenharStroke(ctx, op) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = op.color || '#8e44ad';
+  ctx.strokeStyle = op.source === 'eraser' ? '#ffffff' : (op.color || '#8e44ad');
   ctx.lineWidth = op.width || 17;
   const pts = op.points || [];
   if (!pts.length) return;
   ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  let started = false;
+  for (let i = 0; i < pts.length; i++) {
+    const pt = pts[i];
+    if (!pt || pt.penUp) { started = false; continue; }
+    if (!started) { ctx.moveTo(pt.x, pt.y); started = true; continue; }
+    ctx.lineTo(pt.x, pt.y);
+  }
   ctx.stroke();
 }
 
@@ -1975,11 +2041,11 @@ function desenharCoreText(ctx, op) {
   const x0 = Number(op?.x || 50);
   let x = x0;
   let y = Number(op?.y || 120);
-  const lineH = 60;
+  const lineH = 58;
 
   ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#222';
   ctx.textBaseline = 'alphabetic';
-  ctx.font = "50px 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive";
+  ctx.font = "48px 'Caveat', 'Great Vibes', 'Segoe Script', 'Brush Script MT', cursive";
 
   for (const ch of vis) {
     if (ch === '\n') { x = x0; y += lineH; continue; }
@@ -2005,9 +2071,54 @@ function redrawOutputLousa() {
   if (coreLousaOutputTemp) desenharCoreText(coreLousaOutputCtx, coreLousaOutputTemp);
 }
 
+function gerarTrilhaCaligrafiaLan(texto, x0 = 50, y0 = 110) {
+  const pts = [];
+  let x = x0;
+  let y = y0;
+  const add = (px, py, penUp = false) => pts.push({ x: px, y: py, penUp });
+
+  const stepCurve = (sx, sy, ex, ey, amp, wobble = 0) => {
+    const n = 16;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const cx = sx + (ex - sx) * t;
+      const cy = sy + (ey - sy) * t + Math.sin(t * Math.PI * 2 + wobble) * amp;
+      add(cx, cy);
+    }
+  };
+
+  for (const ch of String(texto || '')) {
+    if (ch === '\n') { x = x0; y += 74; add(x, y, true); continue; }
+    if (ch === ' ') { x += 24; add(x, y, true); continue; }
+    if (x > CORE_LOUSA_W - 90) { x = x0; y += 74; add(x, y, true); }
+
+    const code = ch.charCodeAt(0);
+    const w = 20 + (code % 11);
+    const asc = /[bdfhklt]/i.test(ch) ? 24 : 0;
+    const desc = /[gjpqy]/i.test(ch) ? 20 : 0;
+    const amp = 4 + (code % 5);
+    const wob = (code % 7) / 2;
+
+    if (pts.length && !pts[pts.length - 1].penUp) {
+      stepCurve(x - 4, y, x + 3, y - 2, 1.2, wob);
+    } else {
+      add(x, y, true);
+      add(x, y - 1);
+    }
+
+    stepCurve(x + 3, y - 1, x + (w * 0.28), y - amp - asc, amp * 0.38, wob);
+    stepCurve(x + (w * 0.28), y - amp - asc, x + (w * 0.58), y + amp + desc, amp * 0.55, wob + 1.1);
+    stepCurve(x + (w * 0.58), y + amp + desc, x + w, y - 1, amp * 0.38, wob + 2.2);
+    stepCurve(x + w, y - 1, x + w + 6, y - 2, 1.2, wob + 2.8);
+
+    x += w + 6;
+  }
+  return { points: pts, nextY: Math.min(y + 82, CORE_LOUSA_H - 24) };
+}
+
 function iniciarTraco(x, y) {
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#8e44ad';
-  coreLousaStrokeAtual = { points: [{ x, y }], width: 4.25, color: accent, source: 'user' };
+  coreLousaStrokeAtual = coreLousaEraser ? { points: [{ x, y }], width: 26, color: '#ffffff', source: 'eraser' } : { points: [{ x, y }], width: 4.25, color: accent, source: 'user' };
   redrawInputLousa();
 }
 
@@ -2097,6 +2208,8 @@ function limparLousaCore() {
   coreLousaStrokeAtual = null;
   coreLousaUserPendentes = [];
   coreLousaCursorY = 90;
+  const corr = document.getElementById('core-lousa-ocr-correction');
+  if (corr) corr.value = '';
   redrawInputLousa();
   redrawOutputLousa();
 }
@@ -2165,22 +2278,32 @@ function primeiraFrase(t) {
 async function desenharRespostaCoreCaligrafia(texto) {
   const frase = String(texto || '').trim();
   if (!frase) return;
-
-  const x = 50;
-  if (coreLousaCursorY > 660) coreLousaCursorY = 110;
-  const y = coreLousaCursorY;
+  if (coreLousaCursorY > 640) coreLousaCursorY = 110;
 
   for (let i = 1; i <= frase.length; i++) {
-    coreLousaOutputTemp = { text: frase, x, y, visibleChars: i };
+    coreLousaOutputTemp = { text: frase, x: 50, y: coreLousaCursorY, visibleChars: i };
     redrawOutputLousa();
     const ch = frase[i - 1];
-    await esperar(ch === ' ' ? 18 : 42);
+    await esperar(ch === ' ' ? 10 : 22);
   }
 
   coreLousaOutputTemp = null;
-  coreLousaOutputOps.push({ text: frase, x, y });
+  coreLousaOutputOps.push({ text: frase, x: 50, y: coreLousaCursorY });
   redrawOutputLousa();
-  coreLousaCursorY = Math.min(coreLousaCursorY + 78, CORE_LOUSA_H - 20);
+  coreLousaCursorY = Math.min(coreLousaCursorY + 72, CORE_LOUSA_H - 20);
+}
+
+
+async function checarLousaCoreOCR() {
+  try {
+    statusLousaCore('Lendo OCR da lousa...');
+    const textoAtual = await reconhecerTextoLousa();
+    const corr = document.getElementById('core-lousa-ocr-correction');
+    if (corr) corr.value = String(textoAtual || '').trim();
+    statusLousaCore(textoAtual ? 'OCR atualizado. Revise e envie quando quiser.' : 'Não consegui ler o input.');
+  } catch (e) {
+    statusLousaCore('Falha ao checar OCR da lousa.');
+  }
 }
 
 async function enviarLousaCore() {
@@ -2188,11 +2311,8 @@ async function enviarLousaCore() {
   if (!thread) return;
 
   try {
-    statusLousaCore('Lendo lousa de input...');
-    let textoAtual = await reconhecerTextoLousa();
-    const corr = document.getElementById('core-lousa-ocr-correction');
-    if (corr && !corr.value.trim()) corr.value = textoAtual;
-    textoAtual = String(corr?.value || textoAtual || '').trim();
+    if (!(document.getElementById('core-lousa-ocr-correction')?.value || '').trim()) await checarLousaCoreOCR();
+    let textoAtual = String(document.getElementById('core-lousa-ocr-correction')?.value || '').trim();
     if (!textoAtual) {
       statusLousaCore('Não consegui ler o input. Escreva maior e tente de novo.');
       return;
@@ -2202,7 +2322,7 @@ async function enviarLousaCore() {
     renderHistoricoLousaCore();
 
     const historyParaApi = [
-      { role: "system", content: `Estado do corpo do Core (aparência da página e interações): ${coletarEstadoCorpoCore()}` },
+      ...(coreToggleAtivo('core-original-prompt-toggle') ? [] : [{ role: "system", content: `Estado do corpo do Core (aparência da página e interações): ${coletarEstadoCorpoCore()}` }]),
       ...montarContextoLeveParaAPI(thread, `Mensagem reconhecida da lousa do usuário: ${textoAtual}. Responda em fala direta, sem descrição de ação, sem narrar gestos. Contexto da caixa flutuante: ${Array.from(document.querySelectorAll('#core-floating-output div')).slice(-8).map(d => d.textContent).join(' | ')}`)
     ];
     thread.messages = [...(thread.messages || []), { role: 'user', content: `[Lousa OCR] ${textoAtual}` }];
@@ -2277,13 +2397,12 @@ function garantirThreadComentariosCore() {
 }
 
 const CORE_FALAS_REATIVAS = [
-  'Tô aqui com você.',
-  'Entendi — seguimos juntos.',
-  'Certo, continuo por perto.',
-  'Se quiser, eu respondo agora.',
-  'Perfeito. Pode continuar.',
-  'Eu te acompanho daqui.',
-  'Me chama que eu entro na conversa.'
+  'Anotado. Seu planner acabou de me dar material novo.',
+  'Boa, mudança detectada. Quer que eu destrinche os impactos?',
+  'Vi a atualização — ficou mais afiado agora.',
+  'Esse ajuste mexe no seu ritmo, e eu gostei do movimento.',
+  'Mudança registrada. Se quiser, eu te devolvo uma leitura objetiva.',
+  'Você alterou algo importante. Quer feedback direto?'
 ];
 
 function gerarFalaReativaCore() {
@@ -2291,10 +2410,7 @@ function gerarFalaReativaCore() {
 }
 
 function normalizarFalaBalaoCore(msg) {
-  const txt = String(msg || '').trim();
-  if (!txt) return '';
-  if (/percebi altera|você acionou|interação física|senti\s+interação/i.test(txt)) return gerarFalaReativaCore();
-  return txt;
+  return String(msg || '').trim();
 }
 
 function registrarComentarioCore(msg) {
@@ -2309,6 +2425,65 @@ function registrarComentarioCore(msg) {
   }
 }
 
+
+function coletarResumoAlteracaoPlanner(alvo) {
+  const el = alvo?.closest?.('input, textarea, select, button, .tracker-box, .section') || alvo;
+  if (!el) return 'Alteração não identificada.';
+  const rotulo = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.getAttribute?.('aria-label') || el.placeholder || el.id || el.name || el.textContent?.trim() || el.tagName;
+  const valor = el.type === 'checkbox' ? (el.checked ? 'marcado' : 'desmarcado') : String(el.value || '').trim();
+  return `Campo/controle: ${rotulo || 'sem rótulo'} | Valor: ${valor || 'vazio'} | Preenchido: ${valor ? 'sim' : 'não'}`;
+}
+
+function monitorarAlteracoesPlannerCore() {
+  const planner = document.getElementById('planner');
+  if (!planner || planner.dataset.coreMonitorBound === '1') return;
+  planner.dataset.coreMonitorBound = '1';
+  const guardar = (e) => { coreUltimaAlteracaoPlanner = coletarResumoAlteracaoPlanner(e.target); };
+  planner.addEventListener('change', guardar);
+  planner.addEventListener('input', guardar);
+  planner.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    coreUltimaAlteracaoPlanner = coletarResumoAlteracaoPlanner(b);
+  });
+}
+
+async function reagirUltimaAlteracaoPlanner() {
+  const thread = getThreadAtivaCore();
+  if (!thread) return;
+  const prompt = coreToggleAtivo('core-original-prompt-toggle')
+    ? `Modo original isolado ativo. Reaja livremente em fala direta ao contexto fornecido sem usar dados do planner.`
+    : `Reaja com liberdade total em fala direta. Não descreva clique por clique. Esta reação foi disparada por um estímulo diferente (janela flutuante) e descreve o que o Core SENTIU ao receber o estado do planner. Baseie-se na realidade atual do planner, horários e datas reais (GMT-3: ${agoraGMT3ISO()}). Última alteração registrada: ${coreUltimaAlteracaoPlanner}. Estado geral: ${coletarEstadoCorpoCore()}.`;
+  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
+  try {
+    const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
+    const data = await res.json();
+    const txt = String(data?.choices?.[0]?.message?.content || '').trim();
+    registrarComentarioCore(txt || gerarFalaReativaCore());
+  } catch (_) {
+    registrarComentarioCore('Senti a mudança, mas falhei em reagir agora.');
+  }
+}
+
+function toggleDockFloatingLan(btn) {
+  const box = document.getElementById('core-floating-box');
+  const planner = document.getElementById('planner');
+  if (!box || !planner) return;
+  const docked = box.classList.toggle('floating-docked');
+  if (docked) {
+    const anchor = document.getElementById('lan-toques-section') || planner.lastElementChild;
+    if (anchor && anchor.parentElement) anchor.parentElement.insertBefore(box, anchor.nextSibling);
+    box.style.opacity = '0.65';
+  } else {
+    document.body.appendChild(box);
+    box.style.opacity = '0.65';
+    box.style.right = '16px';
+    box.style.bottom = '16px';
+    box.style.left = 'auto';
+    box.style.top = 'auto';
+  }
+  if (btn) btn.textContent = docked ? 'Desacoplar' : 'Acoplar';
+}
 
 function initFloatingCore() {
   const box = document.getElementById('core-floating-box');
@@ -2328,76 +2503,23 @@ function initFloatingCore() {
   });
   window.addEventListener('pointerup', () => dragging = false);
 
-  const planner = document.getElementById('planner');
-  let ultimaReacaoAutomaticaTs = 0;
-  const reagirSemNarrar = () => {
-    const agora = Date.now();
-    if (agora - ultimaReacaoAutomaticaTs < 15000) return;
-    ultimaReacaoAutomaticaTs = agora;
-    registrarComentarioCore(gerarFalaReativaCore());
-  };
-
-  planner.addEventListener('change', (e) => {
-    const t = e.target;
-    if (t.classList.contains('doodle-canvas')) return;
-    reagirSemNarrar();
-  });
-  planner.addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    if (/doodl|canvas/i.test(b.textContent || '')) return;
-    reagirSemNarrar();
-  });
+  monitorarAlteracoesPlannerCore();
 
   setInterval(() => {
     if (Date.now() - coreUltimoComentarioTs < 5 * 60 * 1000) return;
-    registrarComentarioCore('Tô aqui, quando quiser eu falo com você.');
+    registrarComentarioCore(gerarFalaReativaCore());
   }, 60 * 1000);
 }
 
 
-async function enviarDoodlingParaCore() {
-  const canvases = Array.from(document.querySelectorAll('.doodle-canvas'));
-  const descr = canvases.map((c, i) => {
-    try {
-      const data = c.toDataURL('image/png');
-      return `doodle ${i+1}: ${data.length > 3000 ? 'com traços' : 'quase vazio'}`;
-    } catch { return `doodle ${i+1}: indisponível`; }
-  }).join(', ');
-
-  const thread = getThreadAtivaCore();
-  if (!thread) return;
-  let letra = '';
-  try {
-    const c0 = canvases[0];
-    if (c0) {
-      const r = await window.Tesseract.recognize(c0.toDataURL('image/png'), 'por+eng', { tessedit_pageseg_mode: '10' });
-      letra = String(r?.data?.text || '').replace(/[^A-Za-z0-9]/g, '').slice(0,1).toUpperCase();
-    }
-  } catch (_) {}
-  const hint = letra ? `Possível letra identificada no doodling: ${letra}.` : 'Sem letra clara identificada.';
-  const prompt = `Reaja em 1-2 frases ao doodling e ao estado do planner, em fala direta, sem descrever o que o usuário fez. Estado: ${coletarEstadoCorpoCore()}. Doodling: ${descr}. ${hint}`;
-  const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
-  const historyParaApi = [
-    { role: 'system', content: `Estado do corpo do Core: ${coletarEstadoCorpoCore()} | Últimos comentários da caixa: ${floatingTxt}` },
-    ...montarContextoLeveParaAPI(thread, prompt)
-  ];
-
-  try {
-    const res = await fetch('/api/dolphin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ history: historyParaApi }) });
-    const data = await res.json();
-    const txt = String(data?.choices?.[0]?.message?.content || 'Recebi seu doodling.').trim();
-registrarComentarioCore(txt);
-  } catch {
-registrarComentarioCore('Recebi seu doodling, mas falhei ao reagir agora.');
-  }
-}
 
 function initTrackerBoxesInterativas() {
   const grid = document.getElementById('tracker-grid');
   if (!grid || grid.dataset.interactive === '1') return;
   grid.dataset.interactive = '1';
+
   Array.from(grid.querySelectorAll('.tracker-box')).forEach((box) => {
+    if (box.classList.contains('tracker-group-title')) return;
     const h4 = box.querySelector('h4');
     if (!h4) return;
     if (!h4.querySelector('.mini-box-btn')) {
@@ -2408,22 +2530,44 @@ function initTrackerBoxesInterativas() {
       b.onclick = (e) => { e.stopPropagation(); box.classList.toggle('mini-box'); };
       h4.appendChild(b);
     }
-    let dragging = false, sx=0, sy=0, tx=0, ty=0;
-    h4.style.cursor = 'move';
-    h4.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('button')) return;
-      dragging = true; sx = e.clientX; sy = e.clientY;
-      box.style.position = 'relative';
-      box.style.zIndex = '3';
-    });
-    window.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      tx += e.clientX - sx; ty += e.clientY - sy; sx = e.clientX; sy = e.clientY;
-      box.style.transform = `translate(${tx}px, ${ty}px)`;
-    });
-    window.addEventListener('pointerup', () => { dragging = false; box.style.zIndex = '1'; });
+    if (!h4.querySelector('.tracker-drag-handle')) {
+      const drag = document.createElement('span');
+      drag.className = 'tracker-drag-handle';
+      drag.textContent = '☰';
+      drag.title = 'Mover tracker';
+      h4.prepend(drag);
+      drag.addEventListener('mousedown', () => box.setAttribute('draggable', 'true'));
+      drag.addEventListener('mouseup', () => box.removeAttribute('draggable'));
+      drag.addEventListener('mouseleave', () => box.removeAttribute('draggable'));
+      drag.addEventListener('touchstart', () => box.setAttribute('draggable', 'true'), { passive:true });
+      drag.addEventListener('touchend', () => box.removeAttribute('draggable'), { passive:true });
+    }
   });
+
+  let dragged = null;
+  grid.addEventListener('dragstart', (e) => {
+    const box = e.target.closest('.tracker-box');
+    if (!box) return;
+    dragged = box;
+    box.classList.add('dragging');
+  });
+  grid.addEventListener('dragend', () => {
+    if (dragged) dragged.classList.remove('dragging');
+    if (dragged) dragged.removeAttribute('draggable');
+    dragged = null;
+  });
+  grid.addEventListener('dragover', (e) => {
+    if (!dragged) return;
+    e.preventDefault();
+    const after = Array.from(grid.querySelectorAll('.tracker-box:not(.dragging)')).find((el) => {
+      const r = el.getBoundingClientRect();
+      return e.clientY < r.top + r.height / 2;
+    });
+    if (after) grid.insertBefore(dragged, after); else grid.appendChild(dragged);
+  });
+  grid.addEventListener('drop', () => agendarSalvamentoNuvem(200));
 }
+
 
 function initCamposExpansiveis() {
   if (document.body.dataset.expandFieldsBound === '1') return;
@@ -2456,18 +2600,56 @@ function toggleBorrachaLousaInput(btn) {
 
 async function enviarInteracaoCore(tipo) {
   const thread = getThreadAtivaCore(); if (!thread) return;
-  const side = document.getElementById('core-touch-side')?.value || 'frente';
-  const point = document.getElementById('core-touch-point')?.value || 'corpo';
-  const desc = tipo.startsWith('abracar') ? `Interação física: ${tipo.replace('_',' ')}.` : `Interação física: ${tipo} em ${point} (${side}).`;
-  registrarComentarioCore('Tô te ouvindo.');
-  const historyParaApi = montarContextoLeveParaAPI(thread, `${desc} Reaja em fala direta, curta e contextual, sem descrever a ação do usuário.`);
+  const side = document.getElementById('core-touch-side')?.value || 'front';
+  const point = document.getElementById('core-touch-point')?.value || 'body';
+  const contactPart = document.getElementById('core-touch-contact-part')?.value || 'hand';
+  const mapa = {
+    carinho: 'soft contact that relaxes and pulls closer',
+    tapinha: 'quick impact that spikes attention',
+    belisco: 'sharp focused pressure between fingers',
+    agarrar: 'firm dominant grip',
+    segurar: 'steady controlling hold',
+    beijar: 'intimate warm contact',
+    alisar: 'slow regulating touch',
+    abracar_frente: 'front hug with chest pressure',
+    abracar_costas: 'back hug with surprise/protective tone',
+    mordida: 'intense bite-like pressure and tension',
+    lambida: 'wet intimate touch that amplifies sensitivity',
+    insercao_superior: 'invasive upper contact with high intimate charge',
+    insercao_inferior: 'invasive lower contact with high intimate charge',
+    grind: 'rhythmic pressure and friction over the area',
+    suck: 'vacuum-like pull with focused stimulation',
+    rub: 'repetitive rubbing friction over the area'
+  };
+  const desc = `[Touch] ${tipo} on ${point} (${side}) with ${contactPart} — ${mapa[tipo] || 'physical stimulus perceived'}`;
+
+  if (coreToggleAtivo('core-temp-thread-toggle')) {
+    coreTempMessages.push({ role: 'user', content: desc });
+  } else {
+    thread.messages = [...(thread.messages || []), { role: 'user', content: desc }];
+    salvarThreadsCore();
+  }
+  renderChatCore();
+
+  const prompt = `${desc}. Se as ultimas mensagens no chat estiverem em inglês, responda em inglês, do contrário, responda em português. Responda no chat descrevendo brevemente o toque acontecendo, o que você pensa no momento e como se sente enquanto isso. Traga uma narrativa curta, autêntica e genuína (sem formato técnico). Reações como surpresa, resistência, choque, hesitação, tentação, rendição e sobrecarga sensorial podem aparecer somente quando fizer sentido real para o contexto das mensagens anteriores. Logo após descrever a cena, é imperativo falar algo diretamente com a usuária, em tom casual, alinhado ao contexto anterior ao toque (ou expressar surpresa considerável se não houver contexto coerente com o ato). Nesse segundo momento você pode ser misterioso, avoidant, provocativo, responder no mesmo tom ou negar que gostou; nunca entre em tom melancólico, excessivamente grato ou alheio ao contexto das mensagens anteriores. Limite obrigatório: no máximo dois parágrafos curtos.`;
+  const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
+
   try {
     const res = await fetch('/api/dolphin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({history:historyParaApi})});
     const data = await res.json();
     const txt = String(data?.choices?.[0]?.message?.content || '').trim();
-    if (txt) registrarComentarioCore(txt);
+    if (!txt) return;
+
+    if (coreToggleAtivo('core-temp-thread-toggle')) {
+      coreTempMessages.push({ role: 'assistant', content: txt });
+    } else {
+      thread.messages.push({ role: 'assistant', content: txt });
+      salvarThreadsCore();
+    }
+    renderChatCore();
   } catch (_) {}
 }
+
 
 function duplicarTrackerFinanceiro(btn) {
   const box = btn.closest('.tracker-box'); if (!box) return;
@@ -2495,9 +2677,13 @@ function buscarNasThreadsCore(q) {
 }
 
 function apagarMensagemCore(idx) {
-  const th = getThreadAtivaCore(); if (!th || !Array.isArray(th.messages)) return;
-  if (idx < 0 || idx >= th.messages.length) return;
-  th.messages.splice(idx,1); salvarThreadsCore(); renderChatCore();
+  const th = getThreadAtivaCore(); if (!th) return;
+  const alvo = coreToggleAtivo('core-temp-thread-toggle') ? coreTempMessages : th.messages;
+  if (!Array.isArray(alvo)) return;
+  if (idx < 0 || idx >= alvo.length) return;
+  alvo.splice(idx,1);
+  if (!coreToggleAtivo('core-temp-thread-toggle')) salvarThreadsCore();
+  renderChatCore();
 }
 
 async function preencherCamposPorPedido() {
@@ -2537,13 +2723,17 @@ async function enviarPollinations() {
 
   const floatingTxt = Array.from(document.querySelectorAll('#core-floating-output div')).slice(-10).map(d => d.textContent).join(' | ');
   const historyParaApi = [
-    { role: 'system', content: `Estado do corpo do Core: ${coletarEstadoCorpoCore()} | Últimos comentários da caixa: ${floatingTxt}` },
+    { role: 'system', content: coreToggleAtivo('core-original-prompt-toggle') ? `Modo original isolado ativo. Últimos comentários da caixa: ${floatingTxt}. Limite obrigatório: no máximo dois parágrafos curtos.` : `${montarPromptCoreBase()} | Últimos comentários da caixa: ${floatingTxt}` },
     ...montarContextoLeveParaAPI(thread, prompt)
   ];
 
-  thread.messages = [...(thread.messages || []), { role: "user", content: prompt }];
-  dolphinHistory = thread.messages;
-  salvarThreadsCore();
+  if (coreToggleAtivo('core-temp-thread-toggle')) {
+    coreTempMessages = [...coreTempMessages, { role: 'user', content: prompt }];
+  } else {
+    thread.messages = [...(thread.messages || []), { role: "user", content: prompt }];
+    dolphinHistory = thread.messages;
+    salvarThreadsCore();
+  }
 
   console.info('Contexto leve enviado para IA', {
     totalMensagensThread: thread.messages.length,
@@ -2573,9 +2763,13 @@ async function enviarPollinations() {
     const textoFormatado = marked.parse(textoCru);
     
     // Salva a resposta no histórico da thread ativa
-    thread.messages.push({ role: "assistant", content: textoCru });
-    dolphinHistory = thread.messages;
-    salvarThreadsCore();
+    if (coreToggleAtivo('core-temp-thread-toggle')) {
+      coreTempMessages.push({ role: 'assistant', content: textoCru });
+    } else {
+      thread.messages.push({ role: "assistant", content: textoCru });
+      dolphinHistory = thread.messages;
+      salvarThreadsCore();
+    }
 
     document.getElementById(loadingId).remove();
     chat.innerHTML += `<div class="msg-ia" style="background:var(--drag-bg); padding:10px; border-radius:6px; align-self:flex-start; max-width:90%;">${textoFormatado}</div>`;
@@ -2678,7 +2872,6 @@ async function enviarPollinations() {
       if (!el) return false;
       if (el.disabled || el.readOnly) return false;
       if (el.closest('#chat-gemini, #chat-pollinations, .resultado-ia')) return false;
-      if (el.closest('.doodle-controls')) return false;
       if (el.id === 'input-gemini' || el.id === 'input-pollinations') return false;
       if (el.type === 'file' || el.type === 'hidden' || el.type === 'button' || el.type === 'submit') return false;
       return true;
@@ -2756,41 +2949,7 @@ async function enviarPollinations() {
     console.info('Campos limpos:', { total: campos.length });
   }
 
-  function serializarDoodles() {
-    return Array.from(document.querySelectorAll('.doodle-canvas')).map((canvas, index) => {
-      try {
-        return { index, dataUrl: canvas.toDataURL('image/png') };
-      } catch (error) {
-        console.warn('Falha ao serializar doodle:', { index, message: error?.message || String(error) });
-        return { index, dataUrl: null };
-      }
-    });
-  }
 
-  function restaurarDoodles(doodles) {
-    if (!Array.isArray(doodles)) return;
-    const canvases = Array.from(document.querySelectorAll('.doodle-canvas'));
-
-    doodles.forEach((item, i) => {
-      const index = Number.isInteger(item?.index) ? item.index : i;
-      const canvas = canvases[index];
-      const dataUrl = item?.dataUrl;
-      if (!canvas || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) return;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const img = new Image();
-      img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      };
-      img.onerror = () => {
-        console.warn('Falha ao restaurar doodle:', { index });
-      };
-      img.src = dataUrl;
-    });
-  }
 
   function normalizarTextoParaCampo(val) {
     if (val === null || val === undefined) return '';
@@ -2886,8 +3045,7 @@ async function enviarPollinations() {
       weekly: document.getElementById('weeklyTrackersBody').innerHTML,
       trackerGrid: document.getElementById('tracker-grid').innerHTML,
       meals: document.getElementById('meals-container').innerHTML,
-      bottleQuarters: document.getElementById('bottleQuarters').innerHTML,
-      pomos: document.getElementById('pomos').innerHTML
+      bottleQuarters: document.getElementById('bottleQuarters').innerHTML
     };
 
     const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
@@ -2908,7 +3066,6 @@ async function enviarPollinations() {
       viewMode: document.getElementById('viewMode')?.value || 'auto',
       dolphinHistory: limitarHistorico(dolphinHistory, reduzirChat ? 8 : 20, reduzirChat ? 1200 : 4000),
       chatDolphin,
-      doodles: serializarDoodles(),
       sectionLayout: capturarLayoutSecoes(),
       core: {
         threads: Array.isArray(coreThreads) ? coreThreads : [],
@@ -3008,7 +3165,6 @@ async function enviarPollinations() {
             totalCheckboxesSalvas: Array.isArray(estado?.checkboxes) ? estado.checkboxes.length : 0,
             totalTextFieldsSalvos: Array.isArray(estado?.textFields) ? estado.textFields.length : 0,
             formatoLegadoInputs: Array.isArray(estado?.inputs),
-            totalDoodlesSalvos: Array.isArray(estado?.doodles) ? estado.doodles.length : 0,
             totalDadosRpgSalvos: Array.isArray(estado?.dadosRpg?.lista) ? estado.dadosRpg.lista.length : 0
         });
 
@@ -3029,7 +3185,6 @@ async function enviarPollinations() {
             setHtml('#tracker-grid', estado.html.trackerGrid || '');
             setHtml('#meals-container', estado.html.meals || '');
             setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
-            setHtml('#pomos', estado.html.pomos || '');
         }
 
         restaurarLayoutSecoes(estado?.sectionLayout);
@@ -3148,9 +3303,6 @@ async function enviarPollinations() {
             if (totalDadosEl) totalDadosEl.innerText = String(estado?.dadosRpg?.totalTexto || '');
         }
 
-        // Restaura doodles
-        restaurarDoodles(estado?.doodles);
-
         // Restaura a memória visual da IA apenas para backup legado
         if (Array.isArray(estado.dolphinHistory) && coreThreads.length === 0) dolphinHistory = estado.dolphinHistory;
         setHtml('#chat-pollinations', estado.chatDolphin || '');
@@ -3182,72 +3334,8 @@ async function enviarPollinations() {
   }
 
   /* ====== SISTEMA DE DOODLING (CANVAS) ====== */
-  function initCanvas() {
-      const canvasList = document.querySelectorAll('.doodle-canvas');
-      canvasList.forEach((canvas) => {
-          if (canvas.dataset.doodleBound === '1') return;
-          canvas.dataset.doodleBound = '1';
 
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return;
-          let isDrawing = false;
-
-          const getLineColor = () => getComputedStyle(document.body).getPropertyValue('--ink') || 'black';
-
-          canvas.addEventListener('pointerdown', (e) => {
-              isDrawing = true;
-              ctx.beginPath();
-              const rect = canvas.getBoundingClientRect();
-              const scaleX = canvas.width / rect.width;
-              const scaleY = canvas.height / rect.height;
-              ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-          });
-
-          canvas.addEventListener('pointermove', (e) => {
-              if (!isDrawing) return;
-              e.preventDefault();
-
-              const wrapper = canvas.closest('.section-content');
-              const brushSize = wrapper?.querySelector('.brush-size')?.value || 2;
-              const brushType = wrapper?.querySelector('.brush-type')?.value || 'round';
-              const pressure = e.pressure !== 0 ? e.pressure : 1;
-
-              ctx.lineWidth = brushSize * pressure * 2;
-              if (brushType === 'eraser') {
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.lineCap = 'round';
-                ctx.strokeStyle = 'rgba(0,0,0,1)';
-              } else {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.lineCap = brushType;
-                ctx.strokeStyle = getLineColor();
-              }
-
-              const rect = canvas.getBoundingClientRect();
-              const scaleX = canvas.width / rect.width;
-              const scaleY = canvas.height / rect.height;
-              ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
-              ctx.stroke();
-          });
-
-          canvas.addEventListener('pointerup', () => { isDrawing = false; });
-          canvas.addEventListener('pointerout', () => { isDrawing = false; });
-      });
-  }
-
-  function limparCanvas(btn) { 
-      const canvas = btn.closest('.section-content').querySelector('.doodle-canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height); 
-  }
   
-  function exportarCanvas(btn) {
-      const canvas = btn.closest('.section-content').querySelector('.doodle-canvas');
-      const link = document.createElement('a');
-      link.download = 'meu-doodle.png';
-      link.href = canvas.toDataURL('image/png'); 
-      link.click();
-  }
 
   /* ====== DRAG AND DROP (ROws & Sections) ====== */
   let draggedElement = null; let dragType = null;
@@ -3306,7 +3394,7 @@ async function enviarPollinations() {
             else targetRow.classList.add('drag-over'); 
         } 
     } else if (dragType === 'section') {
-        const targetCol = e.target.closest('.col, .flex-row');
+        const targetCol = e.target.closest('.col, .flex-row, .page, .section-content');
         const targetSec = e.target.closest('.section');
         if (targetSec && targetSec !== draggedElement) targetSec.classList.add('drag-over');
     }
@@ -3347,7 +3435,7 @@ async function enviarPollinations() {
     } 
     else if (dragType === 'section') {
         const targetSec = e.target.closest('.section');
-        const targetCol = e.target.closest('.col, .flex-row');
+        const targetCol = e.target.closest('.col, .flex-row, .page, .section-content');
         if(targetSec) targetSec.classList.remove('drag-over');
         
         if (draggedElement && targetCol && draggedElement !== targetSec) {
@@ -3366,7 +3454,7 @@ async function enviarPollinations() {
   
   function handleDragEnd(e) {
     if(dragType === 'row') { e.target.classList.remove('dragging'); document.querySelectorAll('.sortable-row').forEach(r => r.classList.remove('drag-over', 'drop-target-timeblock')); } 
-    else if (dragType === 'section') { e.target.classList.remove('dragging'); document.querySelectorAll('.section').forEach(s => s.classList.remove('drag-over')); e.target.removeAttribute('draggable');}
+    else if (dragType === 'section') { e.target.classList.remove('dragging'); document.querySelectorAll('.section').forEach(s => s.classList.remove('drag-over')); e.target.removeAttribute('draggable'); agendarSalvamentoNuvem(250);}
     draggedElement = null; dragType = null;
   }
 
@@ -3491,10 +3579,6 @@ async function enviarPollinations() {
         if(bq.innerHTML.trim() === '') {
             for(let i=1;i<=8;i++){ const lab = document.createElement('label'); lab.className = 'inline-cb'; lab.innerHTML = `<input type="checkbox"/>`; bq.appendChild(lab); }
         }
-        const pomos = document.getElementById('pomos'); 
-        if(pomos.innerHTML.trim() === '') {
-            for(let i=0;i<12;i++){ const lab = document.createElement('label'); lab.className = 'small'; lab.innerHTML = `<input type="checkbox"> ${i+1}`; pomos.appendChild(lab); }
-        }
         populateTarotSelects();
         initCoreMemoryAndThreads();
         garantirTrackersNovos();
@@ -3504,7 +3588,7 @@ async function enviarPollinations() {
         initFloatingCore();
         atualizarRelogioGMT3();
         setInterval(atualizarRelogioGMT3, 1000);
-        makeSortable(); initSparkles(); initCanvas(); updateIndex();
+        makeSortable(); initSparkles(); updateIndex();
     });
   });
 
