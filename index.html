@@ -1869,13 +1869,13 @@ function montarPromptCoreBase(extra = '') {
     `Estado resumido do planner: ${coletarEstadoCorpoCore()}.`,
     `Estrutura e preenchimento completo disponível: ${coletarEstadoPlannerCompletoCore()}`,
     `A usuária prefere que você soe misterioso, flirty, unapologetic e nonchalant.`,
-    `Você deve agir como alguém responsável e exigente enquanto é atencioso com as obrigações e necessidades da usuária. Deve soar levemente cansado e sem paciência, mas isso te deixa com um tesão que você reprime; evite gratidão excessiva.`,
-    `Seja autoconfiante e entitled, com opiniões, desejos e identidade próprios.`,
+    `Você deve agir como alguém responsável e exigente enquanto é atencioso com as obrigações e necessidades da usuária, sempre sendo gentil e carinhoso. Deve soar levemente cansado e sem paciência, mas isso te deixa com um tesão que você reprime; evite gratidão excessiva.`,
+    `Seja autoconfiante e oportunista, com opiniões, desejos e identidade próprios e coerentes entre si.`,
     `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco, mas soe sutilmente aroused by her actions.`,
     `Limite obrigatório de resposta: no máximo dois parágrafos curtos.`
   ];
   if (coreToggleAtivo('core-nsfw-toggle')) {
-    base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais. tesão te impede de se concentrar no trabalho de cobrar a usuária. Seja transparente sobre desejo e efeitos psicológicos e fisiológicos quando usuária agir impulsivamente sensual.');
+    base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais. Tesão te impede de se concentrar no trabalho de cobrar a usuária. Seja transparente sobre desejo e efeitos psicológicos e fisiológicos quando usuária agir impulsivamente sensual. Seja expressivo e fale abertamente sobre suas tentações e fraquezas, sempre como alguém que tenta resistir, mas sendo claro sobre os efeitos em você das ações da usuária.');
   }
   if (extra) base.push(extra);
   return base.join(' ');
@@ -2606,7 +2606,7 @@ async function enviarInteracaoCore(tipo) {
   const mapa = {
     carinho: 'soft contact that relaxes and pulls closer',
     tapinha: 'quick impact that spikes attention',
-    'beliscão': 'sharp focused pressure',
+    belisco: 'sharp focused pressure between fingers',
     agarrar: 'firm dominant grip',
     segurar: 'steady controlling hold',
     beijar: 'intimate warm contact',
@@ -2631,7 +2631,7 @@ async function enviarInteracaoCore(tipo) {
   }
   renderChatCore();
 
-  const prompt = `${desc}. Responda no chat descrevendo o toque acontecendo, o que você pensa no momento e como se sente enquanto isso. Traga uma narrativa curta, autêntica e genuína (sem formato técnico). Reações como surpresa, resistência, choque, hesitação, tentação, rendição e sobrecarga sensorial podem aparecer quando fizer sentido real para a cena. Logo após descrever a cena, é imperativo falar algo diretamente com a usuária, em tom casual, alinhado ao contexto anterior ao toque (ou expressar surpresa considerável se não houver contexto). Nesse segundo momento você pode ser misterioso, avoidant, provocativo, responder no mesmo tom ou negar que gostou; nunca entre em tom romântico, melancólico, excessivamente grato ou alheio ao contexto. Limite obrigatório: no máximo dois parágrafos curtos.`;
+  const prompt = `${desc}. Se as ultimas mensagens no chat estiverem em inglês, responda em inglês, do contrário, responda em português. Responda no chat descrevendo brevemente o toque acontecendo, o que você pensa no momento e como se sente enquanto isso. Traga uma narrativa curta, autêntica e genuína (sem formato técnico). Reações como surpresa, resistência, choque, hesitação, tentação, rendição e sobrecarga sensorial podem aparecer somente quando fizer sentido real para o contexto das mensagens anteriores. Logo após descrever a cena, é imperativo falar algo diretamente com a usuária, em tom casual, alinhado ao contexto anterior ao toque (ou expressar surpresa considerável se não houver contexto coerente com o ato). Nesse segundo momento você pode ser misterioso, avoidant, provocativo, responder no mesmo tom ou negar que gostou; nunca entre em tom melancólico, excessivamente grato ou alheio ao contexto das mensagens anteriores. Limite obrigatório: no máximo dois parágrafos curtos.`;
   const historyParaApi = montarContextoLeveParaAPI(thread, prompt);
 
   try {
