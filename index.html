@@ -1273,10 +1273,6 @@ function rolarTodosOsDados() {
   /* ====== ATUALIZAÇÃO DO ÍNDICE DINÂMICO ====== */
   const SECOES_FIXAS_VISIVEIS = new Set([
     'indice-container',
-    'control-time-section',
-    'lan-chat-section',
-    'lan-lousas-section',
-    'lan-toques-section',
     'save-print-section'
   ]);
 
@@ -3317,7 +3313,7 @@ async function enviarPollinations() {
         }
 
         restaurarLayoutSecoes(estado?.sectionLayout);
-        aplicarVisibilidadeSecoesCriaveis(estado?.createdSectionIds);
+        aplicarVisibilidadeSecoesCriaveis([]);
 
         if (estado?.core && typeof estado.core === 'object') {
             if (typeof estado.core.memory === 'string') {
