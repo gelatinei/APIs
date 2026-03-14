@@ -1335,7 +1335,7 @@ function rolarTodosOsDados() {
       const btn = document.createElement('button');
       btn.className = 'xbtn-sec remove-dynamic-section-btn';
       btn.style.margin = '0 4px 0 0';
-      btn.innerText = 'Excluir';
+      btn.innerText = 'Apagar seção';
       btn.onclick = () => removerSecaoPeloIndice(sec.id);
       header.insertBefore(btn, header.querySelector('.collapse-btn') || null);
     });
@@ -1347,26 +1347,22 @@ function rolarTodosOsDados() {
     if(!indice) return;
     indice.innerHTML = '';
 
-    const labels = document.querySelectorAll('.section-header label');
-    labels.forEach((lbl, i) => {
-        const sec = lbl.closest('.section');
-        if(!sec) return;
-        if(!sec.id) sec.id = 'secao-' + i;
-
+    getSecoesCriaveis().forEach((sec, i) => {
+      if (!sec.id) sec.id = `secao-${i}`;
+      const lbl = sec.querySelector('.section-header label');
+      if (lbl) {
         lbl.style.cursor = 'pointer';
         lbl.title = 'Voltar ao Índice';
         lbl.onclick = () => { window.location.hash = '#indice-container'; };
+      }
 
-        if (getTituloSecao(sec).includes('Índice Rápido')) return;
-        if (SECOES_FIXAS_VISIVEIS.has(sec.id)) return;
-
-        const li = document.createElement('li');
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.innerText = getTituloSecao(sec);
-        btn.onclick = () => criarOuAbrirSecaoPeloIndice(sec.id);
-        li.appendChild(btn);
-        indice.appendChild(li);
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerText = getTituloSecao(sec);
+      btn.onclick = () => criarOuAbrirSecaoPeloIndice(sec.id);
+      li.appendChild(btn);
+      indice.appendChild(li);
     });
 
     prepararBotoesRemocaoSecoes();
