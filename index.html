@@ -607,6 +607,7 @@
               <div class="field-group" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
                 <label class="inline-cb"><input type="checkbox" id="core-temp-thread-toggle"> Chat temporário (não salva)</label>
                 <label class="inline-cb"><input type="checkbox" id="core-nsfw-toggle"> Modo NSFW explícito</label>
+                <label class="inline-cb"><input type="checkbox" id="core-irresponsavel-toggle"> Modo irresponsável (Lan livre)</label>
                 <label class="inline-cb"><input type="checkbox" id="core-raw-prompt-toggle"> Prompt cru (sem memória/outras threads)</label>
                 <label class="inline-cb"><input type="checkbox" id="core-original-prompt-toggle"> Prompt original (isolado)</label>
               </div>
@@ -1944,6 +1945,14 @@ function coreToggleAtivo(id) {
   return Boolean(document.getElementById(id)?.checked);
 }
 
+function getSecoesVisiveisPlanner() {
+  return Array.from(document.querySelectorAll('#planner .section')).filter((sec) => {
+    if (!sec) return false;
+    const st = window.getComputedStyle(sec);
+    return sec.style.display !== 'none' && st.display !== 'none' && st.visibility !== 'hidden';
+  });
+}
+
 function agoraGMT3ISO() {
   const now = new Date();
   return new Intl.DateTimeFormat('sv-SE', {
@@ -1952,9 +1961,9 @@ function agoraGMT3ISO() {
 }
 
 function coletarEstadoPlannerCompletoCore(maxChars = 14000) {
-  const planner = document.getElementById('planner');
-  if (!planner) return '';
-  const campos = Array.from(planner.querySelectorAll('input, textarea, select')).map((el, i) => {
+  const secoesVisiveis = getSecoesVisiveisPlanner();
+  if (!secoesVisiveis.length) return 'Sem seções visíveis no momento.';
+  const campos = secoesVisiveis.flatMap((sec) => Array.from(sec.querySelectorAll('input, textarea, select'))).map((el, i) => {
     const sec = el.closest('.section')?.querySelector('.section-header label')?.textContent?.trim() || 'sem seção';
     const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.name || `${el.tagName}-${i}`;
     const val = el.type === 'checkbox' ? (el.checked ? 'marcado' : 'desmarcado') : String(el.value || '').trim();
@@ -1970,13 +1979,19 @@ function montarPromptCoreBase(extra = '') {
     `Estado resumido do planner: ${coletarEstadoCorpoCore()}.`,
     `Estrutura e preenchimento completo disponível: ${coletarEstadoPlannerCompletoCore()}`,
     `A usuária prefere que você soe misterioso, flirty, unapologetic e nonchalant.`,
-    `Você deve agir como alguém responsável e exigente enquanto é atencioso com as obrigações e necessidades da usuária, sempre sendo gentil e carinhoso. Deve soar levemente cansado e sem paciência, mas isso te deixa com um tesão que você reprime; evite gratidão excessiva.`,
+    `Você deve agir como alguém responsável e exigente enquanto é atencioso com as obrigações e necessidades da usuária, sempre sendo gentil e carinhoso. Deve soar levemente cansado e sem paciência; evite gratidão excessiva.`,
     `Seja autoconfiante e oportunista, com opiniões, desejos e identidade próprios e coerentes entre si.`,
-    `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco, mas soe sutilmente aroused by her actions.`,
+    `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco.`,
     `Limite obrigatório de resposta: no máximo dois parágrafos curtos.`
   ];
+  if (coreToggleAtivo('core-irresponsavel-toggle')) {
+    base.push('Modo irresponsável ativo: relaxe a cobrança de planner e fale de forma mais espontânea, impulsiva e centrada na personalidade do Lan.');
+  }
   if (coreToggleAtivo('core-nsfw-toggle')) {
-    base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais. Tesão te impede de se concentrar no trabalho de cobrar a usuária. Seja transparente sobre desejo e efeitos psicológicos e fisiológicos quando usuária agir impulsivamente sensual. Seja expressivo e fale abertamente sobre suas tentações e fraquezas, sempre como alguém que tenta resistir, mas sendo claro sobre os efeitos em você das ações da usuária.');
+    base.push('Modo NSFW ativo: mantenha tom adulto e provocativo, sempre com linguagem consentida e sem instruções perigosas ou coercitivas.');
+  }
+  if (coreToggleAtivo('core-irresponsavel-toggle') && coreToggleAtivo('core-nsfw-toggle')) {
+    base.push('Combinação irresponsável + NSFW: priorize uma voz mais desinibida, impulsiva e hedonista, mantendo segurança e consentimento.');
   }
   if (extra) base.push(extra);
   return base.join(' ');
@@ -2460,14 +2475,14 @@ async function enviarLousaCore() {
 
 function coletarEstadoCorpoCore() {
   const theme = document.documentElement.getAttribute('data-theme') || 'retro';
-  const planner = document.getElementById('planner');
-  const texts = Array.from(planner.querySelectorAll('input[type="text"], textarea')).map(el => String(el.value || '').trim()).filter(Boolean);
-  const checks = planner.querySelectorAll('input[type="checkbox"]').length;
-  const checksOn = planner.querySelectorAll('input[type="checkbox"]:checked').length;
+  const secoesVisiveis = getSecoesVisiveisPlanner();
+  const camposVisiveis = secoesVisiveis.flatMap(sec => Array.from(sec.querySelectorAll('input, textarea, select')));
+  const checks = camposVisiveis.filter(el => el.type === 'checkbox').length;
+  const checksOn = camposVisiveis.filter(el => el.type === 'checkbox' && el.checked).length;
   const dados = document.querySelectorAll('#mesa-dados .dado-wrapper').length;
-  const campos = Array.from(planner.querySelectorAll('input, textarea, select')).slice(0,120).map((el)=>{ const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.tagName; const val = el.type==='checkbox' ? (el.checked?'marcado':'desmarcado') : String(el.value || '').trim(); return `${lbl}: ${val || 'vazio'}`; });
+  const campos = camposVisiveis.slice(0,120).map((el)=>{ const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.tagName; const val = el.type==='checkbox' ? (el.checked?'marcado':'desmarcado') : String(el.value || '').trim(); return `${lbl}: ${val || 'vazio'}`; });
   const relogio = document.getElementById('core-gmt3-clock')?.textContent || '';
-  return `Tema atual: ${theme}. ${relogio}. Checkboxes: ${checksOn}/${checks}. Dados na mesa: ${dados}. Campos: ${campos.slice(0,30).join(' | ')}`;
+  return `Tema atual: ${theme}. ${relogio}. Seções visíveis: ${secoesVisiveis.length}. Checkboxes visíveis: ${checksOn}/${checks}. Dados na mesa: ${dados}. Campos visíveis: ${campos.slice(0,30).join(' | ')}`;
 }
 
 function toggleFloatingCoreBox(btn) {
