@@ -161,7 +161,7 @@
     #lista-indice { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
     #lista-indice li a, #lista-indice li button { color: var(--ink); text-decoration: none; font-size: 12px; background: var(--drag-bg); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); display: block;}
     #lista-indice li a:hover, #lista-indice li button:hover { background: var(--accent); color: var(--bg); }
-    #lista-indice li button { cursor: pointer; width: 100%; }
+    #lista-indice li .index-open-btn { cursor: pointer; width: 100%; }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: stretch; transition: all 0.3s ease; }
     .col { display: flex; flex-direction: column; gap: 12px; min-height: 100px; } 
@@ -1304,20 +1304,6 @@ function rolarTodosOsDados() {
     agendarSalvamentoNuvem(250);
   }
 
-  function prepararBotoesRemocaoSecoes() {
-    getSecoesCriaveis().forEach(sec => {
-      const header = sec.querySelector('.section-header');
-      if (!header || header.querySelector('.remove-dynamic-section-btn')) return;
-
-      const btn = document.createElement('button');
-      btn.className = 'xbtn-sec remove-dynamic-section-btn';
-      btn.style.margin = '0 4px 0 0';
-      btn.innerText = 'Apagar seção';
-      btn.onclick = () => removerSecaoPeloIndice(sec.id);
-      header.insertBefore(btn, header.querySelector('.collapse-btn') || null);
-    });
-  }
-
   function updateIndex() {
     garantirIdsSecoes();
     const indice = document.getElementById('lista-indice');
@@ -1334,15 +1320,34 @@ function rolarTodosOsDados() {
       }
 
       const li = document.createElement('li');
+      li.style.display = 'flex';
+      li.style.alignItems = 'center';
+      li.style.gap = '6px';
+
       const btn = document.createElement('button');
       btn.type = 'button';
+      btn.className = 'index-open-btn';
       btn.innerText = getTituloSecao(sec);
       btn.onclick = () => criarOuAbrirSecaoPeloIndice(sec.id);
       li.appendChild(btn);
+
+      if (sec.style.display !== 'none') {
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'xbtn';
+        closeBtn.style.padding = '4px 8px';
+        closeBtn.style.lineHeight = '1';
+        closeBtn.title = `Fechar ${getTituloSecao(sec)}`;
+        closeBtn.innerText = '✕';
+        closeBtn.onclick = () => {
+          removerSecaoPeloIndice(sec.id);
+          updateIndex();
+        };
+        li.appendChild(closeBtn);
+      }
+
       indice.appendChild(li);
     });
-
-    prepararBotoesRemocaoSecoes();
   }
 
   let pomodoroTimer; let timeLeft = 25 * 60; let isTimerRunning = false;
