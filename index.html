@@ -220,12 +220,17 @@
     .tracker-box { background: var(--card-bg); border: 1px solid var(--border); padding: 12px; border-radius: 6px; position: relative; }
     .tracker-box h4 { margin: 0 0 10px 0; font-size: 13px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
 
-    .gtd-board { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; }
-    .gtd-col { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; min-height: 210px; display: flex; flex-direction: column; gap: 8px; }
-    .gtd-col h5 { margin: 0; font-size: 12px; color: var(--accent); }
-    .gtd-dropzone { min-height: 150px; display: flex; flex-direction: column; gap: 6px; }
-    .gtd-card { padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); cursor: grab; white-space: pre-wrap; word-break: break-word; }
-    .gtd-dropzone.drag-over { outline: 2px dashed var(--accent); outline-offset: 2px; }
+    .mono-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; align-items: start; }
+    .mono-panel { border:1px solid var(--border); border-radius: 8px; background: var(--card-bg); padding: 10px; min-height: 220px; }
+    .mono-panel h5 { margin:0 0 8px 0; color: var(--accent); font-size: 12px; }
+    .mono-list { display:flex; flex-direction:column; gap:6px; max-height:220px; overflow:auto; }
+    .mono-item { display:flex; gap:6px; align-items:center; background: var(--bg); border:1px solid var(--border); border-radius: 8px; padding: 6px; }
+    .mono-box { border: 1px dashed var(--border); border-radius: 8px; padding: 8px; margin-top: 8px; }
+    .mono-box-title { font-size:11px; color: var(--muted); margin-bottom:6px; }
+    .mono-seq { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
+    .mono-step { display:flex; align-items:center; gap:6px; background: var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:6px; min-width:220px; }
+    .mono-arrow { color: var(--accent); font-weight: 700; }
+    .mono-reward { width:130px; min-width: 110px; background: color-mix(in srgb, #ffd54f 25%, var(--bg)); border: 1px solid color-mix(in srgb, #ffca28 50%, var(--border)); font-size: 11px; }
     .field-group { margin-bottom: 8px; }
     .dynamic-fields { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
     .inline-cb { display: flex; align-items: center; gap: 6px; font-size: 12px; }
@@ -516,38 +521,53 @@
           </div>
         </div>
 
-        <div id="gtd-flow-section" class="section hide-in-focus">
+        <div id="mono-timeline-section" class="section hide-in-focus">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
-            <label>🧠 Fluxo GTD (Get Things Done)</label>
+            <label>🧩 Linha do Tempo de Monotarefa / Solotarefa</label>
             <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
-            <div class="field-group" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
-              <div style="flex:1; min-width:250px;">
-                <label class="tiny-lbl">Nova captura GTD</label>
-                <textarea id="gtd-input" rows="2" placeholder="Capture aqui sua próxima ação, pendência ou ideia..."></textarea>
+            <div class="mono-grid">
+              <div class="mono-panel">
+                <h5>1) Criar tarefas</h5>
+                <div style="display:flex; gap:8px; align-items:flex-end;">
+                  <input type="text" id="mono-task-input" placeholder="Ex: revisar e-mail do cliente" style="margin:0;" />
+                  <button class="ghost mini-add" onclick="addMonoTask()">+</button>
+                </div>
+                <div class="mono-list" id="mono-task-list" style="margin-top:8px;"></div>
               </div>
-              <button class="ghost" onclick="addGtdCard()">+ Capturar</button>
+
+              <div class="mono-panel">
+                <h5>2) Guardar em caixas nomeáveis</h5>
+                <div style="display:flex; gap:8px; align-items:flex-end;">
+                  <input type="text" id="mono-box-input" placeholder="Nome da caixa (ex: Hoje, Casa, Trabalho)" style="margin:0;" />
+                  <button class="ghost mini-add" onclick="addMonoBox()">+</button>
+                </div>
+                <div id="mono-boxes" style="margin-top:8px;"></div>
+              </div>
+
+              <div class="mono-panel" style="grid-column: 1 / -1; min-height:auto;">
+                <h5>3) Sequência dinâmica (sem time blocking)</h5>
+                <div class="tiny-lbl">Escolha a próxima tarefa a cada conclusão. Entre passos, preencha (ou não) mini recompensas.</div>
+                <div class="mono-seq" id="mono-seq"></div>
+              </div>
             </div>
-            <div class="gtd-board" id="gtd-board">
-              <div class="gtd-col">
-                <h5>Inbox</h5>
-                <div class="gtd-dropzone" data-gtd-col="inbox"></div>
-              </div>
-              <div class="gtd-col">
-                <h5>Próximas Ações</h5>
-                <div class="gtd-dropzone" data-gtd-col="next"></div>
-              </div>
-              <div class="gtd-col">
-                <h5>Aguardando</h5>
-                <div class="gtd-dropzone" data-gtd-col="waiting"></div>
-              </div>
-              <div class="gtd-col">
-                <h5>Algum dia / Talvez</h5>
-                <div class="gtd-dropzone" data-gtd-col="someday"></div>
-              </div>
+          </div>
+        </div>
+
+        <div id="mini-rewards-section" class="section hide-in-focus">
+          <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+            <label>🎁 Banco de Mini Recompensas</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+          </div>
+          <div class="section-content">
+            <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+              <input type="text" id="reward-input" placeholder="Ex: 5 minutos de música, café especial..." style="flex:1; min-width:220px; margin:0;" />
+              <button class="ghost" onclick="addRewardItem()">+ mini recompensa</button>
             </div>
+            <div class="mono-list" id="reward-list" style="margin-top:10px;"></div>
           </div>
         </div>
 
@@ -1133,7 +1153,7 @@
         
     </div>
 
-    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center; flex-wrap:wrap; gap:12px;" class="section hide-in-focus">
+    <div id="save-print-section" style="margin-top:16px;display:flex;justify-content:space-between;align-items:center; flex-wrap:wrap; gap:12px;" class="section hide-in-focus">
       <div class="controls">
         <button onclick="printPlanner()">Imprimir (A4 Comum)</button>
         <button style="background: #2E7D32;" onclick="gerarPDFIninterrupto()">📥 Baixar PDF Ininterrupto</button>
@@ -1251,7 +1271,14 @@ function rolarTodosOsDados() {
   }
 
   /* ====== ATUALIZAÇÃO DO ÍNDICE DINÂMICO ====== */
-  const SECOES_FIXAS_VISIVEIS = new Set(['indice-container', 'control-time-section']);
+  const SECOES_FIXAS_VISIVEIS = new Set([
+    'indice-container',
+    'control-time-section',
+    'lan-chat-section',
+    'lan-lousas-section',
+    'lan-toques-section',
+    'save-print-section'
+  ]);
 
   function garantirIdsSecoes() {
     document.querySelectorAll('.section').forEach((sec, i) => {
@@ -1308,7 +1335,7 @@ function rolarTodosOsDados() {
       const btn = document.createElement('button');
       btn.className = 'xbtn-sec remove-dynamic-section-btn';
       btn.style.margin = '0 4px 0 0';
-      btn.innerText = 'Ocultar';
+      btn.innerText = 'Excluir';
       btn.onclick = () => removerSecaoPeloIndice(sec.id);
       header.insertBefore(btn, header.querySelector('.collapse-btn') || null);
     });
@@ -3141,7 +3168,10 @@ async function enviarPollinations() {
       trackerGrid: document.getElementById('tracker-grid').innerHTML,
       meals: document.getElementById('meals-container').innerHTML,
       bottleQuarters: document.getElementById('bottleQuarters').innerHTML,
-      gtdBoard: document.getElementById('gtd-board')?.innerHTML || ''
+      monoTaskList: document.getElementById('mono-task-list')?.innerHTML || '',
+      monoBoxes: document.getElementById('mono-boxes')?.innerHTML || '',
+      monoSeq: document.getElementById('mono-seq')?.innerHTML || '',
+      rewardList: document.getElementById('reward-list')?.innerHTML || ''
     };
 
     const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
@@ -3284,7 +3314,10 @@ async function enviarPollinations() {
             setHtml('#tracker-grid', estado.html.trackerGrid || '');
             setHtml('#meals-container', estado.html.meals || '');
             setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
-            setHtml('#gtd-board', estado.html.gtdBoard || '');
+            setHtml('#mono-task-list', estado.html.monoTaskList || '');
+            setHtml('#mono-boxes', estado.html.monoBoxes || '');
+            setHtml('#mono-seq', estado.html.monoSeq || '');
+            setHtml('#reward-list', estado.html.rewardList || '');
         }
 
         restaurarLayoutSecoes(estado?.sectionLayout);
@@ -3417,7 +3450,7 @@ async function enviarPollinations() {
             }).join('');
         }
 
-        initGtdBoard();
+        initMonotaskUI();
 
         // Como injetamos HTML novo, precisamos religar os botões de arrastar
         if (typeof makeSortable === 'function') makeSortable();
@@ -3572,57 +3605,116 @@ async function enviarPollinations() {
   function addProject(){ const tbody = document.getElementById('projects'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nome"></td><td><input type="text" placeholder="Próximo passo"></td><td><input type="text" placeholder="__/__"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
   function addTimeblock(){ const tbody = document.getElementById('timeTblBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row timeblock-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:100px"><input type="time" class="timeblock-time" /></td><td><input type="text" class="timeblock-input" placeholder="Foco / Ação"/></td><td style="width:100px"><select><option>Imutável</option><option>Mutável</option><option>Opcional</option><option>Remarcável</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
 
-  function createGtdCard(text) {
-    const card = document.createElement('div');
-    card.className = 'gtd-card';
-    card.textContent = text;
-    card.dataset.gtdCardId = `gtd-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    bindGtdCardEvents(card);
-    return card;
+  function bindMonoTaskItem(row) {
+    if (!row || row.dataset.bound === '1') return;
+    row.dataset.bound = '1';
+    row.querySelector('.mono-task-delete')?.addEventListener('click', () => { row.remove(); refreshMonoTaskSelectors(); agendarSalvamentoNuvem(250); });
   }
 
-  function bindGtdCardEvents(card) {
-    if (!card || card.dataset.bound === '1') return;
-    card.dataset.bound = '1';
-    card.draggable = true;
-    if (!card.dataset.gtdCardId) card.dataset.gtdCardId = `gtd-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    card.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', card.textContent || '');
-      e.dataTransfer.setData('gtd-card-id', card.dataset.gtdCardId);
-      card.classList.add('dragging');
-    });
-    card.addEventListener('dragend', () => card.classList.remove('dragging'));
-    card.ondblclick = () => card.remove();
-  }
-
-  function addGtdCard() {
-    const input = document.getElementById('gtd-input');
-    const inbox = document.querySelector('.gtd-dropzone[data-gtd-col="inbox"]');
-    if (!input || !inbox) return;
-    const txt = String(input.value || '').trim();
+  function addMonoTask(taskText = '') {
+    const input = document.getElementById('mono-task-input');
+    const list = document.getElementById('mono-task-list');
+    if (!list) return;
+    const txt = String(taskText || input?.value || '').trim();
     if (!txt) return;
-    inbox.appendChild(createGtdCard(txt));
-    input.value = '';
+    const row = document.createElement('div');
+    row.className = 'mono-item';
+    row.innerHTML = `<span style="flex:1;">${txt.replace(/</g,'&lt;')}</span><button type="button" class="xbtn mono-task-delete" style="padding:2px 8px;">✕</button>`;
+    list.appendChild(row);
+    bindMonoTaskItem(row);
+    if (input) input.value = '';
+    refreshMonoTaskSelectors();
     agendarSalvamentoNuvem(250);
   }
 
-  function initGtdBoard() {
-    const board = document.getElementById('gtd-board');
-    if (!board || board.dataset.ready === '1') return;
-    board.dataset.ready = '1';
-    board.querySelectorAll('.gtd-card').forEach(bindGtdCardEvents);
-    board.querySelectorAll('.gtd-dropzone').forEach((zone) => {
-      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-      zone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        zone.classList.remove('drag-over');
-        const id = e.dataTransfer.getData('gtd-card-id');
-        const dragged = id ? document.querySelector(`.gtd-card[data-gtd-card-id="${CSS.escape(id)}"]`) : null;
-        if (dragged) zone.appendChild(dragged);
-        agendarSalvamentoNuvem(250);
-      });
+  function bindMonoBox(box) {
+    if (!box || box.dataset.bound === '1') return;
+    box.dataset.bound = '1';
+    box.querySelector('.mono-box-delete')?.addEventListener('click', () => { box.remove(); agendarSalvamentoNuvem(250); });
+    box.querySelector('.mono-box-add')?.addEventListener('click', () => {
+      const select = box.querySelector('select');
+      const list = box.querySelector('.mono-list');
+      if (!select || !list || !select.value) return;
+      const item = document.createElement('div');
+      item.className = 'mono-item';
+      item.innerHTML = `<span style="flex:1;">${select.value}</span><button type="button" class="xbtn" style="padding:2px 8px;">✕</button>`;
+      item.querySelector('button').onclick = () => { item.remove(); agendarSalvamentoNuvem(250); };
+      list.appendChild(item);
+      agendarSalvamentoNuvem(250);
     });
+  }
+
+  function addMonoBox(boxName = '') {
+    const input = document.getElementById('mono-box-input');
+    const wrap = document.getElementById('mono-boxes');
+    if (!wrap) return;
+    const nome = String(boxName || input?.value || '').trim();
+    if (!nome) return;
+    const box = document.createElement('div');
+    box.className = 'mono-box';
+    box.innerHTML = `<div class="mono-box-title"><strong>${nome.replace(/</g,'&lt;')}</strong> <button type="button" class="xbtn mono-box-delete" style="padding:1px 6px;">✕</button></div><div style="display:flex; gap:6px;"><select class="mono-task-select" style="margin:0;"><option value="">Escolha uma tarefa...</option></select><button type="button" class="ghost mini-add mono-box-add">+ colocar</button></div><div class="mono-list" style="margin-top:6px;"></div>`;
+    wrap.appendChild(box);
+    if (input) input.value = '';
+    bindMonoBox(box);
+    refreshMonoTaskSelectors();
+    agendarSalvamentoNuvem(250);
+  }
+
+  function refreshMonoTaskSelectors() {
+    const tasks = Array.from(document.querySelectorAll('#mono-task-list .mono-item > span')).map(el => el.textContent.trim()).filter(Boolean);
+    document.querySelectorAll('.mono-task-select, .mono-seq-select').forEach(sel => {
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Escolha...</option>' + tasks.map(t => `<option>${t.replace(/</g,'&lt;')}</option>`).join('');
+      if (current && tasks.includes(current)) sel.value = current;
+    });
+  }
+
+  function buildMonoSequenceSteps() {
+    const seq = document.getElementById('mono-seq');
+    if (!seq || seq.dataset.built === '1') return;
+    seq.dataset.built = '1';
+    for (let i = 0; i < 6; i++) {
+      const step = document.createElement('div');
+      step.className = 'mono-step';
+      step.innerHTML = `<span class="tiny-lbl" style="margin:0;">Etapa ${i + 1}</span><select class="mono-seq-select" style="margin:0; min-width:130px;"><option value="">Escolha...</option></select><input type="text" class="mono-reward" placeholder="mini recompensa" />`;
+      seq.appendChild(step);
+      if (i < 5) {
+        const arrow = document.createElement('span');
+        arrow.className = 'mono-arrow';
+        arrow.textContent = '➜';
+        seq.appendChild(arrow);
+      }
+    }
+    refreshMonoTaskSelectors();
+  }
+
+  function bindRewardItem(item) {
+    if (!item || item.dataset.bound === '1') return;
+    item.dataset.bound = '1';
+    item.querySelector('button')?.addEventListener('click', () => { item.remove(); agendarSalvamentoNuvem(250); });
+  }
+
+  function addRewardItem(text = '') {
+    const input = document.getElementById('reward-input');
+    const list = document.getElementById('reward-list');
+    if (!list) return;
+    const txt = String(text || input?.value || '').trim();
+    if (!txt) return;
+    const item = document.createElement('div');
+    item.className = 'mono-item';
+    item.innerHTML = `<span style="flex:1;">${txt.replace(/</g,'&lt;')}</span><button type="button" class="xbtn" style="padding:2px 8px;">✕</button>`;
+    list.appendChild(item);
+    bindRewardItem(item);
+    if (input) input.value = '';
+    agendarSalvamentoNuvem(250);
+  }
+
+  function initMonotaskUI() {
+    buildMonoSequenceSteps();
+    document.querySelectorAll('#mono-task-list .mono-item').forEach(bindMonoTaskItem);
+    document.querySelectorAll('#mono-boxes .mono-box').forEach(bindMonoBox);
+    document.querySelectorAll('#reward-list .mono-item').forEach(bindRewardItem);
+    refreshMonoTaskSelectors();
   }
   
   function updateWeeklyCheckboxes(input) { const tr = input.closest('tr'); let qty = parseInt(input.value) || 1; if(qty < 1) qty = 1; if(qty > 20) qty = 20; const containers = tr.querySelectorAll('.day-cb-container'); containers.forEach(td => { td.innerHTML = ''; const flexDiv = document.createElement('div'); flexDiv.style.display = 'flex'; flexDiv.style.flexWrap = 'wrap'; flexDiv.style.gap = '2px'; flexDiv.style.justifyContent = 'center'; for(let i=0; i<qty; i++) { const cb = document.createElement('input'); cb.type = 'checkbox'; flexDiv.appendChild(cb); } td.appendChild(flexDiv); }); }
@@ -3731,7 +3823,7 @@ async function enviarPollinations() {
     initThemeState();
     garantirIdsSecoes();
     aplicarVisibilidadeSecoesCriaveis([]);
-    initGtdBoard();
+    initMonotaskUI();
 
     // Primeiro carrega da nuvem
     carregarNuvem().then(() => {
