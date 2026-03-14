@@ -1293,6 +1293,7 @@ function rolarTodosOsDados() {
     if (!sec) return;
     sec.style.display = '';
     sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    updateIndex();
     agendarSalvamentoNuvem(250);
   }
 
@@ -1301,6 +1302,7 @@ function rolarTodosOsDados() {
     if (!sec) return;
     sec.style.display = 'none';
     window.location.hash = '#indice-container';
+    updateIndex();
     agendarSalvamentoNuvem(250);
   }
 
@@ -1341,7 +1343,6 @@ function rolarTodosOsDados() {
         closeBtn.innerText = '✕';
         closeBtn.onclick = () => {
           removerSecaoPeloIndice(sec.id);
-          updateIndex();
         };
         li.appendChild(closeBtn);
       }
