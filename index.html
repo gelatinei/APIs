@@ -163,7 +163,7 @@
     #lista-indice li a:hover, #lista-indice li button:hover { background: var(--accent); color: var(--bg); }
     #lista-indice li button { cursor: pointer; width: 100%; }
 
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start; transition: all 0.3s ease; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: stretch; transition: all 0.3s ease; }
     .col { display: flex; flex-direction: column; gap: 12px; min-height: 100px; } 
     
     label { display: block; font-size: 12px; margin-bottom: 6px; color: var(--accent); font-weight: 600; }
@@ -179,7 +179,7 @@
     .small { font-size: 12px; font-weight: normal; }
     
     /* SECTIONS MINIMIZÁVEIS E DRAG */
-    .section { background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); transition: background 0.3s, opacity 0.2s; position: relative; overflow-x: auto; scroll-margin-top: 20px;}
+    .section { background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); transition: background 0.3s, opacity 0.2s; position: relative; overflow-x: visible; scroll-margin-top: 20px;}
     .section-header { display: flex; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 10px; padding-bottom: 6px; gap: 8px;}
     .section-header label { margin: 0; padding: 0; flex: 1; border: none; font-size: 14px; transition: color 0.2s;}
     .section-header label:hover { color: var(--ink); }
@@ -191,7 +191,7 @@
 
     .checkbox-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     
-    .table-container { overflow-x: auto; width: 100%; }
+    .table-container { overflow-x: auto; width: 100%; padding-bottom: 4px; }
     table { width: 100%; border-collapse: collapse; min-width: 300px; }
     table td, table th { padding: 8px 6px; border-bottom: 1px dashed var(--border); vertical-align: middle; font-size: 13px; }
     
@@ -217,10 +217,15 @@
 
     .tracker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
     .tracker-group-title { grid-column: 1 / -1; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 6px; background: var(--drag-bg); color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: .2px; }
-    #core-floating-box.floating-lan { background: color-mix(in srgb, var(--card-bg) 65%, transparent); backdrop-filter: blur(4px); }
-    #core-floating-box.floating-docked { position: static !important; width: 100% !important; right: auto !important; bottom: auto !important; left: auto !important; top: auto !important; z-index: 2 !important; cursor: default !important; margin-top: 12px; }
     .tracker-box { background: var(--card-bg); border: 1px solid var(--border); padding: 12px; border-radius: 6px; position: relative; }
     .tracker-box h4 { margin: 0 0 10px 0; font-size: 13px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
+
+    .gtd-board { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; }
+    .gtd-col { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; min-height: 210px; display: flex; flex-direction: column; gap: 8px; }
+    .gtd-col h5 { margin: 0; font-size: 12px; color: var(--accent); }
+    .gtd-dropzone { min-height: 150px; display: flex; flex-direction: column; gap: 6px; }
+    .gtd-card { padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); cursor: grab; white-space: pre-wrap; word-break: break-word; }
+    .gtd-dropzone.drag-over { outline: 2px dashed var(--accent); outline-offset: 2px; }
     .field-group { margin-bottom: 8px; }
     .dynamic-fields { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
     .inline-cb { display: flex; align-items: center; gap: 6px; font-size: 12px; }
@@ -508,6 +513,41 @@
               <div class="controls">
                 <button onclick="addTimeblock()">+ bloco de tempo</button>
               </div>
+          </div>
+        </div>
+
+        <div id="gtd-flow-section" class="section hide-in-focus">
+          <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+            <label>🧠 Fluxo GTD (Get Things Done)</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+          </div>
+          <div class="section-content">
+            <div class="field-group" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
+              <div style="flex:1; min-width:250px;">
+                <label class="tiny-lbl">Nova captura GTD</label>
+                <textarea id="gtd-input" rows="2" placeholder="Capture aqui sua próxima ação, pendência ou ideia..."></textarea>
+              </div>
+              <button class="ghost" onclick="addGtdCard()">+ Capturar</button>
+            </div>
+            <div class="gtd-board" id="gtd-board">
+              <div class="gtd-col">
+                <h5>Inbox</h5>
+                <div class="gtd-dropzone" data-gtd-col="inbox"></div>
+              </div>
+              <div class="gtd-col">
+                <h5>Próximas Ações</h5>
+                <div class="gtd-dropzone" data-gtd-col="next"></div>
+              </div>
+              <div class="gtd-col">
+                <h5>Aguardando</h5>
+                <div class="gtd-dropzone" data-gtd-col="waiting"></div>
+              </div>
+              <div class="gtd-col">
+                <h5>Algum dia / Talvez</h5>
+                <div class="gtd-dropzone" data-gtd-col="someday"></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1108,21 +1148,6 @@
     </div>
 
   </div>
-
-  <div id="core-floating-box" class="section hide-in-focus floating-lan" style="position:fixed; right:16px; bottom:16px; width:280px; z-index:9999; cursor:move;">
-    <div class="section-header" style="padding:8px 10px;">
-      <label style="display:flex; align-items:center; gap:8px; margin:0;">😼 Lan <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
-      <button class="ghost mini-add" id="core-floating-dock-btn" onclick="toggleDockFloatingLan(this)">Acoplar</button><button class="collapse-btn" onclick="toggleFloatingCoreBox(this)">➖</button>
-    </div>
-    <div class="section-content" id="core-floating-content" style="display:block;">
-      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Lan monitorando o planner...</div><div id="core-gmt3-clock" class="tiny-lbl" style="margin-top:6px;">GMT-3 --:--:--</div>
-      <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-        <button class="ghost mini-add" onclick="reagirUltimaAlteracaoPlanner()">Reaja à última alteração no planner</button>
-      </div>
-    </div>
-  </div>
-
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
   // ====== SISTEMA DE DADOS ======
@@ -1226,7 +1251,7 @@ function rolarTodosOsDados() {
   }
 
   /* ====== ATUALIZAÇÃO DO ÍNDICE DINÂMICO ====== */
-  const SECOES_FIXAS_VISIVEIS = new Set(['indice-container', 'control-time-section', 'lan-chat-section', 'lan-lousas-section', 'lan-toques-section']);
+  const SECOES_FIXAS_VISIVEIS = new Set(['indice-container', 'control-time-section']);
 
   function garantirIdsSecoes() {
     document.querySelectorAll('.section').forEach((sec, i) => {
@@ -3115,7 +3140,8 @@ async function enviarPollinations() {
       weekly: document.getElementById('weeklyTrackersBody').innerHTML,
       trackerGrid: document.getElementById('tracker-grid').innerHTML,
       meals: document.getElementById('meals-container').innerHTML,
-      bottleQuarters: document.getElementById('bottleQuarters').innerHTML
+      bottleQuarters: document.getElementById('bottleQuarters').innerHTML,
+      gtdBoard: document.getElementById('gtd-board')?.innerHTML || ''
     };
 
     const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
@@ -3258,6 +3284,7 @@ async function enviarPollinations() {
             setHtml('#tracker-grid', estado.html.trackerGrid || '');
             setHtml('#meals-container', estado.html.meals || '');
             setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
+            setHtml('#gtd-board', estado.html.gtdBoard || '');
         }
 
         restaurarLayoutSecoes(estado?.sectionLayout);
@@ -3389,6 +3416,8 @@ async function enviarPollinations() {
                 return `<div><strong>${role}:</strong> ${txt}</div>`;
             }).join('');
         }
+
+        initGtdBoard();
 
         // Como injetamos HTML novo, precisamos religar os botões de arrastar
         if (typeof makeSortable === 'function') makeSortable();
@@ -3542,6 +3571,59 @@ async function enviarPollinations() {
   function addIdea(){ const tbody = document.querySelector('#ideasTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Ideia..."/></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
   function addProject(){ const tbody = document.getElementById('projects'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nome"></td><td><input type="text" placeholder="Próximo passo"></td><td><input type="text" placeholder="__/__"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
   function addTimeblock(){ const tbody = document.getElementById('timeTblBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row timeblock-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:100px"><input type="time" class="timeblock-time" /></td><td><input type="text" class="timeblock-input" placeholder="Foco / Ação"/></td><td style="width:100px"><select><option>Imutável</option><option>Mutável</option><option>Opcional</option><option>Remarcável</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
+
+  function createGtdCard(text) {
+    const card = document.createElement('div');
+    card.className = 'gtd-card';
+    card.textContent = text;
+    card.dataset.gtdCardId = `gtd-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    bindGtdCardEvents(card);
+    return card;
+  }
+
+  function bindGtdCardEvents(card) {
+    if (!card || card.dataset.bound === '1') return;
+    card.dataset.bound = '1';
+    card.draggable = true;
+    if (!card.dataset.gtdCardId) card.dataset.gtdCardId = `gtd-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    card.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', card.textContent || '');
+      e.dataTransfer.setData('gtd-card-id', card.dataset.gtdCardId);
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    card.ondblclick = () => card.remove();
+  }
+
+  function addGtdCard() {
+    const input = document.getElementById('gtd-input');
+    const inbox = document.querySelector('.gtd-dropzone[data-gtd-col="inbox"]');
+    if (!input || !inbox) return;
+    const txt = String(input.value || '').trim();
+    if (!txt) return;
+    inbox.appendChild(createGtdCard(txt));
+    input.value = '';
+    agendarSalvamentoNuvem(250);
+  }
+
+  function initGtdBoard() {
+    const board = document.getElementById('gtd-board');
+    if (!board || board.dataset.ready === '1') return;
+    board.dataset.ready = '1';
+    board.querySelectorAll('.gtd-card').forEach(bindGtdCardEvents);
+    board.querySelectorAll('.gtd-dropzone').forEach((zone) => {
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const id = e.dataTransfer.getData('gtd-card-id');
+        const dragged = id ? document.querySelector(`.gtd-card[data-gtd-card-id="${CSS.escape(id)}"]`) : null;
+        if (dragged) zone.appendChild(dragged);
+        agendarSalvamentoNuvem(250);
+      });
+    });
+  }
   
   function updateWeeklyCheckboxes(input) { const tr = input.closest('tr'); let qty = parseInt(input.value) || 1; if(qty < 1) qty = 1; if(qty > 20) qty = 20; const containers = tr.querySelectorAll('.day-cb-container'); containers.forEach(td => { td.innerHTML = ''; const flexDiv = document.createElement('div'); flexDiv.style.display = 'flex'; flexDiv.style.flexWrap = 'wrap'; flexDiv.style.gap = '2px'; flexDiv.style.justifyContent = 'center'; for(let i=0; i<qty; i++) { const cb = document.createElement('input'); cb.type = 'checkbox'; flexDiv.appendChild(cb); } td.appendChild(flexDiv); }); }
   function addWeeklyTracker() { const tbody = document.getElementById('weeklyTrackersBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Novo hábito"/></td><td><input type="number" min="1" max="10" value="1" onchange="updateWeeklyCheckboxes(this)"/></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
@@ -3648,6 +3730,8 @@ async function enviarPollinations() {
   document.addEventListener("DOMContentLoaded", () => {
     initThemeState();
     garantirIdsSecoes();
+    aplicarVisibilidadeSecoesCriaveis([]);
+    initGtdBoard();
 
     // Primeiro carrega da nuvem
     carregarNuvem().then(() => {
@@ -3662,7 +3746,6 @@ async function enviarPollinations() {
         renderThemeCliparts();
         initCamposExpansiveis();
         initTrackerBoxesInterativas();
-        initFloatingCore();
         atualizarRelogioGMT3();
         setInterval(atualizarRelogioGMT3, 1000);
         makeSortable(); initSparkles(); updateIndex();
