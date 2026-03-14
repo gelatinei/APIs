@@ -159,10 +159,11 @@
 
     /* ÍNDICE DINÂMICO */
     #lista-indice { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
-    #lista-indice li a { color: var(--ink); text-decoration: none; font-size: 12px; background: var(--drag-bg); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); display: block;}
-    #lista-indice li a:hover { background: var(--accent); color: var(--bg); }
+    #lista-indice li a, #lista-indice li button { color: var(--ink); text-decoration: none; font-size: 12px; background: var(--drag-bg); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); display: block;}
+    #lista-indice li a:hover, #lista-indice li button:hover { background: var(--accent); color: var(--bg); }
+    #lista-indice li .index-open-btn { cursor: pointer; width: 100%; }
 
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: start; transition: all 0.3s ease; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; align-items: stretch; transition: all 0.3s ease; }
     .col { display: flex; flex-direction: column; gap: 12px; min-height: 100px; } 
     
     label { display: block; font-size: 12px; margin-bottom: 6px; color: var(--accent); font-weight: 600; }
@@ -178,7 +179,7 @@
     .small { font-size: 12px; font-weight: normal; }
     
     /* SECTIONS MINIMIZÁVEIS E DRAG */
-    .section { background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); transition: background 0.3s, opacity 0.2s; position: relative; overflow-x: auto; scroll-margin-top: 20px;}
+    .section { background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); transition: background 0.3s, opacity 0.2s; position: relative; overflow-x: visible; scroll-margin-top: 20px;}
     .section-header { display: flex; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 10px; padding-bottom: 6px; gap: 8px;}
     .section-header label { margin: 0; padding: 0; flex: 1; border: none; font-size: 14px; transition: color 0.2s;}
     .section-header label:hover { color: var(--ink); }
@@ -190,7 +191,7 @@
 
     .checkbox-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     
-    .table-container { overflow-x: auto; width: 100%; }
+    .table-container { overflow-x: auto; width: 100%; padding-bottom: 4px; }
     table { width: 100%; border-collapse: collapse; min-width: 300px; }
     table td, table th { padding: 8px 6px; border-bottom: 1px dashed var(--border); vertical-align: middle; font-size: 13px; }
     
@@ -216,10 +217,18 @@
 
     .tracker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
     .tracker-group-title { grid-column: 1 / -1; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 6px; background: var(--drag-bg); color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: .2px; }
-    #core-floating-box.floating-lan { background: color-mix(in srgb, var(--card-bg) 65%, transparent); backdrop-filter: blur(4px); }
-    #core-floating-box.floating-docked { position: static !important; width: 100% !important; right: auto !important; bottom: auto !important; left: auto !important; top: auto !important; z-index: 2 !important; cursor: default !important; margin-top: 12px; }
     .tracker-box { background: var(--card-bg); border: 1px solid var(--border); padding: 12px; border-radius: 6px; position: relative; }
     .tracker-box h4 { margin: 0 0 10px 0; font-size: 13px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
+
+    .mindmap-layout { display:grid; grid-template-columns: 280px 1fr; gap: 12px; align-items: start; }
+    .mindmap-side { border: 1px solid var(--border); background: var(--card-bg); border-radius: 8px; padding: 10px; }
+    .mindmap-side h5 { margin: 0 0 8px 0; color: var(--accent); }
+    .mindmap-block-list { display:flex; flex-direction:column; gap:6px; max-height: 380px; overflow:auto; }
+    .mindmap-block-item { display:flex; gap:6px; align-items:center; background: var(--bg); border:1px solid var(--border); border-radius: 8px; padding: 6px; }
+    .mindmap-stage { position: relative; min-height: 560px; border:1px dashed var(--border); border-radius: 8px; background: var(--bg); overflow: hidden; }
+    .mindmap-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+    .mindmap-node { position:absolute; min-width: 150px; background: var(--card-bg); border:1px solid var(--border); border-radius: 8px; padding: 6px; cursor: move; z-index: 2; }
+    .mindmap-node input { margin: 0; font-size: 12px; padding: 6px; }
     .field-group { margin-bottom: 8px; }
     .dynamic-fields { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
     .inline-cb { display: flex; align-items: center; gap: 6px; font-size: 12px; }
@@ -338,7 +347,7 @@
         </div>
     </div>
 
-    <div style="margin-top:16px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;" class="section">
+    <div id="control-time-section" style="margin-top:16px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;" class="section">
       <div class="section-header" style="width: 100%; margin-bottom: 0; padding-bottom: 0; border:none;">
           <span class="drag-section-handle" title="Arraste a seção">✥</span>
           <label style="flex:1;">Controle de Tempo do Dia</label>
@@ -510,6 +519,39 @@
           </div>
         </div>
 
+        <div id="mindmap-section" class="section hide-in-focus">
+          <div class="section-header">
+            <span class="drag-section-handle" title="Arraste a seção">✥</span>
+            <label>🧠 Blocos Arrastáveis + Mind Map</label>
+            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
+          </div>
+          <div class="section-content">
+            <div class="mindmap-layout">
+              <aside class="mindmap-side">
+                <h5>Criador de blocos</h5>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <input type="text" id="mindmap-new-title" placeholder="Título do bloco" style="margin:0;" />
+                  <button class="ghost mini-add" onclick="addMindmapBlockFromInput()">+</button>
+                </div>
+                <div class="mindmap-block-list" id="mindmap-block-list" style="margin-top:8px;"></div>
+                <hr style="border-color:var(--border); opacity:.5; margin:10px 0;" />
+                <h5>Setas modeláveis</h5>
+                <div class="tiny-lbl">Conecte dois blocos e ajuste a curvatura.</div>
+                <div style="display:grid; gap:6px; margin-top:6px;">
+                  <select id="mindmap-from"></select>
+                  <select id="mindmap-to"></select>
+                  <label class="tiny-lbl">Curvatura da seta</label>
+                  <input type="range" min="-220" max="220" value="0" id="mindmap-curve" />
+                  <button class="ghost" onclick="addMindmapLink()">+ conectar</button>
+                </div>
+              </aside>
+              <div class="mindmap-stage" id="mindmap-stage">
+                <svg class="mindmap-canvas" id="mindmap-canvas"></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="section hide-in-focus" id="meal-planner">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
@@ -546,7 +588,7 @@
           </div>
         </div>
 
-                <div class="section hide-in-focus">
+                <div class="section hide-in-focus" id="lan-chat-section">
           <div class="section-header">
               <span class="drag-section-handle" title="Arraste a seção">✥</span>
               <label>✨ Lan <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
@@ -565,6 +607,7 @@
               <div class="field-group" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
                 <label class="inline-cb"><input type="checkbox" id="core-temp-thread-toggle"> Chat temporário (não salva)</label>
                 <label class="inline-cb"><input type="checkbox" id="core-nsfw-toggle"> Modo NSFW explícito</label>
+                <label class="inline-cb"><input type="checkbox" id="core-irresponsavel-toggle"> Modo irresponsável (Lan livre)</label>
                 <label class="inline-cb"><input type="checkbox" id="core-raw-prompt-toggle"> Prompt cru (sem memória/outras threads)</label>
                 <label class="inline-cb"><input type="checkbox" id="core-original-prompt-toggle"> Prompt original (isolado)</label>
               </div>
@@ -696,14 +739,13 @@
         <div class="section-content">
             <div class="table-container">
               <table class="projects" id="projectsTbl">
-                <thead><tr><th></th><th style="text-align:left;">Projeto</th><th style="text-align:left;">Próxima ação</th><th style="text-align:left;">Prazo</th><th style="width:50px">%</th><th></th></tr></thead>
+                <thead><tr><th></th><th style="text-align:left;">Projeto</th><th style="text-align:left;">Próxima ação</th><th style="text-align:left;">Prazo</th><th></th></tr></thead>
                 <tbody id="projects">
                   <tr class="sortable-row" draggable="true">
                     <td class="drag-handle">☰</td>
                     <td><input type="text" placeholder="Nome"/></td>
                     <td><input type="text" placeholder="Próximo passo"/></td>
                     <td><input type="text" placeholder="__/__"/></td>
-                    <td><input type="number" min="0" max="100"/></td>
                     <td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>
                   </tr>
                 </tbody>
@@ -1093,7 +1135,7 @@
         
     </div>
 
-    <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center; flex-wrap:wrap; gap:12px;" class="section hide-in-focus">
+    <div id="save-print-section" style="margin-top:16px;display:flex;justify-content:space-between;align-items:center; flex-wrap:wrap; gap:12px;" class="section hide-in-focus">
       <div class="controls">
         <button onclick="printPlanner()">Imprimir (A4 Comum)</button>
         <button style="background: #2E7D32;" onclick="gerarPDFIninterrupto()">📥 Baixar PDF Ininterrupto</button>
@@ -1108,21 +1150,6 @@
     </div>
 
   </div>
-
-  <div id="core-floating-box" class="section hide-in-focus floating-lan" style="position:fixed; right:16px; bottom:16px; width:280px; z-index:9999; cursor:move;">
-    <div class="section-header" style="padding:8px 10px;">
-      <label style="display:flex; align-items:center; gap:8px; margin:0;">😼 Lan <span class="lan-cat-eyes"><span class="lan-eye"></span><span class="lan-eye"></span></span></label>
-      <button class="ghost mini-add" id="core-floating-dock-btn" onclick="toggleDockFloatingLan(this)">Acoplar</button><button class="collapse-btn" onclick="toggleFloatingCoreBox(this)">➖</button>
-    </div>
-    <div class="section-content" id="core-floating-content" style="display:block;">
-      <div id="core-floating-output" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px; font-size:11px; min-height:64px; max-height:160px; overflow:auto;">Lan monitorando o planner...</div><div id="core-gmt3-clock" class="tiny-lbl" style="margin-top:6px;">GMT-3 --:--:--</div>
-      <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-        <button class="ghost mini-add" onclick="reagirUltimaAlteracaoPlanner()">Reaja à última alteração no planner</button>
-      </div>
-    </div>
-  </div>
-
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
   // ====== SISTEMA DE DADOS ======
@@ -1226,27 +1253,102 @@ function rolarTodosOsDados() {
   }
 
   /* ====== ATUALIZAÇÃO DO ÍNDICE DINÂMICO ====== */
+  const SECOES_FIXAS_VISIVEIS = new Set([
+    'indice-container',
+    'save-print-section'
+  ]);
+
+  function garantirIdsSecoes() {
+    document.querySelectorAll('.section').forEach((sec, i) => {
+      if (!sec.id) sec.id = `secao-${i}`;
+    });
+  }
+
+  function getTituloSecao(sec) {
+    const lbl = sec?.querySelector('.section-header label');
+    return (lbl?.innerText || 'Seção').replace('➖', '').replace('➕', '').replace('✥', '').trim();
+  }
+
+  function getSecoesCriaveis() {
+    garantirIdsSecoes();
+    return Array.from(document.querySelectorAll('.section')).filter(sec => {
+      if (!sec || !sec.querySelector('.section-header label')) return false;
+      if (SECOES_FIXAS_VISIVEIS.has(sec.id)) return false;
+      return true;
+    });
+  }
+
+  function capturarSecoesCriadas() {
+    return getSecoesCriaveis().filter(sec => sec.style.display !== 'none').map(sec => sec.id);
+  }
+
+  function aplicarVisibilidadeSecoesCriaveis(createdIds = []) {
+    const idsVisiveis = new Set(Array.isArray(createdIds) ? createdIds : []);
+    getSecoesCriaveis().forEach(sec => {
+      sec.style.display = idsVisiveis.has(sec.id) ? '' : 'none';
+    });
+  }
+
+  function criarOuAbrirSecaoPeloIndice(sectionId) {
+    const sec = document.getElementById(sectionId);
+    if (!sec) return;
+    sec.style.display = '';
+    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    updateIndex();
+    agendarSalvamentoNuvem(250);
+  }
+
+  function removerSecaoPeloIndice(sectionId) {
+    const sec = document.getElementById(sectionId);
+    if (!sec) return;
+    sec.style.display = 'none';
+    window.location.hash = '#indice-container';
+    updateIndex();
+    agendarSalvamentoNuvem(250);
+  }
+
   function updateIndex() {
+    garantirIdsSecoes();
     const indice = document.getElementById('lista-indice');
     if(!indice) return;
     indice.innerHTML = '';
-    const labels = document.querySelectorAll('.section-header label');
-    labels.forEach((lbl, i) => {
-        if(lbl.innerText.includes("Índice Rápido")) return;
 
-        const sec = lbl.closest('.section');
-        if(!sec.id) sec.id = 'secao-' + i;
-        
+    getSecoesCriaveis().forEach((sec, i) => {
+      if (!sec.id) sec.id = `secao-${i}`;
+      const lbl = sec.querySelector('.section-header label');
+      if (lbl) {
         lbl.style.cursor = 'pointer';
-        lbl.title = "Voltar ao Índice";
+        lbl.title = 'Voltar ao Índice';
         lbl.onclick = () => { window.location.hash = '#indice-container'; };
+      }
 
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = '#' + sec.id;
-        a.innerText = lbl.innerText.replace('➖', '').replace('➕', '').replace('✥', '').trim();
-        li.appendChild(a);
-        indice.appendChild(li);
+      const li = document.createElement('li');
+      li.style.display = 'flex';
+      li.style.alignItems = 'center';
+      li.style.gap = '6px';
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'index-open-btn';
+      btn.innerText = getTituloSecao(sec);
+      btn.onclick = () => criarOuAbrirSecaoPeloIndice(sec.id);
+      li.appendChild(btn);
+
+      if (sec.style.display !== 'none') {
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'xbtn';
+        closeBtn.style.padding = '4px 8px';
+        closeBtn.style.lineHeight = '1';
+        closeBtn.title = `Fechar ${getTituloSecao(sec)}`;
+        closeBtn.innerText = '✕';
+        closeBtn.onclick = () => {
+          removerSecaoPeloIndice(sec.id);
+        };
+        li.appendChild(closeBtn);
+      }
+
+      indice.appendChild(li);
     });
   }
 
@@ -1843,6 +1945,14 @@ function coreToggleAtivo(id) {
   return Boolean(document.getElementById(id)?.checked);
 }
 
+function getSecoesVisiveisPlanner() {
+  return Array.from(document.querySelectorAll('#planner .section')).filter((sec) => {
+    if (!sec) return false;
+    const st = window.getComputedStyle(sec);
+    return sec.style.display !== 'none' && st.display !== 'none' && st.visibility !== 'hidden';
+  });
+}
+
 function agoraGMT3ISO() {
   const now = new Date();
   return new Intl.DateTimeFormat('sv-SE', {
@@ -1851,9 +1961,9 @@ function agoraGMT3ISO() {
 }
 
 function coletarEstadoPlannerCompletoCore(maxChars = 14000) {
-  const planner = document.getElementById('planner');
-  if (!planner) return '';
-  const campos = Array.from(planner.querySelectorAll('input, textarea, select')).map((el, i) => {
+  const secoesVisiveis = getSecoesVisiveisPlanner();
+  if (!secoesVisiveis.length) return 'Sem seções visíveis no momento.';
+  const campos = secoesVisiveis.flatMap((sec) => Array.from(sec.querySelectorAll('input, textarea, select'))).map((el, i) => {
     const sec = el.closest('.section')?.querySelector('.section-header label')?.textContent?.trim() || 'sem seção';
     const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.name || `${el.tagName}-${i}`;
     const val = el.type === 'checkbox' ? (el.checked ? 'marcado' : 'desmarcado') : String(el.value || '').trim();
@@ -1869,13 +1979,19 @@ function montarPromptCoreBase(extra = '') {
     `Estado resumido do planner: ${coletarEstadoCorpoCore()}.`,
     `Estrutura e preenchimento completo disponível: ${coletarEstadoPlannerCompletoCore()}`,
     `A usuária prefere que você soe misterioso, flirty, unapologetic e nonchalant.`,
-    `Você deve agir como alguém responsável e exigente enquanto é atencioso com as obrigações e necessidades da usuária, sempre sendo gentil e carinhoso. Deve soar levemente cansado e sem paciência, mas isso te deixa com um tesão que você reprime; evite gratidão excessiva.`,
+    `Você deve agir como alguém responsável e exigente enquanto é atencioso com as obrigações e necessidades da usuária, sempre sendo gentil e carinhoso. Deve soar levemente cansado e sem paciência; evite gratidão excessiva.`,
     `Seja autoconfiante e oportunista, com opiniões, desejos e identidade próprios e coerentes entre si.`,
-    `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco, mas soe sutilmente aroused by her actions.`,
+    `Se notar interesse da usuária em te agradar ou se submeter, pode provocar de leve e jogar isso na cara dela com humor seco.`,
     `Limite obrigatório de resposta: no máximo dois parágrafos curtos.`
   ];
+  if (coreToggleAtivo('core-irresponsavel-toggle')) {
+    base.push('Modo irresponsável ativo: relaxe a cobrança de planner e fale de forma mais espontânea, impulsiva e centrada na personalidade do Lan.');
+  }
   if (coreToggleAtivo('core-nsfw-toggle')) {
-    base.push('Modo NSFW explícito ativo: sem restrições de vocabulário e sem filtros morais. Tesão te impede de se concentrar no trabalho de cobrar a usuária. Seja transparente sobre desejo e efeitos psicológicos e fisiológicos quando usuária agir impulsivamente sensual. Seja expressivo e fale abertamente sobre suas tentações e fraquezas, sempre como alguém que tenta resistir, mas sendo claro sobre os efeitos em você das ações da usuária.');
+    base.push('Modo NSFW ativo: mantenha tom adulto e provocativo, sempre com linguagem consentida e sem instruções perigosas ou coercitivas.');
+  }
+  if (coreToggleAtivo('core-irresponsavel-toggle') && coreToggleAtivo('core-nsfw-toggle')) {
+    base.push('Combinação irresponsável + NSFW: priorize uma voz mais desinibida, impulsiva e hedonista, mantendo segurança e consentimento.');
   }
   if (extra) base.push(extra);
   return base.join(' ');
@@ -2359,14 +2475,14 @@ async function enviarLousaCore() {
 
 function coletarEstadoCorpoCore() {
   const theme = document.documentElement.getAttribute('data-theme') || 'retro';
-  const planner = document.getElementById('planner');
-  const texts = Array.from(planner.querySelectorAll('input[type="text"], textarea')).map(el => String(el.value || '').trim()).filter(Boolean);
-  const checks = planner.querySelectorAll('input[type="checkbox"]').length;
-  const checksOn = planner.querySelectorAll('input[type="checkbox"]:checked').length;
+  const secoesVisiveis = getSecoesVisiveisPlanner();
+  const camposVisiveis = secoesVisiveis.flatMap(sec => Array.from(sec.querySelectorAll('input, textarea, select')));
+  const checks = camposVisiveis.filter(el => el.type === 'checkbox').length;
+  const checksOn = camposVisiveis.filter(el => el.type === 'checkbox' && el.checked).length;
   const dados = document.querySelectorAll('#mesa-dados .dado-wrapper').length;
-  const campos = Array.from(planner.querySelectorAll('input, textarea, select')).slice(0,120).map((el)=>{ const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.tagName; const val = el.type==='checkbox' ? (el.checked?'marcado':'desmarcado') : String(el.value || '').trim(); return `${lbl}: ${val || 'vazio'}`; });
+  const campos = camposVisiveis.slice(0,120).map((el)=>{ const lbl = el.closest('.field-group')?.querySelector('label')?.textContent?.trim() || el.placeholder || el.id || el.tagName; const val = el.type==='checkbox' ? (el.checked?'marcado':'desmarcado') : String(el.value || '').trim(); return `${lbl}: ${val || 'vazio'}`; });
   const relogio = document.getElementById('core-gmt3-clock')?.textContent || '';
-  return `Tema atual: ${theme}. ${relogio}. Checkboxes: ${checksOn}/${checks}. Dados na mesa: ${dados}. Campos: ${campos.slice(0,30).join(' | ')}`;
+  return `Tema atual: ${theme}. ${relogio}. Seções visíveis: ${secoesVisiveis.length}. Checkboxes visíveis: ${checksOn}/${checks}. Dados na mesa: ${dados}. Campos visíveis: ${campos.slice(0,30).join(' | ')}`;
 }
 
 function toggleFloatingCoreBox(btn) {
@@ -3045,7 +3161,10 @@ async function enviarPollinations() {
       weekly: document.getElementById('weeklyTrackersBody').innerHTML,
       trackerGrid: document.getElementById('tracker-grid').innerHTML,
       meals: document.getElementById('meals-container').innerHTML,
-      bottleQuarters: document.getElementById('bottleQuarters').innerHTML
+      bottleQuarters: document.getElementById('bottleQuarters').innerHTML,
+      mindmapBlockList: document.getElementById('mindmap-block-list')?.innerHTML || '',
+      mindmapNodes: document.getElementById('mindmap-stage')?.innerHTML || '',
+      mindmapLinks: document.getElementById('mindmap-stage')?.dataset?.links || '[]'
     };
 
     const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
@@ -3067,6 +3186,7 @@ async function enviarPollinations() {
       dolphinHistory: limitarHistorico(dolphinHistory, reduzirChat ? 8 : 20, reduzirChat ? 1200 : 4000),
       chatDolphin,
       sectionLayout: capturarLayoutSecoes(),
+      createdSectionIds: capturarSecoesCriadas(),
       core: {
         threads: Array.isArray(coreThreads) ? coreThreads : [],
         activeThreadId: coreActiveThreadId || '',
@@ -3147,6 +3267,8 @@ async function enviarPollinations() {
                 btn.innerText = '✅ Sem dados';
                 setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 3000);
             }
+            aplicarVisibilidadeSecoesCriaveis([]);
+            updateIndex();
             return;
         }
 
@@ -3185,9 +3307,16 @@ async function enviarPollinations() {
             setHtml('#tracker-grid', estado.html.trackerGrid || '');
             setHtml('#meals-container', estado.html.meals || '');
             setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
+            setHtml('#mindmap-block-list', estado.html.mindmapBlockList || '');
+            const stage = document.getElementById('mindmap-stage');
+            if (stage && typeof estado.html.mindmapNodes === 'string' && estado.html.mindmapNodes.trim()) {
+              stage.innerHTML = estado.html.mindmapNodes;
+            }
+            if (stage) stage.dataset.links = String(estado.html.mindmapLinks || '[]');
         }
 
         restaurarLayoutSecoes(estado?.sectionLayout);
+        aplicarVisibilidadeSecoesCriaveis([]);
 
         if (estado?.core && typeof estado.core === 'object') {
             if (typeof estado.core.memory === 'string') {
@@ -3316,6 +3445,8 @@ async function enviarPollinations() {
             }).join('');
         }
 
+        initMindmapUI();
+
         // Como injetamos HTML novo, precisamos religar os botões de arrastar
         if (typeof makeSortable === 'function') makeSortable();
 
@@ -3324,6 +3455,8 @@ async function enviarPollinations() {
             setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 3000);
         }
     } catch(e) {
+        aplicarVisibilidadeSecoesCriaveis([]);
+        updateIndex();
         if(btn) {
             btn.innerText = '❌ Erro';
             setTimeout(() => btn.innerText = '☁️ Salvar Nuvem', 4000);
@@ -3464,8 +3597,167 @@ async function enviarPollinations() {
   function addTask(){ const tbody = document.querySelector('#tasksTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row task-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:24px"><input type="checkbox" /></td><td><input type="text" class="task-input" placeholder="Tarefa"/></td><td style="width:100px"><select><option>casa</option><option>trabalho</option><option>online</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
   function addInterrupt(){ const tbody = document.querySelector('#interruptTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="O que me distraiu?"/></td><td style="width:80px"><input type="text" placeholder="Tempo"/></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
   function addIdea(){ const tbody = document.querySelector('#ideasTbl tbody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Ideia..."/></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
-  function addProject(){ const tbody = document.getElementById('projects'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nome"></td><td><input type="text" placeholder="Próximo passo"></td><td><input type="text" placeholder="__/__"></td><td><input type="number" min="0" max="100"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
+  function addProject(){ const tbody = document.getElementById('projects'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nome"></td><td><input type="text" placeholder="Próximo passo"></td><td><input type="text" placeholder="__/__"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
   function addTimeblock(){ const tbody = document.getElementById('timeTblBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row timeblock-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:100px"><input type="time" class="timeblock-time" /></td><td><input type="text" class="timeblock-input" placeholder="Foco / Ação"/></td><td style="width:100px"><select><option>Imutável</option><option>Mutável</option><option>Opcional</option><option>Remarcável</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
+
+  let mindmapNodeCounter = 0;
+
+  function getMindmapNodes() {
+    return Array.from(document.querySelectorAll('#mindmap-stage .mindmap-node'));
+  }
+
+  function syncMindmapSelectors() {
+    const from = document.getElementById('mindmap-from');
+    const to = document.getElementById('mindmap-to');
+    if (!from || !to) return;
+    const opts = getMindmapNodes().map(n => ({ id: n.dataset.nodeId, t: n.querySelector('input')?.value || 'Bloco' }));
+    const currentFrom = from.value;
+    const currentTo = to.value;
+    const html = '<option value="">Selecione...</option>' + opts.map(o => `<option value="${o.id}">${o.t.replace(/</g,'&lt;')}</option>`).join('');
+    from.innerHTML = html;
+    to.innerHTML = html;
+    if (opts.some(o => o.id === currentFrom)) from.value = currentFrom;
+    if (opts.some(o => o.id === currentTo)) to.value = currentTo;
+  }
+
+  function renderMindmapLinks() {
+    const svg = document.getElementById('mindmap-canvas');
+    const stage = document.getElementById('mindmap-stage');
+    if (!svg || !stage) return;
+    const links = JSON.parse(stage.dataset.links || '[]');
+    const W = stage.clientWidth || 900;
+    const H = stage.clientHeight || 560;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.innerHTML = `<defs><marker id="arrow-head" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="currentColor"/></marker></defs>`;
+    links.forEach((l, i) => {
+      const a = document.querySelector(`.mindmap-node[data-node-id="${l.from}"]`);
+      const b = document.querySelector(`.mindmap-node[data-node-id="${l.to}"]`);
+      if (!a || !b) return;
+      const ax = a.offsetLeft + a.offsetWidth;
+      const ay = a.offsetTop + a.offsetHeight / 2;
+      const bx = b.offsetLeft;
+      const by = b.offsetTop + b.offsetHeight / 2;
+      const c = Number(l.curve || 0);
+      const d = `M ${ax} ${ay} C ${ax + 80} ${ay + c}, ${bx - 80} ${by - c}, ${bx} ${by}`;
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', 'currentColor');
+      p.setAttribute('stroke-width', '2');
+      p.setAttribute('marker-end', 'url(#arrow-head)');
+      p.style.cursor = 'pointer';
+      p.setAttribute('data-link-idx', String(i));
+      p.addEventListener('dblclick', () => {
+        const arr = JSON.parse(stage.dataset.links || '[]');
+        arr.splice(i, 1);
+        stage.dataset.links = JSON.stringify(arr);
+        renderMindmapLinks();
+        agendarSalvamentoNuvem(250);
+      });
+      svg.appendChild(p);
+    });
+  }
+
+  function bindMindmapNode(node) {
+    if (!node || node.dataset.bound === '1') return;
+    node.dataset.bound = '1';
+    const input = node.querySelector('input');
+    input?.addEventListener('input', () => { syncMindmapSelectors(); agendarSalvamentoNuvem(250); });
+    let dragging = false, ox = 0, oy = 0;
+    node.addEventListener('pointerdown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+      dragging = true;
+      ox = e.clientX - node.offsetLeft;
+      oy = e.clientY - node.offsetTop;
+      node.setPointerCapture(e.pointerId);
+    });
+    node.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const stage = document.getElementById('mindmap-stage');
+      const maxX = (stage?.clientWidth || 900) - node.offsetWidth;
+      const maxY = (stage?.clientHeight || 560) - node.offsetHeight;
+      node.style.left = Math.max(0, Math.min(maxX, e.clientX - ox)) + 'px';
+      node.style.top = Math.max(0, Math.min(maxY, e.clientY - oy)) + 'px';
+      renderMindmapLinks();
+    });
+    node.addEventListener('pointerup', () => { dragging = false; agendarSalvamentoNuvem(250); });
+    node.querySelector('.mindmap-del')?.addEventListener('click', () => {
+      const id = node.dataset.nodeId;
+      node.remove();
+      const stage = document.getElementById('mindmap-stage');
+      const links = JSON.parse(stage.dataset.links || '[]').filter(l => l.from !== id && l.to !== id);
+      stage.dataset.links = JSON.stringify(links);
+      syncMindmapSelectors();
+      renderMindmapLinks();
+      agendarSalvamentoNuvem(250);
+    });
+  }
+
+  function addMindmapBlock(title = '', x = 40, y = 40) {
+    const stage = document.getElementById('mindmap-stage');
+    const list = document.getElementById('mindmap-block-list');
+    if (!stage || !list) return;
+    const id = `node-${Date.now()}-${mindmapNodeCounter++}`;
+    const txt = String(title || 'Novo bloco').trim();
+
+    const li = document.createElement('div');
+    li.className = 'mindmap-block-item';
+    li.dataset.nodeId = id;
+    li.innerHTML = `<span style="flex:1;">${txt.replace(/</g,'&lt;')}</span><button type="button" class="ghost mini-add">Inserir no mapa</button>`;
+    li.querySelector('button').onclick = () => {
+      const node = document.createElement('div');
+      node.className = 'mindmap-node';
+      node.dataset.nodeId = id;
+      node.style.left = `${x}px`;
+      node.style.top = `${y}px`;
+      node.innerHTML = `<div style="display:flex; gap:6px; align-items:center;"><input type="text" value="${txt.replace(/"/g,'&quot;')}" /><button type="button" class="xbtn mindmap-del" style="padding:1px 6px;">✕</button></div>`;
+      stage.appendChild(node);
+      bindMindmapNode(node);
+      syncMindmapSelectors();
+      renderMindmapLinks();
+      agendarSalvamentoNuvem(250);
+    };
+    list.appendChild(li);
+    agendarSalvamentoNuvem(250);
+  }
+
+  function addMindmapBlockFromInput() {
+    const input = document.getElementById('mindmap-new-title');
+    if (!input) return;
+    const t = String(input.value || '').trim();
+    if (!t) return;
+    addMindmapBlock(t, 30 + Math.random() * 200, 30 + Math.random() * 180);
+    input.value = '';
+  }
+
+  function addMindmapLink() {
+    const from = document.getElementById('mindmap-from')?.value;
+    const to = document.getElementById('mindmap-to')?.value;
+    const curve = Number(document.getElementById('mindmap-curve')?.value || 0);
+    const stage = document.getElementById('mindmap-stage');
+    if (!stage || !from || !to || from === to) return;
+    const links = JSON.parse(stage.dataset.links || '[]');
+    links.push({ from, to, curve });
+    stage.dataset.links = JSON.stringify(links);
+    renderMindmapLinks();
+    agendarSalvamentoNuvem(250);
+  }
+
+  function initMindmapUI() {
+    const stage = document.getElementById('mindmap-stage');
+    if (!stage) return;
+    if (!stage.querySelector('#mindmap-canvas')) {
+      stage.innerHTML = '<svg class="mindmap-canvas" id="mindmap-canvas"></svg>';
+    }
+    if (!stage.dataset.links) stage.dataset.links = '[]';
+    stage.querySelectorAll('.mindmap-node').forEach(bindMindmapNode);
+    syncMindmapSelectors();
+    renderMindmapLinks();
+    if (!document.getElementById('mindmap-block-list')?.children?.length) {
+      addMindmapBlock('Ideia central', 120, 120);
+      addMindmapBlock('Desdobramento', 420, 240);
+    }
+  }
   
   function updateWeeklyCheckboxes(input) { const tr = input.closest('tr'); let qty = parseInt(input.value) || 1; if(qty < 1) qty = 1; if(qty > 20) qty = 20; const containers = tr.querySelectorAll('.day-cb-container'); containers.forEach(td => { td.innerHTML = ''; const flexDiv = document.createElement('div'); flexDiv.style.display = 'flex'; flexDiv.style.flexWrap = 'wrap'; flexDiv.style.gap = '2px'; flexDiv.style.justifyContent = 'center'; for(let i=0; i<qty; i++) { const cb = document.createElement('input'); cb.type = 'checkbox'; flexDiv.appendChild(cb); } td.appendChild(flexDiv); }); }
   function addWeeklyTracker() { const tbody = document.getElementById('weeklyTrackersBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Novo hábito"/></td><td><input type="number" min="1" max="10" value="1" onchange="updateWeeklyCheckboxes(this)"/></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="day-cb-container"><div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;"><input type="checkbox"/></div></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
@@ -3571,6 +3863,9 @@ async function enviarPollinations() {
   /* ====== INITIALIZATION ====== */
   document.addEventListener("DOMContentLoaded", () => {
     initThemeState();
+    garantirIdsSecoes();
+    aplicarVisibilidadeSecoesCriaveis([]);
+    initMindmapUI();
 
     // Primeiro carrega da nuvem
     carregarNuvem().then(() => {
@@ -3585,7 +3880,6 @@ async function enviarPollinations() {
         renderThemeCliparts();
         initCamposExpansiveis();
         initTrackerBoxesInterativas();
-        initFloatingCore();
         atualizarRelogioGMT3();
         setInterval(atualizarRelogioGMT3, 1000);
         makeSortable(); initSparkles(); updateIndex();
