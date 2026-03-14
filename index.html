@@ -220,17 +220,15 @@
     .tracker-box { background: var(--card-bg); border: 1px solid var(--border); padding: 12px; border-radius: 6px; position: relative; }
     .tracker-box h4 { margin: 0 0 10px 0; font-size: 13px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
 
-    .mono-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; align-items: start; }
-    .mono-panel { border:1px solid var(--border); border-radius: 8px; background: var(--card-bg); padding: 10px; min-height: 220px; }
-    .mono-panel h5 { margin:0 0 8px 0; color: var(--accent); font-size: 12px; }
-    .mono-list { display:flex; flex-direction:column; gap:6px; max-height:220px; overflow:auto; }
-    .mono-item { display:flex; gap:6px; align-items:center; background: var(--bg); border:1px solid var(--border); border-radius: 8px; padding: 6px; }
-    .mono-box { border: 1px dashed var(--border); border-radius: 8px; padding: 8px; margin-top: 8px; }
-    .mono-box-title { font-size:11px; color: var(--muted); margin-bottom:6px; }
-    .mono-seq { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
-    .mono-step { display:flex; align-items:center; gap:6px; background: var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:6px; min-width:220px; }
-    .mono-arrow { color: var(--accent); font-weight: 700; }
-    .mono-reward { width:130px; min-width: 110px; background: color-mix(in srgb, #ffd54f 25%, var(--bg)); border: 1px solid color-mix(in srgb, #ffca28 50%, var(--border)); font-size: 11px; }
+    .mindmap-layout { display:grid; grid-template-columns: 280px 1fr; gap: 12px; align-items: start; }
+    .mindmap-side { border: 1px solid var(--border); background: var(--card-bg); border-radius: 8px; padding: 10px; }
+    .mindmap-side h5 { margin: 0 0 8px 0; color: var(--accent); }
+    .mindmap-block-list { display:flex; flex-direction:column; gap:6px; max-height: 380px; overflow:auto; }
+    .mindmap-block-item { display:flex; gap:6px; align-items:center; background: var(--bg); border:1px solid var(--border); border-radius: 8px; padding: 6px; }
+    .mindmap-stage { position: relative; min-height: 560px; border:1px dashed var(--border); border-radius: 8px; background: var(--bg); overflow: hidden; }
+    .mindmap-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+    .mindmap-node { position:absolute; min-width: 150px; background: var(--card-bg); border:1px solid var(--border); border-radius: 8px; padding: 6px; cursor: move; z-index: 2; }
+    .mindmap-node input { margin: 0; font-size: 12px; padding: 6px; }
     .field-group { margin-bottom: 8px; }
     .dynamic-fields { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
     .inline-cb { display: flex; align-items: center; gap: 6px; font-size: 12px; }
@@ -521,53 +519,36 @@
           </div>
         </div>
 
-        <div id="mono-timeline-section" class="section hide-in-focus">
+        <div id="mindmap-section" class="section hide-in-focus">
           <div class="section-header">
             <span class="drag-section-handle" title="Arraste a seção">✥</span>
-            <label>🧩 Linha do Tempo de Monotarefa / Solotarefa</label>
+            <label>🧠 Blocos Arrastáveis + Mind Map</label>
             <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
           </div>
           <div class="section-content">
-            <div class="mono-grid">
-              <div class="mono-panel">
-                <h5>1) Criar tarefas</h5>
-                <div style="display:flex; gap:8px; align-items:flex-end;">
-                  <input type="text" id="mono-task-input" placeholder="Ex: revisar e-mail do cliente" style="margin:0;" />
-                  <button class="ghost mini-add" onclick="addMonoTask()">+</button>
+            <div class="mindmap-layout">
+              <aside class="mindmap-side">
+                <h5>Criador de blocos</h5>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <input type="text" id="mindmap-new-title" placeholder="Título do bloco" style="margin:0;" />
+                  <button class="ghost mini-add" onclick="addMindmapBlockFromInput()">+</button>
                 </div>
-                <div class="mono-list" id="mono-task-list" style="margin-top:8px;"></div>
-              </div>
-
-              <div class="mono-panel">
-                <h5>2) Guardar em caixas nomeáveis</h5>
-                <div style="display:flex; gap:8px; align-items:flex-end;">
-                  <input type="text" id="mono-box-input" placeholder="Nome da caixa (ex: Hoje, Casa, Trabalho)" style="margin:0;" />
-                  <button class="ghost mini-add" onclick="addMonoBox()">+</button>
+                <div class="mindmap-block-list" id="mindmap-block-list" style="margin-top:8px;"></div>
+                <hr style="border-color:var(--border); opacity:.5; margin:10px 0;" />
+                <h5>Setas modeláveis</h5>
+                <div class="tiny-lbl">Conecte dois blocos e ajuste a curvatura.</div>
+                <div style="display:grid; gap:6px; margin-top:6px;">
+                  <select id="mindmap-from"></select>
+                  <select id="mindmap-to"></select>
+                  <label class="tiny-lbl">Curvatura da seta</label>
+                  <input type="range" min="-220" max="220" value="0" id="mindmap-curve" />
+                  <button class="ghost" onclick="addMindmapLink()">+ conectar</button>
                 </div>
-                <div id="mono-boxes" style="margin-top:8px;"></div>
-              </div>
-
-              <div class="mono-panel" style="grid-column: 1 / -1; min-height:auto;">
-                <h5>3) Sequência dinâmica (sem time blocking)</h5>
-                <div class="tiny-lbl">Escolha a próxima tarefa a cada conclusão. Entre passos, preencha (ou não) mini recompensas.</div>
-                <div class="mono-seq" id="mono-seq"></div>
+              </aside>
+              <div class="mindmap-stage" id="mindmap-stage">
+                <svg class="mindmap-canvas" id="mindmap-canvas"></svg>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div id="mini-rewards-section" class="section hide-in-focus">
-          <div class="section-header">
-            <span class="drag-section-handle" title="Arraste a seção">✥</span>
-            <label>🎁 Banco de Mini Recompensas</label>
-            <button class="collapse-btn" onclick="toggleSection(this)">➖</button>
-          </div>
-          <div class="section-content">
-            <div style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">
-              <input type="text" id="reward-input" placeholder="Ex: 5 minutos de música, café especial..." style="flex:1; min-width:220px; margin:0;" />
-              <button class="ghost" onclick="addRewardItem()">+ mini recompensa</button>
-            </div>
-            <div class="mono-list" id="reward-list" style="margin-top:10px;"></div>
           </div>
         </div>
 
@@ -3160,10 +3141,9 @@ async function enviarPollinations() {
       trackerGrid: document.getElementById('tracker-grid').innerHTML,
       meals: document.getElementById('meals-container').innerHTML,
       bottleQuarters: document.getElementById('bottleQuarters').innerHTML,
-      monoTaskList: document.getElementById('mono-task-list')?.innerHTML || '',
-      monoBoxes: document.getElementById('mono-boxes')?.innerHTML || '',
-      monoSeq: document.getElementById('mono-seq')?.innerHTML || '',
-      rewardList: document.getElementById('reward-list')?.innerHTML || ''
+      mindmapBlockList: document.getElementById('mindmap-block-list')?.innerHTML || '',
+      mindmapNodes: document.getElementById('mindmap-stage')?.innerHTML || '',
+      mindmapLinks: document.getElementById('mindmap-stage')?.dataset?.links || '[]'
     };
 
     const textFields = Array.from(document.querySelectorAll('input, select, textarea'))
@@ -3306,10 +3286,12 @@ async function enviarPollinations() {
             setHtml('#tracker-grid', estado.html.trackerGrid || '');
             setHtml('#meals-container', estado.html.meals || '');
             setHtml('#bottleQuarters', estado.html.bottleQuarters || '');
-            setHtml('#mono-task-list', estado.html.monoTaskList || '');
-            setHtml('#mono-boxes', estado.html.monoBoxes || '');
-            setHtml('#mono-seq', estado.html.monoSeq || '');
-            setHtml('#reward-list', estado.html.rewardList || '');
+            setHtml('#mindmap-block-list', estado.html.mindmapBlockList || '');
+            const stage = document.getElementById('mindmap-stage');
+            if (stage && typeof estado.html.mindmapNodes === 'string' && estado.html.mindmapNodes.trim()) {
+              stage.innerHTML = estado.html.mindmapNodes;
+            }
+            if (stage) stage.dataset.links = String(estado.html.mindmapLinks || '[]');
         }
 
         restaurarLayoutSecoes(estado?.sectionLayout);
@@ -3442,7 +3424,7 @@ async function enviarPollinations() {
             }).join('');
         }
 
-        initMonotaskUI();
+        initMindmapUI();
 
         // Como injetamos HTML novo, precisamos religar os botões de arrastar
         if (typeof makeSortable === 'function') makeSortable();
@@ -3597,116 +3579,163 @@ async function enviarPollinations() {
   function addProject(){ const tbody = document.getElementById('projects'); const tr = document.createElement('tr'); tr.className = 'sortable-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td><input type="text" placeholder="Nome"></td><td><input type="text" placeholder="Próximo passo"></td><td><input type="text" placeholder="__/__"></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
   function addTimeblock(){ const tbody = document.getElementById('timeTblBody'); const tr = document.createElement('tr'); tr.className = 'sortable-row timeblock-row'; tr.draggable = true; tr.innerHTML = `<td class="drag-handle">☰</td><td style="width:100px"><input type="time" class="timeblock-time" /></td><td><input type="text" class="timeblock-input" placeholder="Foco / Ação"/></td><td style="width:100px"><select><option>Imutável</option><option>Mutável</option><option>Opcional</option><option>Remarcável</option></select></td><td class="row-actions"><button class="xbtn" onclick="deleteRow(this)">✕</button></td>`; tbody.appendChild(tr); addDragEvents(tr, 'row'); return tr; }
 
-  function bindMonoTaskItem(row) {
-    if (!row || row.dataset.bound === '1') return;
-    row.dataset.bound = '1';
-    row.querySelector('.mono-task-delete')?.addEventListener('click', () => { row.remove(); refreshMonoTaskSelectors(); agendarSalvamentoNuvem(250); });
+  let mindmapNodeCounter = 0;
+
+  function getMindmapNodes() {
+    return Array.from(document.querySelectorAll('#mindmap-stage .mindmap-node'));
   }
 
-  function addMonoTask(taskText = '') {
-    const input = document.getElementById('mono-task-input');
-    const list = document.getElementById('mono-task-list');
-    if (!list) return;
-    const txt = String(taskText || input?.value || '').trim();
-    if (!txt) return;
-    const row = document.createElement('div');
-    row.className = 'mono-item';
-    row.innerHTML = `<span style="flex:1;">${txt.replace(/</g,'&lt;')}</span><button type="button" class="xbtn mono-task-delete" style="padding:2px 8px;">✕</button>`;
-    list.appendChild(row);
-    bindMonoTaskItem(row);
-    if (input) input.value = '';
-    refreshMonoTaskSelectors();
-    agendarSalvamentoNuvem(250);
+  function syncMindmapSelectors() {
+    const from = document.getElementById('mindmap-from');
+    const to = document.getElementById('mindmap-to');
+    if (!from || !to) return;
+    const opts = getMindmapNodes().map(n => ({ id: n.dataset.nodeId, t: n.querySelector('input')?.value || 'Bloco' }));
+    const currentFrom = from.value;
+    const currentTo = to.value;
+    const html = '<option value="">Selecione...</option>' + opts.map(o => `<option value="${o.id}">${o.t.replace(/</g,'&lt;')}</option>`).join('');
+    from.innerHTML = html;
+    to.innerHTML = html;
+    if (opts.some(o => o.id === currentFrom)) from.value = currentFrom;
+    if (opts.some(o => o.id === currentTo)) to.value = currentTo;
   }
 
-  function bindMonoBox(box) {
-    if (!box || box.dataset.bound === '1') return;
-    box.dataset.bound = '1';
-    box.querySelector('.mono-box-delete')?.addEventListener('click', () => { box.remove(); agendarSalvamentoNuvem(250); });
-    box.querySelector('.mono-box-add')?.addEventListener('click', () => {
-      const select = box.querySelector('select');
-      const list = box.querySelector('.mono-list');
-      if (!select || !list || !select.value) return;
-      const item = document.createElement('div');
-      item.className = 'mono-item';
-      item.innerHTML = `<span style="flex:1;">${select.value}</span><button type="button" class="xbtn" style="padding:2px 8px;">✕</button>`;
-      item.querySelector('button').onclick = () => { item.remove(); agendarSalvamentoNuvem(250); };
-      list.appendChild(item);
+  function renderMindmapLinks() {
+    const svg = document.getElementById('mindmap-canvas');
+    const stage = document.getElementById('mindmap-stage');
+    if (!svg || !stage) return;
+    const links = JSON.parse(stage.dataset.links || '[]');
+    const W = stage.clientWidth || 900;
+    const H = stage.clientHeight || 560;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.innerHTML = `<defs><marker id="arrow-head" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="currentColor"/></marker></defs>`;
+    links.forEach((l, i) => {
+      const a = document.querySelector(`.mindmap-node[data-node-id="${l.from}"]`);
+      const b = document.querySelector(`.mindmap-node[data-node-id="${l.to}"]`);
+      if (!a || !b) return;
+      const ax = a.offsetLeft + a.offsetWidth;
+      const ay = a.offsetTop + a.offsetHeight / 2;
+      const bx = b.offsetLeft;
+      const by = b.offsetTop + b.offsetHeight / 2;
+      const c = Number(l.curve || 0);
+      const d = `M ${ax} ${ay} C ${ax + 80} ${ay + c}, ${bx - 80} ${by - c}, ${bx} ${by}`;
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', 'currentColor');
+      p.setAttribute('stroke-width', '2');
+      p.setAttribute('marker-end', 'url(#arrow-head)');
+      p.style.cursor = 'pointer';
+      p.setAttribute('data-link-idx', String(i));
+      p.addEventListener('dblclick', () => {
+        const arr = JSON.parse(stage.dataset.links || '[]');
+        arr.splice(i, 1);
+        stage.dataset.links = JSON.stringify(arr);
+        renderMindmapLinks();
+        agendarSalvamentoNuvem(250);
+      });
+      svg.appendChild(p);
+    });
+  }
+
+  function bindMindmapNode(node) {
+    if (!node || node.dataset.bound === '1') return;
+    node.dataset.bound = '1';
+    const input = node.querySelector('input');
+    input?.addEventListener('input', () => { syncMindmapSelectors(); agendarSalvamentoNuvem(250); });
+    let dragging = false, ox = 0, oy = 0;
+    node.addEventListener('pointerdown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+      dragging = true;
+      ox = e.clientX - node.offsetLeft;
+      oy = e.clientY - node.offsetTop;
+      node.setPointerCapture(e.pointerId);
+    });
+    node.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const stage = document.getElementById('mindmap-stage');
+      const maxX = (stage?.clientWidth || 900) - node.offsetWidth;
+      const maxY = (stage?.clientHeight || 560) - node.offsetHeight;
+      node.style.left = Math.max(0, Math.min(maxX, e.clientX - ox)) + 'px';
+      node.style.top = Math.max(0, Math.min(maxY, e.clientY - oy)) + 'px';
+      renderMindmapLinks();
+    });
+    node.addEventListener('pointerup', () => { dragging = false; agendarSalvamentoNuvem(250); });
+    node.querySelector('.mindmap-del')?.addEventListener('click', () => {
+      const id = node.dataset.nodeId;
+      node.remove();
+      const stage = document.getElementById('mindmap-stage');
+      const links = JSON.parse(stage.dataset.links || '[]').filter(l => l.from !== id && l.to !== id);
+      stage.dataset.links = JSON.stringify(links);
+      syncMindmapSelectors();
+      renderMindmapLinks();
       agendarSalvamentoNuvem(250);
     });
   }
 
-  function addMonoBox(boxName = '') {
-    const input = document.getElementById('mono-box-input');
-    const wrap = document.getElementById('mono-boxes');
-    if (!wrap) return;
-    const nome = String(boxName || input?.value || '').trim();
-    if (!nome) return;
-    const box = document.createElement('div');
-    box.className = 'mono-box';
-    box.innerHTML = `<div class="mono-box-title"><strong>${nome.replace(/</g,'&lt;')}</strong> <button type="button" class="xbtn mono-box-delete" style="padding:1px 6px;">✕</button></div><div style="display:flex; gap:6px;"><select class="mono-task-select" style="margin:0;"><option value="">Escolha uma tarefa...</option></select><button type="button" class="ghost mini-add mono-box-add">+ colocar</button></div><div class="mono-list" style="margin-top:6px;"></div>`;
-    wrap.appendChild(box);
-    if (input) input.value = '';
-    bindMonoBox(box);
-    refreshMonoTaskSelectors();
+  function addMindmapBlock(title = '', x = 40, y = 40) {
+    const stage = document.getElementById('mindmap-stage');
+    const list = document.getElementById('mindmap-block-list');
+    if (!stage || !list) return;
+    const id = `node-${Date.now()}-${mindmapNodeCounter++}`;
+    const txt = String(title || 'Novo bloco').trim();
+
+    const li = document.createElement('div');
+    li.className = 'mindmap-block-item';
+    li.dataset.nodeId = id;
+    li.innerHTML = `<span style="flex:1;">${txt.replace(/</g,'&lt;')}</span><button type="button" class="ghost mini-add">Inserir no mapa</button>`;
+    li.querySelector('button').onclick = () => {
+      const node = document.createElement('div');
+      node.className = 'mindmap-node';
+      node.dataset.nodeId = id;
+      node.style.left = `${x}px`;
+      node.style.top = `${y}px`;
+      node.innerHTML = `<div style="display:flex; gap:6px; align-items:center;"><input type="text" value="${txt.replace(/"/g,'&quot;')}" /><button type="button" class="xbtn mindmap-del" style="padding:1px 6px;">✕</button></div>`;
+      stage.appendChild(node);
+      bindMindmapNode(node);
+      syncMindmapSelectors();
+      renderMindmapLinks();
+      agendarSalvamentoNuvem(250);
+    };
+    list.appendChild(li);
     agendarSalvamentoNuvem(250);
   }
 
-  function refreshMonoTaskSelectors() {
-    const tasks = Array.from(document.querySelectorAll('#mono-task-list .mono-item > span')).map(el => el.textContent.trim()).filter(Boolean);
-    document.querySelectorAll('.mono-task-select, .mono-seq-select').forEach(sel => {
-      const current = sel.value;
-      sel.innerHTML = '<option value="">Escolha...</option>' + tasks.map(t => `<option>${t.replace(/</g,'&lt;')}</option>`).join('');
-      if (current && tasks.includes(current)) sel.value = current;
-    });
+  function addMindmapBlockFromInput() {
+    const input = document.getElementById('mindmap-new-title');
+    if (!input) return;
+    const t = String(input.value || '').trim();
+    if (!t) return;
+    addMindmapBlock(t, 30 + Math.random() * 200, 30 + Math.random() * 180);
+    input.value = '';
   }
 
-  function buildMonoSequenceSteps() {
-    const seq = document.getElementById('mono-seq');
-    if (!seq || seq.dataset.built === '1') return;
-    seq.dataset.built = '1';
-    for (let i = 0; i < 6; i++) {
-      const step = document.createElement('div');
-      step.className = 'mono-step';
-      step.innerHTML = `<span class="tiny-lbl" style="margin:0;">Etapa ${i + 1}</span><select class="mono-seq-select" style="margin:0; min-width:130px;"><option value="">Escolha...</option></select><input type="text" class="mono-reward" placeholder="mini recompensa" />`;
-      seq.appendChild(step);
-      if (i < 5) {
-        const arrow = document.createElement('span');
-        arrow.className = 'mono-arrow';
-        arrow.textContent = '➜';
-        seq.appendChild(arrow);
-      }
+  function addMindmapLink() {
+    const from = document.getElementById('mindmap-from')?.value;
+    const to = document.getElementById('mindmap-to')?.value;
+    const curve = Number(document.getElementById('mindmap-curve')?.value || 0);
+    const stage = document.getElementById('mindmap-stage');
+    if (!stage || !from || !to || from === to) return;
+    const links = JSON.parse(stage.dataset.links || '[]');
+    links.push({ from, to, curve });
+    stage.dataset.links = JSON.stringify(links);
+    renderMindmapLinks();
+    agendarSalvamentoNuvem(250);
+  }
+
+  function initMindmapUI() {
+    const stage = document.getElementById('mindmap-stage');
+    if (!stage) return;
+    if (!stage.querySelector('#mindmap-canvas')) {
+      stage.innerHTML = '<svg class="mindmap-canvas" id="mindmap-canvas"></svg>';
     }
-    refreshMonoTaskSelectors();
-  }
-
-  function bindRewardItem(item) {
-    if (!item || item.dataset.bound === '1') return;
-    item.dataset.bound = '1';
-    item.querySelector('button')?.addEventListener('click', () => { item.remove(); agendarSalvamentoNuvem(250); });
-  }
-
-  function addRewardItem(text = '') {
-    const input = document.getElementById('reward-input');
-    const list = document.getElementById('reward-list');
-    if (!list) return;
-    const txt = String(text || input?.value || '').trim();
-    if (!txt) return;
-    const item = document.createElement('div');
-    item.className = 'mono-item';
-    item.innerHTML = `<span style="flex:1;">${txt.replace(/</g,'&lt;')}</span><button type="button" class="xbtn" style="padding:2px 8px;">✕</button>`;
-    list.appendChild(item);
-    bindRewardItem(item);
-    if (input) input.value = '';
-    agendarSalvamentoNuvem(250);
-  }
-
-  function initMonotaskUI() {
-    buildMonoSequenceSteps();
-    document.querySelectorAll('#mono-task-list .mono-item').forEach(bindMonoTaskItem);
-    document.querySelectorAll('#mono-boxes .mono-box').forEach(bindMonoBox);
-    document.querySelectorAll('#reward-list .mono-item').forEach(bindRewardItem);
-    refreshMonoTaskSelectors();
+    if (!stage.dataset.links) stage.dataset.links = '[]';
+    stage.querySelectorAll('.mindmap-node').forEach(bindMindmapNode);
+    syncMindmapSelectors();
+    renderMindmapLinks();
+    if (!document.getElementById('mindmap-block-list')?.children?.length) {
+      addMindmapBlock('Ideia central', 120, 120);
+      addMindmapBlock('Desdobramento', 420, 240);
+    }
   }
   
   function updateWeeklyCheckboxes(input) { const tr = input.closest('tr'); let qty = parseInt(input.value) || 1; if(qty < 1) qty = 1; if(qty > 20) qty = 20; const containers = tr.querySelectorAll('.day-cb-container'); containers.forEach(td => { td.innerHTML = ''; const flexDiv = document.createElement('div'); flexDiv.style.display = 'flex'; flexDiv.style.flexWrap = 'wrap'; flexDiv.style.gap = '2px'; flexDiv.style.justifyContent = 'center'; for(let i=0; i<qty; i++) { const cb = document.createElement('input'); cb.type = 'checkbox'; flexDiv.appendChild(cb); } td.appendChild(flexDiv); }); }
@@ -3815,7 +3844,7 @@ async function enviarPollinations() {
     initThemeState();
     garantirIdsSecoes();
     aplicarVisibilidadeSecoesCriaveis([]);
-    initMonotaskUI();
+    initMindmapUI();
 
     // Primeiro carrega da nuvem
     carregarNuvem().then(() => {
